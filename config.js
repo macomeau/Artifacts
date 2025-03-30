@@ -51,7 +51,7 @@ function prepareConfig() {
     return undefined;
   })();
 
-  const token = envConfig.API_TOKEN || ''; // Use token from loaded config
+  const token = envConfig.API_TOKEN || ''; // Use token from loaded config (which is ARTIFACTS_API_TOKEN from process.env)
 
   // Validate that token is set
   if (!token && envConfig.NODE_ENV !== 'test') {

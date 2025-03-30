@@ -60,17 +60,21 @@ function loadEnv() {
   // Optional: Log key variables after loading to verify correct override
   if (process.env.NODE_ENV !== 'production') {
       console.log(`[EnvLoader] Final ACCOUNT_NAME: ${process.env.ACCOUNT_NAME}`);
-      // Avoid logging the full token, just confirm if it's set
-      console.log(`[EnvLoader] Final API_TOKEN is ${process.env.API_TOKEN ? 'set' : 'not set'}`);
+      // Log the correct variable and indicate if it's set
+      console.log(`[EnvLoader] Final ARTIFACTS_API_TOKEN is ${process.env.ARTIFACTS_API_TOKEN ? 'set' : 'not set'}`);
+      // Optionally log a few chars of the token for verification (REMOVE AFTER DEBUGGING)
+      // if (process.env.ARTIFACTS_API_TOKEN) {
+      //   console.log(`[EnvLoader DEBUG] Token starts with: ${process.env.ARTIFACTS_API_TOKEN.substring(0, 5)}...`);
+      // }
       console.log(`[EnvLoader] Final DEFAULT_CHARACTER: ${process.env.DEFAULT_CHARACTER}`);
   }
 
   envLoaded = true; // Set flag after successful load
 
-  // Construct and return an object with the final values
+  // Construct and return an object with the final values, using the correct token variable name
   const finalEnv = {
     ACCOUNT_NAME: process.env.ACCOUNT_NAME,
-    API_TOKEN: process.env.ARTIFACTS_API_TOKEN, // Use the correct variable name here
+    API_TOKEN: process.env.ARTIFACTS_API_TOKEN, // Ensure this matches the name in your .env files
     DEFAULT_CHARACTER: process.env.DEFAULT_CHARACTER,
     DATABASE_URL: process.env.DATABASE_URL,
     NODE_ENV: process.env.NODE_ENV,
