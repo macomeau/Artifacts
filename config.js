@@ -3,28 +3,32 @@
  * @module config
  */
 
-// Ensure env-loader runs when this module is loaded.
-// It modifies the global process.env object.
-require('./env-loader');
+// Import the final, loaded configuration object from env-loader
+const envConfig = require('./env-loader');
 
 // Note: db also requires env-loader, but the flag prevents multiple loads.
-const db = require('./db');
+// We don't strictly need db here anymore unless config needs DB values.
+// const db = require('./db');
 
 /**
- * Returns the configuration object, reading environment variables dynamically.
- * Ensures that the latest values from process.env (potentially overridden by env-loader) are used.
- * @returns {Object} Configuration object
- * @throws {Error} If required environment variables are not set
+ * Validates and prepares the final configuration object.
+ * @throws {Error} If required environment variables are not set in the loaded config
  */
-function getConfig() {
+function prepareConfig() {
+  // Determine character name logic (can still use process.argv if needed, but prefer envConfig)
   const character = (() => {
-     // For test environment
-    if (process.env.NODE_ENV === 'test') {
+    // For test environment
+    if (envConfig.NODE_ENV === 'test') {
       return 'test_character';
     }
-    
-    // Check environment variable
-    const charName = process.env.control_character;
+
+    // Prefer DEFAULT_CHARACTER from the loaded env config
+    if (envConfig.DEFAULT_CHARACTER) {
+        return envConfig.DEFAULT_CHARACTER;
+    }
+
+    // Fallback: Check environment variable (less ideal now)
+    const charName = process.env.control_character; // Keep this for backward compat? Or remove? Let's keep for now.
     if (charName && typeof charName === 'string' && charName.trim() !== '') {
       return charName;
     }
@@ -36,37 +40,42 @@ function getConfig() {
       if (scriptArgs.length > 0 && scriptArgs[0].trim() !== '') {
         console.log(`Using character name from command line: ${scriptArgs[0]}`);
         return scriptArgs[0];
-      }
-    } catch (e) {
-      // Ignore errors when accessing process.argv
+      // Ignore errors when accessing process.argv? Maybe remove this fallback.
     }
-    
-    // If no character name found from env or args, return undefined
-    // The calling script or validation should handle this case.
-    console.warn('WARN: No character name specified via environment variable (control_character) or command line argument.');
-    console.warn('TIP: To specify a character, either:');
-    console.warn('  1. Set the control_character environment variable');
-    console.warn('  2. Pass the character name as the first command line argument');
-    return undefined; // Explicitly return undefined
+
+    // If no character name found, return undefined
+    // API functions might handle this or throw errors later.
+    console.warn('WARN: No default character name specified in environment files (DEFAULT_CHARACTER).');
+    return undefined;
   })();
 
-  const token = process.env.ARTIFACTS_API_TOKEN || '';
+  const token = envConfig.API_TOKEN || ''; // Use token from loaded config
 
   // Validate that token is set
-  if (!token && process.env.NODE_ENV !== 'test') {
-    throw new Error('FATAL: ARTIFACTS_API_TOKEN environment variable is not set.');
+  if (!token && envConfig.NODE_ENV !== 'test') {
+    throw new Error('FATAL: ARTIFACTS_API_TOKEN environment variable is not set in the loaded environment configuration.');
   }
 
-  return {
+  // Construct the final config object
+  const finalConfig = {
     server: 'https://api.artifactsmmo.com',
-    token: token || (process.env.NODE_ENV === 'test' ? 'test_token' : ''), // Use test token only if needed
+    // Use test token only if in test mode AND no token was loaded
+    token: token || (envConfig.NODE_ENV === 'test' ? 'test_token' : ''),
+    // Use the determined character name
     character: character,
+    // Pass through other useful values if needed
+    accountName: envConfig.ACCOUNT_NAME,
+    nodeEnv: envConfig.NODE_ENV,
   };
+
+  return finalConfig;
 }
 
+// Prepare and export the final config object immediately
+const config = prepareConfig();
 
 /**
- * Module exports
- * @exports getConfig
+ * Module exports the prepared configuration object
+ * @exports config
  */
-module.exports = getConfig;
+module.exports = config;

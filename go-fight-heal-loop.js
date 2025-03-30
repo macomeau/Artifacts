@@ -7,7 +7,7 @@
 // Import the API utilities and deposit function
 const { moveCharacter, fightAction, restAction, executeWithCooldown, getCharacterDetails, healCharacter } = require('./api'); // Added healCharacter
 const { depositAllItems } = require('./go-deposit-all');
-const config = require('./config');
+const config = require('./config'); // Import the final config object
 const db = require('./db');
 
 /**
@@ -184,7 +184,7 @@ async function main() {
               `INSERT INTO action_logs(character, action_type, result, coordinates)
                VALUES ($1, 'move', $2, point($3,$4))`,
               [
-                characterName || config.character,
+                characterName || config.character, // Use config.character directly
                 { destination: `(${coords.x},${coords.y})` },
                 coords.x,
                 coords.y
@@ -216,7 +216,7 @@ async function main() {
                   `INSERT INTO action_logs(character, action_type, result, coordinates)
                    VALUES ($1, 'move', $2, point($3,$4))`,
                   [
-                    characterName || config.character,
+                    characterName || config.character, // Use config.character directly
                     { destination: `(${coords.x},${coords.y})` },
                     coords.x,
                     coords.y
@@ -254,7 +254,7 @@ async function main() {
             `INSERT INTO action_logs(character, action_type, result, coordinates)
              VALUES ($1, 'move', $2, point($3,$4))`,
             [
-              characterName || config.character,
+              characterName || config.character, // Use config.character directly
               { destination: `(${coords.x},${coords.y})` },
               coords.x,
               coords.y
@@ -371,9 +371,9 @@ async function main() {
           await db.query(
             `INSERT INTO action_logs(character, action_type, result)
              VALUES ($1, 'inventory_full', $2)`,
-            [characterName || config.character, { total_items: totalItems }]
+            [characterName || config.character, { total_items: totalItems }] // Use config.character directly
           );
-          
+
           // Deposit workflow
           await moveCharacter(4, 1, characterName);
           await depositAllItems();
@@ -458,7 +458,7 @@ async function main() {
           `INSERT INTO action_logs(character, action_type, result, coordinates)
            VALUES ($1, 'fight', $2, point($3,$4))`,
           [
-            characterName || config.character,
+            characterName || config.character, // Use config.character directly
             {
               enemy: result.enemy ? result.enemy.name : 'unknown',
               hp_remaining: result.character ? result.character.hp : 0,

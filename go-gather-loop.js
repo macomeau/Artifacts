@@ -3,7 +3,7 @@
 
 // Import the API utilities
 const { moveCharacter, gatheringAction, getCharacterDetails, executeWithCooldown } = require('./api');
-const config = require('./config');
+const config = require('./config'); // Import the final config object
 
 /**
  * Parse coordinates from string format "(x,y)" to numbers
@@ -121,11 +121,11 @@ async function main() {
             await new Promise(resolve => setTimeout(resolve, cooldownSeconds * 1000 + 500)); // Add 500ms buffer
           }
         }
-        
         // Now move the character to the specified coordinates
-        console.log(`Moving character ${config.character} to coordinates (${coords.x}, ${coords.y})...`);
+        // Note: moveCharacter in api.js now gets default character from config if not passed
+        console.log(`Moving character to coordinates (${coords.x}, ${coords.y})...`);
         try {
-          const moveResult = await moveCharacter(coords.x, coords.y);
+          const moveResult = await moveCharacter(coords.x, coords.y); // Pass character name if needed, otherwise uses config default
           console.log('Movement successful:');
           console.log(moveResult);
         } catch (error) {
@@ -159,11 +159,12 @@ async function main() {
     } catch (error) {
       console.error('Failed to get character details:', error.message);
       console.log('Proceeding with movement without character details check...');
-      
+
       // Attempt to move without character details check
-      console.log(`Moving character ${config.character} to coordinates (${coords.x}, ${coords.y})...`);
+      // Note: moveCharacter in api.js now gets default character from config if not passed
+      console.log(`Moving character to coordinates (${coords.x}, ${coords.y})...`);
       try {
-        const moveResult = await moveCharacter(coords.x, coords.y);
+        const moveResult = await moveCharacter(coords.x, coords.y); // Pass character name if needed, otherwise uses config default
         console.log('Movement successful:');
         console.log(moveResult);
       } catch (error) {

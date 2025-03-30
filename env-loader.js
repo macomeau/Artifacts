@@ -66,17 +66,24 @@ function loadEnv() {
   }
 
   envLoaded = true; // Set flag after successful load
-  return process.env;
+
+  // Construct and return an object with the final values
+  const finalEnv = {
+    ACCOUNT_NAME: process.env.ACCOUNT_NAME,
+    API_TOKEN: process.env.ARTIFACTS_API_TOKEN, // Use the correct variable name here
+    DEFAULT_CHARACTER: process.env.DEFAULT_CHARACTER,
+    DATABASE_URL: process.env.DATABASE_URL,
+    NODE_ENV: process.env.NODE_ENV,
+    // Add any other relevant env vars your app uses directly
+  };
+  return finalEnv;
 }
 
-// Load environment variables immediately when this module is imported
-// The function call itself returns process.env, but the main effect is modifying the global process.env
-loadEnv();
+// Load environment variables immediately and export the resulting object
+const loadedConfig = loadEnv();
 
 /**
- * Module exports
- * @exports env-loader
+ * Module exports the final loaded configuration object
+ * @exports loadedConfig
  */
-module.exports = {
-  loadEnv
-};
+module.exports = loadedConfig;

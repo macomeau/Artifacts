@@ -4,7 +4,7 @@
  */
 
 const { sleep } = require('./utils');
-const getConfig = require('./config'); // Import the function
+const config = require('./config'); // Import the final config object
 const db = require('./db');
 
 /**
@@ -13,14 +13,13 @@ const db = require('./db');
  * @returns {string} - Sanitized character name that meets API pattern ^[a-zA-Z0-9_-]+$
  */
 function sanitizeCharacterName(characterName) {
-  const currentConfig = getConfig(); // Get current config
-  if (!characterName) return currentConfig.character;
+  // Use the imported config object directly
+  if (!characterName) return config.character;
 
   // Remove any characters that aren't alphanumeric, underscore, or hyphen
   const sanitized = String(characterName).replace(/[^a-zA-Z0-9_-]/g, '');
-  
   // If sanitization removed all characters, return default from config
-  return sanitized || currentConfig.character;
+  return sanitized || config.character;
 }
 
 /**
@@ -50,7 +49,7 @@ async function makeApiRequest(endpoint, method, body = null, characterName = nul
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      'Authorization': `Bearer ${currentConfig.token}` // Use token from getConfig()
+      'Authorization': `Bearer ${config.token}` // Use token from imported config
     }
   };
 
@@ -160,7 +159,7 @@ async function moveCharacter(x, y, characterName) {
   }
 
   // Sanitize the character name
-  const charName = sanitizeCharacterName(characterName || getConfig().character); // Use getConfig()
+  const charName = sanitizeCharacterName(characterName || config.character); // Use imported config
   console.log(`Moving character ${charName} to coordinates (${x}, ${y})...`);
   return makeApiRequest('action/move', 'POST', { x, y, character: charName }, charName);
 }
@@ -173,7 +172,7 @@ async function moveCharacter(x, y, characterName) {
  * @throws {Error} For fight failures or if character is in cooldown
  */
 async function fightAction(characterName) {
-  const charName = sanitizeCharacterName(characterName || getConfig().character); // Use getConfig()
+  const charName = sanitizeCharacterName(characterName || config.character); // Use imported config
   console.log(`Initiating fight action for character: ${charName}`);
   return makeApiRequest('action/fight', 'POST', { character: charName }, charName);
 }
@@ -186,7 +185,7 @@ async function fightAction(characterName) {
  * @throws {Error} For gathering failures or inventory full
  */
 async function gatheringAction(characterName) {
-  const charName = sanitizeCharacterName(characterName || getConfig().character); // Use getConfig()
+  const charName = sanitizeCharacterName(characterName || config.character); // Use imported config
   console.log(`Initiating gathering action for character: ${charName}`);
   return makeApiRequest('action/gathering', 'POST', { character: charName }, charName);
 }
@@ -199,7 +198,7 @@ async function gatheringAction(characterName) {
  * @throws {Error} For mining failures or inventory full
  */
 async function miningAction(characterName) {
-  const charName = sanitizeCharacterName(characterName || getConfig().character); // Use getConfig()
+  const charName = sanitizeCharacterName(characterName || config.character); // Use imported config
   console.log(`Initiating mining action for character: ${charName}`);
   // Assuming the endpoint is 'action/mining', adjust if different
   return makeApiRequest('action/mining', 'POST', { character: charName }, charName);
@@ -213,7 +212,7 @@ async function miningAction(characterName) {
  * @throws {Error} For rest failures or if character is in cooldown
  */
 async function restAction(characterName) {
-  const charName = sanitizeCharacterName(characterName || getConfig().character); // Use getConfig()
+  const charName = sanitizeCharacterName(characterName || config.character); // Use imported config
   console.log(`Initiating rest action for character: ${charName}`);
   return makeApiRequest('action/rest', 'POST', { character: charName }, charName);
 }
@@ -327,9 +326,9 @@ async function craftingAction(code = 'ITEM', quantity = 1, material, characterNa
   if (typeof quantity !== 'number' || quantity < 1) {
     throw new Error('Quantity must be a positive number');
   }
-  
-  const charName = sanitizeCharacterName(characterName || getConfig().character); // Use getConfig()
-  return makeApiRequest('action/crafting', 'POST', { 
+
+  const charName = sanitizeCharacterName(characterName || config.character); // Use imported config
+  return makeApiRequest('action/crafting', 'POST', {
     code: code,
     quantity: quantity,
     character: charName
@@ -354,7 +353,7 @@ async function smeltingAction(code, quantity = 1, characterName) {
     throw new Error('Quantity must be a positive number');
   }
 
-  const charName = sanitizeCharacterName(characterName || getConfig().character); // Use getConfig()
+  const charName = sanitizeCharacterName(characterName || config.character); // Use imported config
   console.log(`Initiating smelting action for character: ${charName}, Code: ${code}, Qty: ${quantity}`);
   // Assuming the endpoint is 'action/smelting', adjust if different
   return makeApiRequest('action/smelting', 'POST', {
@@ -493,12 +492,12 @@ async function fightLoopAction(maxAttempts = 0, onSuccess, onError) {
  * @throws {Error} For API errors or if character doesn't exist
  */
 async function getCharacterDetails(characterName) {
-  const currentConfig = getConfig(); // Get current config
+  // Use the imported config object directly
   try {
     // Use the public API endpoint to get character details without triggering cooldown
-    const charName = sanitizeCharacterName(characterName || currentConfig.character);
+    const charName = sanitizeCharacterName(characterName || config.character);
     console.log(`Getting character details for: ${charName}`);
-    const url = `${currentConfig.server}/characters/${encodeURIComponent(charName)}`;
+    const url = `${config.server}/characters/${encodeURIComponent(charName)}`;
     const options = {
       method: 'GET',
       headers: {
@@ -588,7 +587,7 @@ async function recyclingAction(code, quantity = 1) {
  * @throws {Error} If healing fails or character info is unavailable
  */
 async function healCharacter(characterName) {
-  const charName = sanitizeCharacterName(characterName || getConfig().character); // Use getConfig()
+  const charName = sanitizeCharacterName(characterName || config.character); // Use imported config
   let currentCharacter;
 
   try {

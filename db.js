@@ -3,8 +3,8 @@
  * @module db
  */
 
-// Ensure the correct environment is loaded before initializing the pool!
-require('./env-loader');
+// Load the final environment configuration object
+const envConfig = require('./env-loader');
 
 const { Pool } = require('pg');
 
@@ -13,7 +13,8 @@ const { Pool } = require('pg');
  * @type {Pool}
  */
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL
+  // Use the DATABASE_URL from the explicitly loaded config
+  connectionString: envConfig.DATABASE_URL
 });
 
 /**
