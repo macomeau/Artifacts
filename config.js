@@ -3,28 +3,22 @@
  * @module config
  */
 
-// Load environment variables first, ensuring env-loader is initialized
-const envLoader = require('./env-loader');
-// Reload env variables to ensure we get the latest from any custom env file
-envLoader.loadEnv();
+// Ensure env-loader runs when this module is loaded.
+// It modifies the global process.env object.
+require('./env-loader');
 
+// Note: db also requires env-loader, but the flag prevents multiple loads.
 const db = require('./db');
 
 /**
- * Configuration object for ArtifactsMMO API
- * @type {Object}
- * @property {string} server - API server URL
- * @property {string} token - API authentication token from environment variables
- * @property {string} character - Character name to use for API requests
+ * Returns the configuration object, reading environment variables dynamically.
+ * Ensures that the latest values from process.env (potentially overridden by env-loader) are used.
+ * @returns {Object} Configuration object
  * @throws {Error} If required environment variables are not set
  */
-const config = {
-  server: 'https://api.artifactsmmo.com',
-  // Load token from environment variables
-  token: process.env.ARTIFACTS_API_TOKEN || '',
-  // Character name can be set via environment variable, with various fallbacks
-  character: (() => {
-    // For test environment
+function getConfig() {
+  const character = (() => {
+     // For test environment
     if (process.env.NODE_ENV === 'test') {
       return 'test_character';
     }
@@ -54,21 +48,25 @@ const config = {
     console.warn('  1. Set the control_character environment variable');
     console.warn('  2. Pass the character name as the first command line argument');
     return undefined; // Explicitly return undefined
-  })(),
-};
+  })();
 
-// Validate that token is set
-if (!config.token) {
-  if (process.env.NODE_ENV === 'test') {
-    config.token = 'test_token'; // Keep test token for convenience
-  } else {
-    // Throw an error if the token is not set in non-test environments
+  const token = process.env.ARTIFACTS_API_TOKEN || '';
+
+  // Validate that token is set
+  if (!token && process.env.NODE_ENV !== 'test') {
     throw new Error('FATAL: ARTIFACTS_API_TOKEN environment variable is not set.');
   }
+
+  return {
+    server: 'https://api.artifactsmmo.com',
+    token: token || (process.env.NODE_ENV === 'test' ? 'test_token' : ''), // Use test token only if needed
+    character: character,
+  };
 }
+
 
 /**
  * Module exports
- * @exports config
+ * @exports getConfig
  */
-module.exports = config;
+module.exports = getConfig;

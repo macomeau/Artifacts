@@ -4,7 +4,7 @@
  */
 
 const { sleep } = require('./utils');
-const config = require('./config');
+const getConfig = require('./config'); // Import the function
 const db = require('./db');
 
 /**
@@ -13,13 +13,14 @@ const db = require('./db');
  * @returns {string} - Sanitized character name that meets API pattern ^[a-zA-Z0-9_-]+$
  */
 function sanitizeCharacterName(characterName) {
-  if (!characterName) return config.character;
-  
+  const currentConfig = getConfig(); // Get current config
+  if (!characterName) return currentConfig.character;
+
   // Remove any characters that aren't alphanumeric, underscore, or hyphen
   const sanitized = String(characterName).replace(/[^a-zA-Z0-9_-]/g, '');
   
   // If sanitization removed all characters, return default from config
-  return sanitized || config.character;
+  return sanitized || currentConfig.character;
 }
 
 /**
@@ -32,25 +33,24 @@ function sanitizeCharacterName(characterName) {
  * @throws {Error} For network errors or non-2xx responses
  */
 async function makeApiRequest(endpoint, method, body = null, characterName = null) {
+  const currentConfig = getConfig(); // Get current config
   // Get character name, sanitize it, and ensure it meets API requirements
-  const charName = sanitizeCharacterName(characterName || config.character);
+  const charName = sanitizeCharacterName(characterName || currentConfig.character);
 
-  // Construct URL safely
-  let url;
   if (endpoint) {
-    url = `${config.server}/my/${encodeURIComponent(charName)}/${endpoint}`;
+    url = `${currentConfig.server}/my/${encodeURIComponent(charName)}/${endpoint}`;
   } else {
     // If no endpoint is provided, just get the character details
-    url = `${config.server}/my/${encodeURIComponent(charName)}`;
+    url = `${currentConfig.server}/my/${encodeURIComponent(charName)}`;
   }
-  
+
   // Prepare request options
   const options = {
     method: method || 'GET',
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      'Authorization': `Bearer ${config.token}`
+      'Authorization': `Bearer ${currentConfig.token}` // Use token from getConfig()
     }
   };
 
@@ -158,9 +158,9 @@ async function moveCharacter(x, y, characterName) {
   if (typeof x !== 'number' || typeof y !== 'number') {
     throw new Error('X and Y must be numbers');
   }
-  
+
   // Sanitize the character name
-  const charName = sanitizeCharacterName(characterName || config.character);
+  const charName = sanitizeCharacterName(characterName || getConfig().character); // Use getConfig()
   console.log(`Moving character ${charName} to coordinates (${x}, ${y})...`);
   return makeApiRequest('action/move', 'POST', { x, y, character: charName }, charName);
 }
@@ -173,7 +173,7 @@ async function moveCharacter(x, y, characterName) {
  * @throws {Error} For fight failures or if character is in cooldown
  */
 async function fightAction(characterName) {
-  const charName = sanitizeCharacterName(characterName || config.character);
+  const charName = sanitizeCharacterName(characterName || getConfig().character); // Use getConfig()
   console.log(`Initiating fight action for character: ${charName}`);
   return makeApiRequest('action/fight', 'POST', { character: charName }, charName);
 }
@@ -186,7 +186,7 @@ async function fightAction(characterName) {
  * @throws {Error} For gathering failures or inventory full
  */
 async function gatheringAction(characterName) {
-  const charName = sanitizeCharacterName(characterName || config.character);
+  const charName = sanitizeCharacterName(characterName || getConfig().character); // Use getConfig()
   console.log(`Initiating gathering action for character: ${charName}`);
   return makeApiRequest('action/gathering', 'POST', { character: charName }, charName);
 }
@@ -199,7 +199,7 @@ async function gatheringAction(characterName) {
  * @throws {Error} For mining failures or inventory full
  */
 async function miningAction(characterName) {
-  const charName = sanitizeCharacterName(characterName || config.character);
+  const charName = sanitizeCharacterName(characterName || getConfig().character); // Use getConfig()
   console.log(`Initiating mining action for character: ${charName}`);
   // Assuming the endpoint is 'action/mining', adjust if different
   return makeApiRequest('action/mining', 'POST', { character: charName }, charName);
@@ -213,7 +213,7 @@ async function miningAction(characterName) {
  * @throws {Error} For rest failures or if character is in cooldown
  */
 async function restAction(characterName) {
-  const charName = sanitizeCharacterName(characterName || config.character);
+  const charName = sanitizeCharacterName(characterName || getConfig().character); // Use getConfig()
   console.log(`Initiating rest action for character: ${charName}`);
   return makeApiRequest('action/rest', 'POST', { character: charName }, charName);
 }
@@ -354,7 +354,7 @@ async function smeltingAction(code, quantity = 1, characterName) {
     throw new Error('Quantity must be a positive number');
   }
 
-  const charName = sanitizeCharacterName(characterName || config.character);
+  const charName = sanitizeCharacterName(characterName || getConfig().character); // Use getConfig()
   console.log(`Initiating smelting action for character: ${charName}, Code: ${code}, Qty: ${quantity}`);
   // Assuming the endpoint is 'action/smelting', adjust if different
   return makeApiRequest('action/smelting', 'POST', {
@@ -493,11 +493,12 @@ async function fightLoopAction(maxAttempts = 0, onSuccess, onError) {
  * @throws {Error} For API errors or if character doesn't exist
  */
 async function getCharacterDetails(characterName) {
+  const currentConfig = getConfig(); // Get current config
   try {
     // Use the public API endpoint to get character details without triggering cooldown
-    const charName = sanitizeCharacterName(characterName || config.character);
+    const charName = sanitizeCharacterName(characterName || currentConfig.character);
     console.log(`Getting character details for: ${charName}`);
-    const url = `${config.server}/characters/${encodeURIComponent(charName)}`;
+    const url = `${currentConfig.server}/characters/${encodeURIComponent(charName)}`;
     const options = {
       method: 'GET',
       headers: {
@@ -587,7 +588,7 @@ async function recyclingAction(code, quantity = 1) {
  * @throws {Error} If healing fails or character info is unavailable
  */
 async function healCharacter(characterName) {
-  const charName = sanitizeCharacterName(characterName || config.character);
+  const charName = sanitizeCharacterName(characterName || getConfig().character); // Use getConfig()
   let currentCharacter;
 
   try {
