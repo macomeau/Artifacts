@@ -59,27 +59,32 @@ async function makeApiRequest(endpoint, method, body = null, characterName = nul
     options.body = JSON.stringify(body);
   }
 
-  // --- Debug Logging ---
-  console.log(`[API Request] Method: ${options.method}`);
-  console.log(`[API Request] URL: ${url}`);
-  // Mask token for security in logs
-  const maskedHeaders = { ...options.headers };
-  if (maskedHeaders.Authorization) {
-    maskedHeaders.Authorization = `${maskedHeaders.Authorization.substring(0, 10)}...`; // Show "Bearer ..."
-  }
-  console.log(`[API Request] Headers: ${JSON.stringify(maskedHeaders)}`);
+  // --- Enhanced Debug Logging ---
+  console.log(`[API Request DEBUG] Method: ${options.method}`);
+  console.log(`[API Request DEBUG] URL: ${url}`);
+  // --- TEMPORARY: Log full token for debugging. REMOVE THIS LATER! ---
+  console.log(`[API Request DEBUG] Full Headers: ${JSON.stringify(options.headers)}`);
+  // --- End Temporary Log ---
   if (options.body) {
     console.log(`[API Request] Body: ${options.body}`);
   }
-  // --- End Debug Logging ---
+  if (options.body) {
+    console.log(`[API Request DEBUG] Body: ${options.body}`);
+  }
+  console.log(`[API Request DEBUG] Full Options Object: ${JSON.stringify(options)}`);
+  // --- End Enhanced Debug Logging ---
 
   try {
     // Make the request
+    console.log(`[API Request DEBUG] Sending fetch request...`);
     const response = await fetch(url, options);
+    console.log(`[API Request DEBUG] Received response status: ${response.status}`);
 
     // Check if the response is OK
     if (!response.ok) {
       const errorText = await response.text();
+      // Log the raw error text before throwing
+      console.error(`[API Request DEBUG] Raw error response text: ${errorText}`);
       throw new Error(`API error (${response.status}): ${errorText}`);
     }
 
