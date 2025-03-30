@@ -37,6 +37,9 @@ function parseCoordinates(coordString) {
  */
 async function main() {
   try {
+    // Ensure database tables are ready before proceeding
+    await db.createTables();
+
     // Get command line arguments
     const args = process.argv.slice(2);
     

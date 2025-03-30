@@ -41,6 +41,7 @@ module.exports = {
    * @returns {Promise<void>}
    */
   createTables: async () => {
+    console.log('[DB] Attempting to create/verify database tables...');
     // Create tables and indexes
     await pool.query(`
       CREATE TABLE IF NOT EXISTS action_logs (
@@ -186,11 +187,12 @@ module.exports = {
         EXECUTE FUNCTION increment_and_check_counter();
       `);
       
-      console.log('Created pruning triggers successfully');
+      console.log('[DB] Created pruning triggers successfully');
     } catch (error) {
-      console.error('Error creating pruning triggers:', error.message);
+      console.error('[DB] Error creating pruning triggers (continuing anyway):', error.message);
       // Continue even if we can't create triggers
     }
+    console.log('[DB] Database table creation/verification complete.');
   },
   
   /**

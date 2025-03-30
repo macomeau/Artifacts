@@ -7,11 +7,18 @@ const fs = require('fs');
 const dotenv = require('dotenv');
 const path = require('path');
 
+let envLoaded = false; // Flag to prevent multiple executions
+
 /**
  * Load environment variables from the default .env file and optionally a custom file
  * @returns {Object} The loaded environment variables (primarily modifies global process.env)
  */
 function loadEnv() {
+  if (envLoaded) {
+    // console.log("[EnvLoader] Environment already loaded."); // Optional: uncomment for debugging
+    return process.env;
+  }
+
   // 1. Load the default .env file. Do NOT override existing env vars initially.
   dotenv.config();
   console.log("[EnvLoader] Loaded default .env file.");
@@ -58,6 +65,7 @@ function loadEnv() {
       console.log(`[EnvLoader] Final DEFAULT_CHARACTER: ${process.env.DEFAULT_CHARACTER}`);
   }
 
+  envLoaded = true; // Set flag after successful load
   return process.env;
 }
 
