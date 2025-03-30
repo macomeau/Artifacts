@@ -194,8 +194,10 @@ class AshHarvestingLoop extends BaseLoop {
         console.error('Harvesting failed:', error.message);
         
         // Handle specific errors
-        if (error.message.includes('inventory is full')) {
-          console.log('Stopping: Inventory is full.');
+        if (error.message.includes('inventory is full') || 
+            error.message.includes('Character inventory is full') || 
+            (error.message.includes('API error') && error.message.includes('497'))) {
+          console.log('Inventory is full. Proceeding to deposit items...');
           break;
         }
         
@@ -214,7 +216,13 @@ class AshHarvestingLoop extends BaseLoop {
         }
       }
     }
-    console.log(`Collected target of ${this.targetAshWood} ash wood`); // Use configured target
+    // Check if we're breaking the loop due to inventory full or target reached
+    const currentAsh = await this.getAshWoodCount();
+    if (currentAsh >= this.targetAshWood) {
+      console.log(`Collected target of ${this.targetAshWood} ash wood`);
+    } else {
+      console.log(`Inventory full with ${currentAsh} ash wood. Proceeding to deposit.`);
+    }
     
     // Step 2: Process ash into planks
     // Check for cooldown before moving to workshop
@@ -254,8 +262,9 @@ class AshHarvestingLoop extends BaseLoop {
     
     if (planksToMake === 0) {
       console.log('Not enough ash wood to make planks (need at least 10)');
-      return;
-    }
+      // Continue to deposit step instead of returning
+      console.log('Skipping processing step due to insufficient materials');
+    } else {
     
     console.log(`Processing ${planksToMake} ash planks...`);
     try {
@@ -308,7 +317,9 @@ class AshHarvestingLoop extends BaseLoop {
         throw error;
       }
     }
-    console.log('Processing complete');
+    }  // Close the else block from planksToMake check
+    
+    console.log('Processing complete or skipped');
     
     // Step 3: Deposit everything in the bank
     // Check for cooldown before moving to bank
@@ -476,8 +487,10 @@ class AshHarvestingLoop extends BaseLoop {
                 const currentAsh = await this.getAshWoodCount();
                 console.log(`Total ash wood: ${currentAsh}`);
               } catch (error) {
-                if (error.message.includes('inventory is full')) {
-                  console.log('Stopping: Inventory is full.');
+                if (error.message.includes('inventory is full') || 
+                    error.message.includes('Character inventory is full') || 
+                    (error.message.includes('API error') && error.message.includes('497'))) {
+                  console.log('Inventory is full. Proceeding to deposit items...');
                   break;
                 }
                 
