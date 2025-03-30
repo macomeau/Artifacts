@@ -32,15 +32,17 @@ function sanitizeCharacterName(characterName) {
  * @throws {Error} For network errors or non-2xx responses
  */
 async function makeApiRequest(endpoint, method, body = null, characterName = null) {
-  const currentConfig = getConfig(); // Get current config
+  // Use the imported config object directly
   // Get character name, sanitize it, and ensure it meets API requirements
-  const charName = sanitizeCharacterName(characterName || currentConfig.character);
+  const charName = sanitizeCharacterName(characterName || config.character);
 
+  // Construct URL safely
+  let url; // Declare url here
   if (endpoint) {
-    url = `${currentConfig.server}/my/${encodeURIComponent(charName)}/${endpoint}`;
+    url = `${config.server}/my/${encodeURIComponent(charName)}/${endpoint}`;
   } else {
     // If no endpoint is provided, just get the character details
-    url = `${currentConfig.server}/my/${encodeURIComponent(charName)}`;
+    url = `${config.server}/my/${encodeURIComponent(charName)}`;
   }
 
   // Prepare request options
