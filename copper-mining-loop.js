@@ -338,7 +338,7 @@ class CopperMiningLoop extends BaseLoop {
         throw error;
       }
     }
-    console.log('Smelting complete');
+      console.log('Smelting complete');
     }
     
     // Step 3: Deposit everything in the bank
