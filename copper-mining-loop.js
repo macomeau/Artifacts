@@ -434,18 +434,19 @@ class CopperMiningLoop extends BaseLoop {
   }
 }
 
-/**
- * Main entry point for the application that handles command line arguments and initiates the mining loop.
- * Parses command line arguments for character name and processing options.
- * @async
- * @example
- * node copper-mining-loop.js [characterName] [processOption] [targetOre] [mineX] [mineY] [bankX] [bankY] [smithX] [smithY] [barsToSmelt]
- * node copper-mining-loop.js MyChar smelt 150 2 0 4 1 1 5 15
- * node copper-mining-loop.js MyOtherChar store 200 2 0 4 1
- * @returns {Promise<void>}
- * @throws {Error} If there's an error in the main process
- */
-async function main() { // Moved outside the class
+  /**
+   * Main entry point for the application that handles command line arguments and initiates the mining loop.
+   * Parses command line arguments for character name and processing options.
+   * @static
+   * @async
+   * @example
+   * node copper-mining-loop.js [characterName] [processOption] [targetOre] [mineX] [mineY] [bankX] [bankY] [smithX] [smithY] [barsToSmelt]
+   * node copper-mining-loop.js MyChar smelt 150 2 0 4 1 1 5 15
+   * node copper-mining-loop.js MyOtherChar store 200 2 0 4 1
+   * @returns {Promise<void>}
+   * @throws {Error} If there's an error in the main process
+   */
+  static async main() {
   const args = process.argv.slice(2);
   const characterName = args[0] || process.env.control_character || config.character;
 
@@ -491,4 +492,4 @@ async function main() { // Moved outside the class
 }
 
 // Execute the main function defined above
-main();
+CopperMiningLoop.main();
