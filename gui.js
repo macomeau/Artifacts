@@ -856,34 +856,50 @@ app.get('/api/characters', async (req, res) => {
       ]);
     }
 
-    const url = 'https://api.artifactsmmo.com/accounts/fernloft/characters';
+    // --- Dynamically determine account name and token ---
+    const accountName = process.env.ACCOUNT_NAME;
+    const apiToken = rootConfig.token || process.env.API_TOKEN; // Use token from root config or env
+
+    if (!accountName) {
+      console.error('FATAL: ACCOUNT_NAME environment variable is not set. Cannot determine which account to fetch characters for.');
+      logger.error('FATAL: ACCOUNT_NAME environment variable is not set.'); // Use logger
+      return res.status(500).json({ error: 'Server configuration error: ACCOUNT_NAME missing.' });
+    }
+    if (!apiToken) {
+      console.error('FATAL: API token is missing (checked rootConfig.token and process.env.API_TOKEN). Cannot authenticate character fetch.');
+      logger.error('FATAL: API token is missing (checked rootConfig.token and process.env.API_TOKEN).'); // Use logger
+      return res.status(500).json({ error: 'Server configuration error: API token missing.' });
+    }
+    // --- End Dynamic Determination ---
+
+    // Construct URL dynamically
+    const url = `${process.env.API_SERVER || 'https://api.artifactsmmo.com'}/accounts/${encodeURIComponent(accountName)}/characters`;
     if (process.env.NODE_ENV !== 'production') {
-      console.log('[DEBUG] Fetching from URL:', url);
+      console.log(`[DEBUG] Fetching characters for account '${accountName}' from URL:`, url);
+      logger.debug(`Fetching characters for account '${accountName}' from URL: ${url}`); // Use logger
     }
 
-    // Add more detailed headers
+    // Use server's token for authentication, not client headers
     const options = {
-      method: 'GET', 
+      method: 'GET',
       headers: {
         'Accept': 'application/json',
-        'User-Agent': 'ArtifactsMMO-Client',
-        // Forward any auth tokens from the client
-        ...(req.headers.authorization && { 'Authorization': req.headers.authorization }),
-        // Forward cookies if present
-        ...(req.headers.cookie && { 'Cookie': req.headers.cookie })
+        'User-Agent': 'ArtifactsMMO-Client-GUI', // Slightly different agent for clarity
+        'Authorization': `Bearer ${apiToken}` // Use the server's token
       }
     };
 
     if (process.env.NODE_ENV !== 'production') {
-      console.log('[DEBUG] Request options:', JSON.stringify({
+      const logOptions = {
         method: options.method,
         headers: {
           ...options.headers,
-        // Don't log the actual auth token value
-        ...(options.headers.Authorization && { 'Authorization': '[REDACTED]' }),
-        ...(options.headers.Cookie && { 'Cookie': '[REDACTED]' })
-      } // <-- Added missing closing brace for headers object
-    }, null, 2));
+          // Don't log the actual auth token value
+          'Authorization': '[REDACTED]'
+        }
+      };
+      console.log('[DEBUG] Request options:', JSON.stringify(logOptions, null, 2));
+      logger.debug('Request options:', logOptions); // Use logger
     }
 
     const response = await fetch(url, options);
