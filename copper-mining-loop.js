@@ -399,7 +399,7 @@ class CopperMiningLoop extends BaseLoop {
       
       // Perform deposit with error handling
       try {
-        await depositAllItems();
+        await depositAllItems(this.characterName);
       } catch (error) {
         // Handle cooldown errors for deposit action
         const cooldownMatch = error.message.match(/Character in cooldown: (\d+\.\d+) seconds left/);
@@ -413,7 +413,7 @@ class CopperMiningLoop extends BaseLoop {
           // Try again after cooldown
           console.log('Retrying deposit after cooldown...');
           try {
-            await depositAllItems();
+            await depositAllItems(this.characterName);
           } catch (retryError) {
             console.error('Deposit failed after retry:', retryError.message);
           }

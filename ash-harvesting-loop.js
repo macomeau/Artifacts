@@ -407,7 +407,7 @@ class AshHarvestingLoop extends BaseLoop {
           // Try again after cooldown
           console.log('Retrying deposit after cooldown...');
           try {
-            await depositAllItems();
+            await depositAllItems(this.characterName);
           } catch (retryError) {
             console.error('Deposit failed after retry:', retryError.message);
           }
