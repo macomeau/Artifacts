@@ -189,8 +189,11 @@ class CopperMiningLoop extends BaseLoop {
         console.error('Gathering failed:', error.message);
         
         // Handle specific errors
-        if (error.message.includes('Character inventory is full')) {
-          console.log('Stopping: Inventory is full.');
+        if (error.message.includes('inventory is full') || 
+            error.message.includes('Character inventory is full') || 
+            (error.message.includes('API error') && error.message.includes('497'))) {
+          console.log('Inventory is full. Proceeding to emergency deposit...');
+          
           // Log the inventory full event to database
           const details = await getCharacterDetails(this.characterName);
           await db.query(
@@ -198,11 +201,29 @@ class CopperMiningLoop extends BaseLoop {
              VALUES ($1, 'mining', $2, point($3,$4))`,
             [
               this.characterName,
-              { error: 'inventory_full', message: 'Stopped due to full inventory' },
+              { error: 'inventory_full', message: 'Emergency deposit triggered due to full inventory' },
               details.x,
               details.y
             ]
           );
+          
+          // Move to bank and deposit immediately when inventory is full
+          try {
+            console.log(`Moving to bank at (${this.bankCoords.x}, ${this.bankCoords.y})`);
+            await moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName);
+            
+            console.log('Starting emergency deposit of all items...');
+            await depositAllItems(this.characterName);
+            console.log('Emergency deposit complete');
+            
+            // Return to mine to continue mining
+            console.log(`Returning to mine at (${this.mineCoords.x}, ${this.mineCoords.y})`);
+            await moveCharacter(this.mineCoords.x, this.mineCoords.y, this.characterName);
+            continue; // Continue mining after deposit
+          } catch (depositError) {
+            console.error('Emergency deposit failed:', depositError.message);
+            // If deposit fails, break the mining loop and continue with normal flow
+          }
           break;
         }
         
