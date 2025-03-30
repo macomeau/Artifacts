@@ -91,14 +91,12 @@ class SpruceHarvestingLoop extends BaseLoop {
    * Main loop that coordinates the harvesting, processing, and depositing process
    */
   async mainLoop() {
-  let loopCount = 0;
   
   while (true) {
     // Call the startLoop method to record coordinates properly
-    await this.startLoop();
+    await this.startLoop(); // This increments this.loopCount
     
-    loopCount++;
-    console.log(`\nStarting harvesting loop #${loopCount}`);
+    console.log(`\nStarting harvesting loop #${this.loopCount}`);
     
     // Step 1: Harvest spruce until we have enough
     // Check for cooldown before moving
@@ -437,7 +435,7 @@ class SpruceHarvestingLoop extends BaseLoop {
     }
     console.log('Deposit complete');
     
-    console.log(`Completed harvesting loop #${loopCount}\n`);
+    console.log(`Completed harvesting loop #${this.loopCount}\n`);
   }
 
   /**

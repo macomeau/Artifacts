@@ -64,14 +64,12 @@ class IronMiningLoop extends BaseLoop {
   }
 
   async mainLoop() {
-  let loopCount = 0;
   
   while (true) {
     // Call the startLoop method to record coordinates properly
-    await this.startLoop();
+    await this.startLoop(); // This increments this.loopCount
     
-    loopCount++;
-    console.log(`\nStarting mining loop #${loopCount}`);
+    console.log(`\nStarting mining loop #${this.loopCount}`);
     
     // Step 1: Mine iron until we have enough
     // Check for cooldown before moving

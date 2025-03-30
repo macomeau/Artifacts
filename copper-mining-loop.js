@@ -17,7 +17,6 @@ require('dotenv').config();
 class CopperMiningLoop extends BaseLoop {
   /**
    * Create a copper mining loop.
-   * Create a copper mining loop.
    * @param {string} characterName - The name of the character to perform actions with.
    * @param {Object} [options={}] - Configuration options for the loop.
    * @param {Object} [options.mineCoords={ x: 2, y: 0 }] - Coordinates for mining.
@@ -88,14 +87,12 @@ class CopperMiningLoop extends BaseLoop {
    * @returns {Promise<void>}
    */
   async mainLoop() {
-    let loopCount = 0;
     
     while (true) {
       // Call the startLoop method to record coordinates properly
-      await this.startLoop();
+      await this.startLoop(); // This increments this.loopCount
       
-      loopCount++;
-      console.log(`\nStarting mining loop #${loopCount} with character ${this.characterName}`);
+      console.log(`\nStarting mining loop #${this.loopCount} with character ${this.characterName}`);
       
       // Step 1: Mine copper until we have enough
       // Check for cooldown before moving
@@ -411,7 +408,7 @@ class CopperMiningLoop extends BaseLoop {
     }
     console.log('Deposit complete');
     
-    console.log(`Completed mining loop #${loopCount}\n`);
+    console.log(`Completed mining loop #${this.loopCount}\n`);
   }
 
   /**
