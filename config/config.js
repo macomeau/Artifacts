@@ -45,6 +45,7 @@ module.exports = {
       'salmon-harvesting-loop', // Added salmon harvesting script
       'glowstem-harvesting-loop', // Added glowstem harvesting script
       'sunflower-harvesting-loop', // Added sunflower harvesting script
+      'gudgeon-harvesting-loop', // Added gudgeon harvesting script
       'go-fight-heal-loop' // Added go-fight-heal-loop script
     ]
   },
