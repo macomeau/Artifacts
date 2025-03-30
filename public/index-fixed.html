@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArtifactsMMO Client</title>
+    
+    <!-- CSS Styles -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/tabs.css">
+    <link rel="stylesheet" href="css/processes.css">
+    <link rel="stylesheet" href="css/skills.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">🧩</span>
+                <span>ArtifactsMMO Client</span>
+            </div>
+            <div class="user-controls">
+                <span class="username">fernloft</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="notification" id="notification"></div>
+    
+    <div class="tabs-container">
+        <div class="tabs">
+            <!-- Use both data-tab and onclick for full compatibility -->
+            <button class="tab-button active" data-tab="dashboard" onclick="TabsModule.openTab(event, 'dashboard')">Dashboard</button>
+            <button class="tab-button" data-tab="mining" onclick="TabsModule.openTab(event, 'mining')">Mining</button>
+            <button class="tab-button" data-tab="woodcutting" onclick="TabsModule.openTab(event, 'woodcutting')">Woodcutting</button>
+            <button class="tab-button" data-tab="fishing" onclick="TabsModule.openTab(event, 'fishing')">Fishing</button>
+            <button class="tab-button" data-tab="alchemy" onclick="TabsModule.openTab(event, 'alchemy')">Alchemy</button>
+            <button class="tab-button" data-tab="combat" onclick="TabsModule.openTab(event, 'combat')">Combat</button>
+            <button class="tab-button" data-tab="gear" onclick="TabsModule.openTab(event, 'gear')">Gear</button>
+            <button class="tab-button" data-tab="crafting" onclick="TabsModule.openTab(event, 'crafting')">Crafting</button>
+            <button class="tab-button" data-tab="utilities" onclick="TabsModule.openTab(event, 'utilities')">Utilities</button>
+            <button class="tab-button" data-tab="skills" onclick="TabsModule.openTab(event, 'skills')">Skills</button>
+        </div>
+    </div>
+    
+    <div class="container">
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <h2>Dashboard</h2>
+            
+            <div class="card">
+                <h3 class="card-title">Active Processes</h3>
+                <div class="process-filter-container">
+                    <select id="process-filter">
+                        <option value="running">Running Only</option>
+                        <option value="all">All Processes</option>
+                        <option value="stopped">Stopped Only</option>
+                    </select>
+                    <button id="clear-stopped-btn" class="clear-btn">Clear Stopped</button>
+                </div>
+                <div id="process-list" class="process-list">
+                    <!-- Process list will be loaded here -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mining Tab -->
+        <div id="mining" class="tab-content">
+            <h2>Mining</h2>
+            <div class="resource-grid">
+                <div class="resource-card" onclick="ProcessesModule.startScript('copper-mining-loop.js')">
+                    <div class="resource-icon">🪨</div>
+                    <h3>Copper</h3>
+                    <p>Mine copper at coordinates (7, 7)</p>
+                </div>
+                <div class="resource-card" onclick="ProcessesModule.startScript('iron-mining-loop.js')">
+                    <div class="resource-icon">⛏️</div>
+                    <h3>Iron</h3>
+                    <p>Mine iron at coordinates (7, 8)</p>
+                </div>
+                <div class="resource-card" onclick="ProcessesModule.startScript('coal-mining-loop.js')">
+                    <div class="resource-icon">🔥</div>
+                    <h3>Coal</h3>
+                    <p>Mine coal at coordinates (8, 7)</p>
+                </div>
+                <div class="resource-card" onclick="ProcessesModule.startScript('gold-mining-loop.js')">
+                    <div class="resource-icon">💰</div>
+                    <h3>Gold</h3>
+                    <p>Mine gold at coordinates (8, 8)</p>
+                </div>
+            </div>
+
+            <!-- Mining Form -->
+            <div id="mining-form" class="card" style="display: none;">
+                <h3 class="card-title">Mining Setup</h3>
+                <div class="form-group">
+                    <label for="mining-character">Character Name:</label>
+                    <select id="mining-character" data-character-dropdown>
+                        <option value="">Select a character</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="mining-location">Mining Location:</label>
+                    <select id="mining-location">
+                        <option value="copper">Copper Mine (7,7)</option>
+                        <option value="iron">Iron Mine (7,8)</option>
+                        <option value="coal">Coal Mine (8,7)</option>
+                        <option value="gold">Gold Mine (8,8)</option>
+                    </select>
+                </div>
+                <button onclick="startMining()">Start Mining</button>
+            </div>
+        </div>
+        
+        <!-- Woodcutting Tab -->
+        <div id="woodcutting" class="tab-content">
+            <h2>Woodcutting</h2>
+            <div class="resource-grid">
+                <div class="resource-card" onclick="ProcessesModule.startScript('ash-harvesting-loop.js')">
+                    <div class="resource-icon">🌳</div>
+                    <h3>Ash</h3>
+                    <p>Harvest ash wood at coordinates (9, 7)</p>
+                </div>
+                <div class="resource-card" onclick="ProcessesModule.startScript('birch-harvesting-loop.js')">
+                    <div class="resource-icon">🌲</div>
+                    <h3>Birch</h3>
+                    <p>Harvest birch wood at coordinates (9, 8)</p>
+                </div>
+                <div class="resource-card" onclick="ProcessesModule.startScript('spruce-harvesting-loop.js')">
+                    <div class="resource-icon">🌲</div>
+                    <h3>Spruce</h3>
+                    <p>Harvest spruce wood at coordinates (10, 7)</p>
+                </div>
+                <div class="resource-card" onclick="ProcessesModule.startScript('maple-harvesting-loop.js')">
+                    <div class="resource-icon">🍁</div>
+                    <h3>Maple</h3>
+                    <p>Harvest maple wood at coordinates (10, 8)</p>
+                </div>
+                <div class="resource-card" onclick="ProcessesModule.startScript('deadwood-harvesting-loop.js')">
+                    <div class="resource-icon">🪵</div>
+                    <h3>Deadwood</h3>
+                    <p>Harvest deadwood at coordinates (9, 2)</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Fishing Tab -->
+        <div id="fishing" class="tab-content">
+            <h2>Fishing</h2>
+            <div class="resource-grid">
+                <div class="resource-card" onclick="ProcessesModule.startScript('shrimp-harvesting-loop.js')">
+                    <div class="resource-icon">🦐</div>
+                    <h3>Shrimp</h3>
+                    <p>Fish for shrimp at coordinates (7, 11)</p>
+                </div>
+                <div class="resource-card" onclick="ProcessesModule.startScript('gudgeon-harvesting-loop.js')">
+                    <div class="resource-icon">🐟</div>
+                    <h3>Gudgeon</h3>
+                    <p>Fish for gudgeon at coordinates (8, 11)</p>
+                </div>
+                <div class="resource-card" onclick="ProcessesModule.startScript('trout-harvesting-loop.js')">
+                    <div class="resource-icon">🐠</div>
+                    <h3>Trout</h3>
+                    <p>Fish for trout at coordinates (9, 11)</p>
+                </div>
+                <div class="resource-card" onclick="ProcessesModule.startScript('bass-harvesting-loop.js')">
+                    <div class="resource-icon">🎣</div>
+                    <h3>Bass</h3>
+                    <p>Fish for bass at coordinates (10, 11)</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Alchemy Tab -->
+        <div id="alchemy" class="tab-content">
+            <h2>Alchemy</h2>
+            <div class="resource-grid">
+                <div class="resource-card" onclick="ProcessesModule.startScript('minor-health-potion-loop.js')">
+                    <div class="resource-icon">❤️</div>
+                    <h3>Minor Health Potion</h3>
+                    <p>Craft minor health potions</p>
+                </div>
+                <div class="resource-card" onclick="ProcessesModule.startScript('air-boost-potion-loop.js')">
+                    <div class="resource-icon">💨</div>
+                    <h3>Air Boost Potion</h3>
+                    <p>Craft air boost potions</p>
+                </div>
+                <div class="resource-card" onclick="ProcessesModule.startScript('nettle-harvesting-loop.js')">
+                    <div class="resource-icon">🌿</div>
+                    <h3>Nettle</h3>
+                    <p>Gather nettle plants at coordinates (2, 7)</p>
+                </div>
+                <div class="resource-card" onclick="ProcessesModule.startScript('sunflower-harvesting-loop.js')">
+                    <div class="resource-icon">🌻</div>
+                    <h3>Sunflower</h3>
+                    <p>Gather sunflowers at coordinates (2, 8)</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Combat Tab -->
+        <div id="combat" class="tab-content">
+            <h2>Combat</h2>
+            <div class="card">
+                <h3 class="card-title">Fight at Location</h3>
+                <div class="form-group">
+                    <label for="combat-x">X Coordinate:</label>
+                    <input type="number" id="combat-x" placeholder="Enter X coordinate">
+                </div>
+                <div class="form-group">
+                    <label for="combat-y">Y Coordinate:</label>
+                    <input type="number" id="combat-y" placeholder="Enter Y coordinate">
+                </div>
+                <div class="form-group">
+                    <label for="combat-character">Character Name:</label>
+                    <select id="combat-character" data-character-dropdown>
+                        <option value="">Select a character</option>
+                    </select>
+                </div>
+                <button onclick="startCombat()">Start Combat</button>
+            </div>
+            
+            <div class="card">
+                <h3 class="card-title">Quick Actions</h3>
+                <button onclick="ProcessesModule.startScript('fight-loop-with-heal.js')">Fight with Auto-Heal</button>
+                <button onclick="ProcessesModule.startScript('rest.js')">Rest to Heal</button>
+            </div>
+        </div>
+        
+        <!-- Gear Tab -->
+        <div id="gear" class="tab-content">
+            <h2>Gear Crafting</h2>
+            <div class="resource-grid">
+                <div class="resource-card" onclick="showLeatherBootsCraftingForm()">
+                    <div class="resource-icon">👢</div>
+                    <h3>Leather Boots</h3>
+                    <p>Craft leather boots at the armorsmith (3,1)</p>
+                </div>
+                <div class="resource-card" onclick="showIronSwordCraftingForm()">
+                    <div class="resource-icon">⚔️</div>
+                    <h3>Iron Sword</h3>
+                    <p>Craft iron swords at the weaponsmith (2,1)</p>
+                </div>
+                <div class="resource-card" onclick="showIronDaggerCraftingForm()">
+                    <div class="resource-icon">🗡️</div>
+                    <h3>Iron Dagger</h3>
+                    <p>Craft iron daggers at the weaponsmith (2,1)</p>
+                </div>
+            </div>
+            
+            <!-- Leather Boots Crafting Form -->
+            <div id="leather-boots-crafting-form" class="card" style="display: none;">
+                <h3 class="card-title">Leather Boots Crafting</h3>
+                <div class="form-group">
+                    <label for="leather-boots-character">Character Name:</label>
+                    <select id="leather-boots-character" data-character-dropdown>
+                        <option value="">Select a character</option>
+                    </select>
+                </div>
+                <button onclick="startLeatherBootsCrafting()">Start Crafting Leather Boots</button>
+            </div>
+            
+            <!-- Iron Sword Crafting Form -->
+            <div id="iron-sword-crafting-form" class="card" style="display: none;">
+                <h3 class="card-title">Iron Sword Crafting</h3>
+                <div class="form-group">
+                    <label for="iron-sword-character">Character Name:</label>
+                    <select id="iron-sword-character" data-character-dropdown>
+                        <option value="">Select a character</option>
+                    </select>
+                </div>
+                <button onclick="startIronSwordCrafting()">Start Crafting Iron Swords</button>
+            </div>
+            
+            <!-- Iron Dagger Crafting Form -->
+            <div id="iron-dagger-crafting-form" class="card" style="display: none;">
+                <h3 class="card-title">Iron Dagger Crafting</h3>
+                <div class="form-group">
+                    <label for="iron-dagger-character">Character Name:</label>
+                    <select id="iron-dagger-character" data-character-dropdown>
+                        <option value="">Select a character</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="iron-dagger-quantity">Quantity:</label>
+                    <select id="iron-dagger-quantity">
+                        <option value="1">1 Dagger</option>
+                        <option value="5">5 Daggers</option>
+                        <option value="10">10 Daggers</option>
+                        <option value="20">20 Daggers</option>
+                    </select>
+                </div>
+                <button onclick="startIronDaggerCrafting()">Start Crafting Iron Daggers</button>
+            </div>
+        </div>
+        
+        <!-- Crafting Tab -->
+        <div id="crafting" class="tab-content">
+            <h2>Crafting</h2>
+            <div class="card">
+                <h3 class="card-title">Craft Item</h3>
+                <div class="form-group">
+                    <label for="craft-x">X Coordinate:</label>
+                    <input type="number" id="craft-x" placeholder="Enter X coordinate">
+                </div>
+                <div class="form-group">
+                    <label for="craft-y">Y Coordinate:</label>
+                    <input type="number" id="craft-y" placeholder="Enter Y coordinate">
+                </div>
+                <div class="form-group">
+                    <label for="craft-item">Item Code:</label>
+                    <input type="text" id="craft-item" placeholder="Enter item code (e.g., WOODEN_SWORD)">
+                </div>
+                <div class="form-group">
+                    <label for="craft-quantity">Quantity:</label>
+                    <input type="number" id="craft-quantity" placeholder="Enter quantity" value="1">
+                </div>
+                <button onclick="startCrafting()">Start Crafting</button>
+            </div>
+        </div>
+        
+        <!-- Utilities Tab -->
+        <div id="utilities" class="tab-content">
+            <h2>Utilities</h2>
+            <div class="card">
+                <h3 class="card-title">Deposit All Items</h3>
+                <div class="form-group">
+                    <label for="deposit-character">Character Name:</label>
+                    <select id="deposit-character" data-character-dropdown>
+                        <option value="">Select a character</option>
+                    </select>
+                </div>
+                <button onclick="ProcessesModule.startScript('go-deposit-all.js', [document.getElementById('deposit-character').value])">Deposit All Items</button>
+            </div>
+        </div>
+        
+        <!-- Skills Tab -->
+        <div id="skills" class="tab-content">
+            <h2>Character Skills</h2>
+            <div class="card">
+                <div class="skills-container">
+                    <div id="skills-loading" class="loading-spinner">Loading skills data...</div>
+                    <div id="skills-table-container" style="display: none;">
+                        <table id="skills-table" class="skills-table">
+                            <thead>
+                                <tr>
+                                    <th>Character</th>
+                                    <th>Level</th>
+                                    <th>Combat</th>
+                                    <th>Mining</th>
+                                    <th>Woodcutting</th>
+                                    <th>Fishing</th>
+                                    <th>Weapon</th>
+                                    <th>Gear</th>
+                                    <th>Jewelry</th>
+                                    <th>Cooking</th>
+                                    <th>Alchemy</th>
+                                </tr>
+                            </thead>
+                            <tbody id="skills-table-body">
+                                <!-- Skills data will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="legend-container">
+                        <div class="legend-title">Skill Level</div>
+                        <div class="legend-gradient"></div>
+                        <div class="legend-labels">
+                            <span>1</span>
+                            <span>10</span>
+                            <span>20</span>
+                            <span>30</span>
+                            <span>40</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Process Output Modal -->
+    <div id="process-output-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Process Output: <span id="process-id"></span></h3>
+                <button id="close-output-modal" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="process-output-content" class="output-container">
+                    <!-- Process output will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- JavaScript Modules -->
+    <script src="js/modules/tabs.js"></script>
+    <script src="js/modules/characters.js"></script>
+    <script src="js/modules/processes.js"></script>
+    <script src="js/modules/skill.js"></script>
+    <script src="js/modules/skills.js"></script>
+    <script src="js/modules/tasks.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

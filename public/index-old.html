@@ -1,0 +1,2689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArtifactsMMO Client</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
+    <style>
+        body {
+            font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f5ff;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: #5e35b1;
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .logo-icon {
+            font-size: 2rem;
+            margin-right: 12px;
+        }
+        
+        h1 {
+            margin: 0;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+        
+        .header-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            letter-spacing: 1px;
+            margin-top: 5px;
+        }
+        
+        /* Modern Tab System */
+        .tabs-container {
+            position: relative;
+        }
+
+        .tabs {
+            display: flex;
+            background-color: #f8f5ff;
+            border-bottom: 1px solid #e0d6ff;
+            padding: 0 20px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tab-button {
+            position: relative;
+            background: none;
+            border: none;
+            padding: 16px 24px;
+            font-size: 15px;
+            font-weight: 500;
+            color: #5e35b1;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            border-radius: 8px 8px 0 0;
+            margin-right: 4px;
+        }
+
+        .tab-button:hover {
+            background-color: rgba(94, 53, 177, 0.08);
+            color: #4527a0;
+        }
+
+        .tab-button.active {
+            color: #4527a0;
+            font-weight: 600;
+        }
+
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background-color: #5e35b1;
+            border-radius: 3px 3px 0 0;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 24px;
+            animation: fadeIn 0.3s ease;
+            box-shadow: 0 2px 8px rgba(94, 53, 177, 0.1);
+            border-radius: 0 0 8px 8px;
+            background: white;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .tabs {
+                padding: 0 12px;
+            }
+            
+            .tab-button {
+                padding: 12px 16px;
+                font-size: 14px;
+            }
+            
+            .tab-content {
+                padding: 16px;
+            }
+        }
+        
+        .card {
+            border: 1px solid #d1c4e9;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: white;
+            box-shadow: 0 2px 8px rgba(103, 58, 183, 0.1);
+        }
+        
+        .card-title {
+            margin-top: 0;
+            border-bottom: 1px solid #ede7f6;
+            padding-bottom: 10px;
+            color: #5e35b1;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #5e35b1;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #b39ddb;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #673ab7;
+            box-shadow: 0 0 0 2px rgba(103, 58, 183, 0.2);
+        }
+        
+        button {
+            background-color: #673ab7;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: #7e57c2;
+        }
+        
+        button.danger {
+            background-color: #e53935;
+        }
+        
+        button.danger:hover {
+            background-color: #f44336;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .process-card {
+            border: 1px solid #d1c4e9;
+            border-radius: 4px;
+            padding: 15px;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(103, 58, 183, 0.1);
+        }
+        
+        .process-card.running {
+            border-left: 4px solid #8e24aa; /* Purple running indicator */
+        }
+        
+        .process-card.stopped {
+            border-left: 4px solid #e53935;
+        }
+        
+        .terminal {
+            background-color: #4527a0; /* Deep purple */
+            color: #f3e5f5;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            height: 300px;
+            overflow-y: auto;
+            margin-top: 10px;
+            border: 1px solid #7e57c2;
+        }
+        
+        .terminal pre {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+        
+        .error {
+            color: #ff8a80; /* Light red for errors in terminal */
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status.running {
+            background-color: #8e24aa; /* Purple status */
+            color: white;
+        }
+        
+        .status.stopped {
+            background-color: #e53935;
+            color: white;
+        }
+        
+        .resource-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .resource-card {
+            border: 1px solid #d1c4e9;
+            border-radius: 4px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background-color: #f5f0ff;
+        }
+        
+        .resource-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(103, 58, 183, 0.2);
+            background-color: #ede7f6;
+        }
+        
+        .resource-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        /* Skills table styles */
+        .skills-container {
+            position: relative;
+            width: 100%;
+            overflow-x: auto;
+        }
+        
+        .skills-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .skills-table th {
+            background-color: #5e35b1;
+            color: white;
+            font-weight: 600;
+            text-align: center;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            position: sticky;
+            top: 0;
+        }
+        
+        .skills-table td {
+            padding: 10px 12px;
+            border: 1px solid #e0e0e0;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        .skills-table td:first-child {
+            background-color: #f5f5f5;
+            font-weight: 600;
+            text-align: left;
+        }
+        
+        .skills-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .skills-table tr:hover {
+            background-color: #f0f0f0;
+        }
+        
+        /* Skill level cell styling */
+        .skill-cell {
+            position: relative;
+            width: 60px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            color: #000;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+        
+        /* Gradient colors based on skill level */
+        .skill-level-1 { background-color: #e57373; }  /* Red (low) */
+        .skill-level-2 { background-color: #ffb74d; }  /* Orange */
+        .skill-level-3 { background-color: #fff176; }  /* Yellow */
+        .skill-level-4 { background-color: #aed581; }  /* Light green */
+        .skill-level-5 { background-color: #4caf50; }  /* Green (high) */
+        .skill-none { background-color: #e0e0e0; color: #9e9e9e; } /* Gray (not trained) */
+        .skill-error { background-color: #f5f5f5; color: #f44336; } /* Error state */
+        
+        /* Legend for skill levels */
+        .legend-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .legend-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .legend-gradient {
+            height: 20px;
+            width: 300px;
+            background: linear-gradient(to right, #e57373, #ffb74d, #fff176, #aed581, #4caf50);
+            border-radius: 4px;
+            margin-bottom: 4px;
+        }
+        
+        .legend-labels {
+            display: flex;
+            justify-content: space-between;
+            width: 300px;
+        }
+        
+        .legend-labels span {
+            font-size: 12px;
+            color: #616161;
+        }
+        
+        /* Loading spinner */
+        .loading-spinner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            font-size: 1.2em;
+            color: #5e35b1;
+        }
+        
+        /* Error styling */
+        .error-badge {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            line-height: 16px;
+            text-align: center;
+            border-radius: 50%;
+            background-color: #f44336;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        
+        .error-name {
+            color: #f44336;
+        }
+        
+        .error-row {
+            background-color: #ffebee !important;
+        }
+        
+        .error-message {
+            color: #f44336;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid #ffcdd2;
+            border-radius: 4px;
+            background-color: #ffebee;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <span class="logo-icon">🧩</span>
+            <h1>ArtifactsMMO Client</h1>
+        </div>
+        <div class="header-subtitle">Explore. Adventure. Automate.</div>
+    </header>
+    
+    <div class="tabs-container">
+        <div class="tabs">
+            <button class="tab-button active" onclick="openTab(event, 'dashboard')">Dashboard</button>
+            <button class="tab-button" onclick="openTab(event, 'mining')">Mining</button>
+            <button class="tab-button" onclick="openTab(event, 'woodcutting')">Woodcutting</button>
+            <button class="tab-button" onclick="openTab(event, 'fishing')">Fishing</button>
+            <button class="tab-button" onclick="openTab(event, 'alchemy')">Alchemy</button>
+            <button class="tab-button" onclick="openTab(event, 'combat')">Combat</button>
+            <button class="tab-button" onclick="openTab(event, 'gear')">Gear</button>
+            <button class="tab-button" onclick="openTab(event, 'crafting')">Crafting</button>
+            <button class="tab-button" onclick="openTab(event, 'utilities')">Utilities</button>
+            <button class="tab-button" onclick="openTab(event, 'skills')">Skills</button>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div id="dashboard" class="tab-content active">
+            <h2>Process Dashboard</h2>
+            <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <button id="kill-all-btn" class="danger" onclick="killAllProcesses()">Kill All Processes</button>
+                </div>
+                <div>
+                    <label for="process-filter" style="display: inline-block; margin-right: 5px;">View: </label>
+                    <select id="process-filter" onchange="filterProcesses()" style="width: auto; display: inline-block;">
+                        <option value="all">All Processes</option>
+                        <option value="running" selected>Running Only</option>
+                        <option value="stopped">Stopped Only</option>
+                    </select>
+                </div>
+            </div>
+            <div id="processes-container" class="grid">
+                <!-- Process cards will be added here -->
+            </div>
+            
+            <div class="card">
+                <h3 class="card-title">Process Output</h3>
+                <select id="process-selector" onchange="loadProcessOutput()">
+                    <option value="">Select a process</option>
+                </select>
+                <div id="terminal" class="terminal">
+                    <pre>Select a process to view its output...</pre>
+                </div>
+            </div>
+        </div>
+        
+        <div id="mining" class="tab-content">
+            <h2>Mining Resources</h2>
+            <div class="resource-grid">
+                <div class="resource-card" onclick="showMiningForm('copper-mining-loop.js')">
+                    <div class="resource-icon">🔶</div>
+                    <h3>Copper</h3>
+                    <p>Mine copper ore and smelt into bars</p>
+                </div>
+                <div class="resource-card" onclick="showMiningForm('iron-mining-loop.js')">
+                    <div class="resource-icon">⚙️</div>
+                    <h3>Iron</h3>
+                    <p>Mine iron ore and smelt into bars</p>
+                </div>
+                <div class="resource-card" onclick="showMiningForm('coal-mining-loop.js')">
+                    <div class="resource-icon">🔳</div>
+                    <h3>Coal</h3>
+                    <p>Mine coal for crafting and smelting</p>
+                </div>
+                <div class="resource-card" onclick="showMiningForm('gold-mining-loop.js')">
+                    <div class="resource-icon">✨</div>
+                    <h3>Gold</h3>
+                    <p>Mine gold ore at (6,-3)</p>
+                </div>
+                <div class="resource-card" onclick="showSteelCraftingForm()">
+                    <div class="resource-icon">⚒️</div>
+                    <h3>Steel Bar</h3>
+                    <p>Craft steel bars at the forge (1,5)</p>
+                </div>
+            </div>
+            
+            <!-- Steel Crafting Form -->
+            <div id="steel-crafting-form" class="card" style="display: none;">
+                <h3 class="card-title">Steel Bar Crafting</h3>
+                <div class="form-group">
+                    <label for="steel-crafting-character">Character Name:</label>
+                    <select id="steel-crafting-character">
+                        <option value="">Select a character</option>
+                    </select>
+                </div>
+                <button onclick="startSteelCrafting()">Start Crafting Steel Bars</button>
+            </div>
+            
+            <div id="mining-form" class="card" style="display: none;">
+                <h3 class="card-title" id="mining-form-title">Start Mining</h3>
+                <div class="form-group">
+                    <label for="mining-character">Character Name:</label>
+                    <input type="text" id="mining-character" placeholder="Enter character name">
+                </div>
+                <div class="form-group">
+                    <label for="mining-options">Options:</label>
+                    <select id="mining-options">
+                        <option value="">No options</option>
+                        <option value="--skip-smelting">Skip smelting</option>
+                    </select>
+                </div>
+                <button onclick="startMining()">Start Mining</button>
+            </div>
+        </div>
+        
+        <div id="woodcutting" class="tab-content">
+            <h2>Woodcutting Resources</h2>
+            <div class="resource-grid">
+                <div class="resource-card" onclick="showWoodcuttingForm('ash-harvesting-loop.js')">
+                    <div class="resource-icon">🌳</div>
+                    <h3>Ash</h3>
+                    <p>Harvest ash wood and process into planks</p>
+                </div>
+                <div class="resource-card" onclick="showWoodcuttingForm('birch-harvesting-loop.js')">
+                    <div class="resource-icon">🌲</div>
+                    <h3>Birch</h3>
+                    <p>Harvest birch wood and process into planks</p>
+                </div>
+                <div class="resource-card" onclick="showWoodcuttingForm('maple-harvesting-loop.js')">
+                    <div class="resource-icon">🍁</div>
+                    <h3>Maple</h3>
+                    <p>Harvest maple wood and process into planks</p>
+                </div>
+                <div class="resource-card" onclick="showWoodcuttingForm('spruce-harvesting-loop.js')">
+                    <div class="resource-icon">🌲</div>
+                    <h3>Spruce</h3>
+                    <p>Harvest spruce wood and process into planks</p>
+                </div>
+                <div class="resource-card" onclick="showWoodcuttingForm('deadwood-harvesting-loop.js', true)">
+                    <div class="resource-icon">🪵</div>
+                    <h3>Deadwood</h3>
+                    <p>Harvest deadwood and optionally craft into planks</p>
+                </div>
+                <div class="resource-card" onclick="showHardwoodPlankCraftingForm()">
+                    <div class="resource-icon">🪵</div>
+                    <h3>Hardwood Plank</h3>
+                    <p>Craft hardwood planks at the mill (-2,-3)</p>
+                </div>
+            </div>
+            
+            <div id="woodcutting-form" class="card" style="display: none;">
+                <h3 class="card-title" id="woodcutting-form-title">Start Woodcutting</h3>
+                <div class="form-group">
+                    <label for="woodcutting-character">Character Name:</label>
+                    <input type="text" id="woodcutting-character" placeholder="Enter character name">
+                </div>
+                <div id="woodcutting-crafting-option" class="form-group" style="display: none;">
+                    <label for="woodcutting-craft-planks">
+                        <input type="checkbox" id="woodcutting-craft-planks">
+                        Craft planks before depositing
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label for="woodcutting-target">Target Quantity (0 = infinite):</label>
+                    <input type="number" id="woodcutting-target" value="0" min="0" step="10">
+                </div>
+                <button onclick="startWoodcutting()">Start Woodcutting</button>
+            </div>
+            
+            <!-- Hardwood Plank Crafting Form -->
+            <div id="hardwood-plank-crafting-form" class="card" style="display: none;">
+                <h3 class="card-title">Hardwood Plank Crafting</h3>
+                <div class="form-group">
+                    <label for="hardwood-plank-character">Character Name:</label>
+                    <select id="hardwood-plank-character">
+                        <option value="">Select a character</option>
+                    </select>
+                </div>
+                <button onclick="startHardwoodPlankCrafting()">Start Crafting Hardwood Planks</button>
+            </div>
+        </div>
+        
+        <div id="fishing" class="tab-content">
+            <h2>Fishing Resources</h2>
+            <div class="resource-grid">
+                <div class="resource-card" onclick="showFishingForm('shrimp-harvesting-loop.js')">
+                    <div class="resource-icon">🦐</div>
+                    <h3>Shrimp</h3>
+                    <p>Fish for shrimp and deposit at bank</p>
+                </div>
+                <div class="resource-card" onclick="showFishingForm('gudgeon-harvesting-loop.js')">
+                    <div class="resource-icon">🐟</div>
+                    <h3>Gudgeon</h3>
+                    <p>Fish for gudgeon and deposit at bank</p>
+                </div>
+                <div class="resource-card" onclick="showFishingForm('trout-harvesting-loop.js')">
+                    <div class="resource-icon">🐠</div>
+                    <h3>Trout</h3>
+                    <p>Fish for trout at (7,12) and deposit at bank</p>
+                </div>
+                <div class="resource-card" onclick="showFishingForm('bass-harvesting-loop.js')">
+                    <div class="resource-icon">🎣</div>
+                    <h3>Bass</h3>
+                    <p>Fish for bass at (6,12) and deposit at bank</p>
+                </div>
+                <div class="resource-card" onclick="showCookWolfMeatForm()">
+                    <div class="resource-icon">🍖</div>
+                    <h3>Cook Wolf Meat</h3>
+                    <p>Cook raw wolf meat at the cook station (1,1)</p>
+                </div>
+                <div class="resource-card" onclick="showCookTroutForm()">
+                    <div class="resource-icon">🐟</div>
+                    <h3>Cook Trout</h3>
+                    <p>Cook raw trout at the cook station (1,1)</p>
+                </div>
+            </div>
+            
+            <div id="fishing-form" class="card" style="display: none;">
+                <h3 class="card-title" id="fishing-form-title">Start Fishing</h3>
+                <div class="form-group">
+                    <label for="fishing-character">Character Name:</label>
+                    <input type="text" id="fishing-character" placeholder="Enter character name">
+                </div>
+                <button onclick="startFishing()">Start Fishing</button>
+            </div>
+            
+            <div id="cook-wolf-meat-form" class="card" style="display: none;">
+                <h3 class="card-title">Cook Wolf Meat</h3>
+                <div class="form-group">
+                    <label for="cook-wolf-meat-character">Character Name:</label>
+                    <select id="cook-wolf-meat-character">
+                        <option value="">Select a character</option>
+                    </select>
+                </div>
+                <button onclick="startCookWolfMeat()">Start Cooking Wolf Meat</button>
+            </div>
+            
+            <div id="cook-trout-form" class="card" style="display: none;">
+                <h3 class="card-title">Cook Trout</h3>
+                <div class="form-group">
+                    <label for="cook-trout-character">Character Name:</label>
+                    <select id="cook-trout-character">
+                        <option value="">Select a character</option>
+                    </select>
+                </div>
+                <button onclick="startCookTrout()">Start Cooking Trout</button>
+            </div>
+        </div>
+        
+        <div id="alchemy" class="tab-content">
+            <h2>Alchemy Resources</h2>
+            <div class="resource-grid">
+                <div class="resource-card" onclick="showAlchemyForm('sunflower-harvesting-loop.js')">
+                    <div class="resource-icon">🌻</div>
+                    <h3>Sunflower</h3>
+                    <p>Harvest sunflowers for alchemy ingredients</p>
+                </div>
+                <div class="resource-card" onclick="showAlchemyForm('nettle-harvesting-loop.js')">
+                    <div class="resource-icon">🌿</div>
+                    <h3>Nettle</h3>
+                    <p>Harvest nettles for alchemy ingredients</p>
+                </div>
+                <div class="resource-card" onclick="showAirBoostPotionForm()">
+                    <div class="resource-icon">💨</div>
+                    <h3>Air Boost Potion</h3>
+                    <p>Craft air boost potions automatically</p>
+                </div>
+                <div class="resource-card" onclick="showMinorHealthPotionForm()">
+                    <div class="resource-icon">❤️</div>
+                    <h3>Minor Health Potion</h3>
+                    <p>Craft minor health potions at the alchemist (2,3)</p>
+                </div>
+            </div>
+            
+            <div id="alchemy-form" class="card" style="display: none;">
+                <h3 class="card-title" id="alchemy-form-title">Start Harvesting</h3>
+                <div class="form-group">
+                    <label for="alchemy-character">Character Name:</label>
+                    <input type="text" id="alchemy-character" placeholder="Enter character name">
+                </div>
+                <button onclick="startAlchemy()">Start Harvesting</button>
+            </div>
+            
+            <div id="air-boost-potion-form" class="card" style="display: none;">
+                <h3 class="card-title">Air Boost Potion Crafting</h3>
+                <div class="form-group">
+                    <label for="air-boost-character">Character Name:</label>
+                    <input type="text" id="air-boost-character" placeholder="Enter character name">
+                </div>
+                <button onclick="startAirBoostPotion()">Start Crafting Potions</button>
+            </div>
+            
+            <div id="minor-health-potion-form" class="card" style="display: none;">
+                <h3 class="card-title">Minor Health Potion Crafting</h3>
+                <div class="form-group">
+                    <label for="minor-health-potion-character">Character Name:</label>
+                    <select id="minor-health-potion-character">
+                        <option value="">Select a character</option>
+                    </select>
+                </div>
+                <button onclick="startMinorHealthPotion()">Start Crafting Health Potions</button>
+            </div>
+        </div>
+        
+        <div id="combat" class="tab-content">
+            <h2>Combat Options</h2>
+            <div class="card">
+                <h3 class="card-title">Fight at Location</h3>
+                <div class="form-group">
+                    <label for="combat-x">X Coordinate:</label>
+                    <input type="number" id="combat-x" placeholder="Enter X coordinate">
+                </div>
+                <div class="form-group">
+                    <label for="combat-y">Y Coordinate:</label>
+                    <input type="number" id="combat-y" placeholder="Enter Y coordinate">
+                </div>
+                <div class="form-group">
+                    <label for="combat-character">Character Name:</label>
+                    <input type="text" id="combat-character" placeholder="Enter character name">
+                </div>
+                <button onclick="startCombat()">Start Combat</button>
+            </div>
+            
+            <div class="card">
+                <h3 class="card-title">Quick Actions</h3>
+                <button onclick="startScript('fight-loop-with-heal.js')">Fight with Auto-Heal</button>
+                <button onclick="startScript('rest.js')">Rest to Heal</button>
+            </div>
+        </div>
+        
+        <div id="gear" class="tab-content">
+            <h2>Gear Crafting</h2>
+            <div class="resource-grid">
+                <div class="resource-card" onclick="showLeatherBootsCraftingForm()">
+                    <div class="resource-icon">👢</div>
+                    <h3>Leather Boots</h3>
+                    <p>Craft leather boots at the armorsmith (3,1)</p>
+                </div>
+                <div class="resource-card" onclick="showIronSwordCraftingForm()">
+                    <div class="resource-icon">⚔️</div>
+                    <h3>Iron Sword</h3>
+                    <p>Craft iron swords at the weaponsmith (2,1)</p>
+                </div>
+                <div class="resource-card" onclick="showIronDaggerCraftingForm()">
+                    <div class="resource-icon">🗡️</div>
+                    <h3>Iron Dagger</h3>
+                    <p>Craft iron daggers at the weaponsmith (2,1)</p>
+                </div>
+            </div>
+            
+            <!-- Leather Boots Crafting Form -->
+            <div id="leather-boots-crafting-form" class="card" style="display: none;">
+                <h3 class="card-title">Leather Boots Crafting</h3>
+                <div class="form-group">
+                    <label for="leather-boots-character">Character Name:</label>
+                    <select id="leather-boots-character">
+                        <option value="">Select a character</option>
+                    </select>
+                </div>
+                <button onclick="startLeatherBootsCrafting()">Start Crafting Leather Boots</button>
+            </div>
+            
+            <!-- Iron Sword Crafting Form -->
+            <div id="iron-sword-crafting-form" class="card" style="display: none;">
+                <h3 class="card-title">Iron Sword Crafting</h3>
+                <div class="form-group">
+                    <label for="iron-sword-character">Character Name:</label>
+                    <select id="iron-sword-character">
+                        <option value="">Select a character</option>
+                    </select>
+                </div>
+                <button onclick="startIronSwordCrafting()">Start Crafting Iron Swords</button>
+            </div>
+            
+            <!-- Iron Dagger Crafting Form -->
+            <div id="iron-dagger-crafting-form" class="card" style="display: none;">
+                <h3 class="card-title">Iron Dagger Crafting</h3>
+                <div class="form-group">
+                    <label for="iron-dagger-character">Character Name:</label>
+                    <select id="iron-dagger-character">
+                        <option value="">Select a character</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="iron-dagger-quantity">Quantity:</label>
+                    <select id="iron-dagger-quantity">
+                        <option value="1">1 Dagger</option>
+                        <option value="5">5 Daggers</option>
+                        <option value="10">10 Daggers</option>
+                        <option value="20">20 Daggers</option>
+                    </select>
+                </div>
+                <button onclick="startIronDaggerCrafting()">Start Crafting Iron Daggers</button>
+            </div>
+        </div>
+        
+        <div id="crafting" class="tab-content">
+            <h2>Crafting</h2>
+            <div class="card">
+                <h3 class="card-title">Craft Item</h3>
+                <div class="form-group">
+                    <label for="craft-x">X Coordinate:</label>
+                    <input type="number" id="craft-x" placeholder="Enter X coordinate">
+                </div>
+                <div class="form-group">
+                    <label for="craft-y">Y Coordinate:</label>
+                    <input type="number" id="craft-y" placeholder="Enter Y coordinate">
+                </div>
+                <div class="form-group">
+                    <label for="craft-item">Item Code:</label>
+                    <input type="text" id="craft-item" placeholder="Enter item code (e.g., WOODEN_SWORD)">
+                </div>
+                <div class="form-group">
+                    <label for="craft-quantity">Quantity:</label>
+                    <input type="number" id="craft-quantity" placeholder="Enter quantity" value="1">
+                </div>
+                <button onclick="startCrafting()">Start Crafting</button>
+            </div>
+        </div>
+        
+        <div id="utilities" class="tab-content">
+            <h2>Utilities</h2>
+            <div class="card">
+                <h3 class="card-title">Deposit All Items</h3>
+                <div class="form-group">
+                    <label for="deposit-character">Character Name:</label>
+                    <input type="text" id="deposit-character" placeholder="Enter character name">
+                </div>
+                <button onclick="startScript('go-deposit-all.js', [document.getElementById('deposit-character').value])">Deposit All Items</button>
+            </div>
+            
+            <div class="card">
+                <h3 class="card-title">Equipment</h3>
+                <div class="form-group">
+                    <label for="equip-item">Item Code:</label>
+                    <input type="text" id="equip-item" placeholder="Enter item code">
+                </div>
+                <div class="form-group">
+                    <label for="equip-slot">Slot:</label>
+                    <select id="equip-slot">
+                        <option value="weapon">Weapon</option>
+                        <option value="shield">Shield</option>
+                        <option value="helmet">Helmet</option>
+                        <option value="body_armor">Body Armor</option>
+                        <option value="leg_armor">Leg Armor</option>
+                        <option value="boots">Boots</option>
+                        <option value="ring1">Ring 1</option>
+                        <option value="ring2">Ring 2</option>
+                        <option value="amulet">Amulet</option>
+                        <option value="artifact1">Artifact 1</option>
+                        <option value="artifact2">Artifact 2</option>
+                        <option value="artifact3">Artifact 3</option>
+                    </select>
+                </div>
+                <button onclick="equipItem()">Equip Item</button>
+                <button onclick="unequipItem()">Unequip Slot</button>
+            </div>
+            
+            <div class="card">
+                <h3 class="card-title">Gathering</h3>
+                <div class="form-group">
+                    <label for="gather-x">X Coordinate:</label>
+                    <input type="number" id="gather-x" placeholder="Enter X coordinate">
+                </div>
+                <div class="form-group">
+                    <label for="gather-y">Y Coordinate:</label>
+                    <input type="number" id="gather-y" placeholder="Enter Y coordinate">
+                </div>
+                <div class="form-group">
+                    <label for="gather-count">Number of Gathers:</label>
+                    <input type="number" id="gather-count" placeholder="Enter number of gathers" value="5">
+                </div>
+                <button onclick="startGathering()">Start Gathering</button>
+            </div>
+        </div>
+
+        <div id="skills" class="tab-content">
+            <h2>Character Skills</h2>
+            <div class="card">
+                <div class="skills-container">
+                    <div id="skills-loading" class="loading-spinner">Loading skills data...</div>
+                    <div id="skills-table-container" style="display: none;">
+                        <table id="skills-table" class="skills-table">
+                            <thead>
+                                <tr>
+                                    <th>Character</th>
+                                    <th>Level</th>
+                                    <th>Combat</th>
+                                    <th>Mining</th>
+                                    <th>Woodcutting</th>
+                                    <th>Fishing</th>
+                                    <th>Weapon</th>
+                                    <th>Gear</th>
+                                    <th>Jewelry</th>
+                                    <th>Cooking</th>
+                                    <th>Alchemy</th>
+                                </tr>
+                            </thead>
+                            <tbody id="skills-table-body">
+                                <!-- Skills data will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="legend-container">
+                        <div class="legend-title">Skill Level</div>
+                        <div class="legend-gradient"></div>
+                        <div class="legend-labels">
+                            <span>1</span>
+                            <span>10</span>
+                            <span>20</span>
+                            <span>30</span>
+                            <span>40</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Global variables
+        let currentMiningScript = '';
+        let currentWoodcuttingScript = '';
+        let currentFishingScript = '';
+        let currentAlchemyScript = '';
+        let selectedProcessId = '';
+        let outputInterval = null;
+        let charactersList = [];
+        
+        // Tab functionality
+        function openTab(evt, tabName) {
+            // Only proceed if this isn't already the active tab
+            if (evt.currentTarget.classList.contains('active')) return;
+            
+            // Add a slight delay for the animation
+            setTimeout(() => {
+                const tabContents = document.getElementsByClassName("tab-content");
+                for (let i = 0; i < tabContents.length; i++) {
+                    tabContents[i].classList.remove("active");
+                }
+                
+                const tabButtons = document.getElementsByClassName("tab-button");
+                for (let i = 0; i < tabButtons.length; i++) {
+                    tabButtons[i].classList.remove("active");
+                }
+                
+                document.getElementById(tabName).classList.add("active");
+                evt.currentTarget.classList.add("active");
+                
+                // Hide any visible forms when switching tabs
+                hideAllForms();
+            }, 50);
+        }
+
+        // Helper function to hide all forms
+        function hideAllForms() {
+            const forms = [
+                'mining-form', 'steel-crafting-form',
+                'woodcutting-form', 'hardwood-plank-crafting-form',
+                'fishing-form', 'cook-wolf-meat-form', 'cook-trout-form',
+                'alchemy-form', 'air-boost-potion-form', 'minor-health-potion-form',
+                'leather-boots-crafting-form', 'iron-sword-crafting-form'
+            ];
+            
+            forms.forEach(formId => {
+                const form = document.getElementById(formId);
+                if (form) form.style.display = 'none';
+            });
+        }
+        
+        // Mining functions
+        function showMiningForm(script) {
+            currentMiningScript = script;
+            document.getElementById('mining-form-title').textContent = `Start Mining: ${script.replace('-mining-loop.js', '')}`;
+            
+            // Hide all mining-related forms
+            document.getElementById('mining-form').style.display = 'none';
+            document.getElementById('steel-crafting-form').style.display = 'none';
+            document.getElementById('hardwood-plank-crafting-form').style.display = 'none';
+            
+            // Show only the appropriate mining form
+            document.getElementById('mining-form').style.display = 'block';
+            
+            // Ensure character dropdown is populated
+            if (charactersList.length > 0) {
+                const select = document.getElementById('mining-character');
+                if (select && select.options.length <= 1) {
+                    // Repopulate the dropdown if it's empty
+                    createCharacterDropdowns();
+                }
+            }
+        }
+        
+        function startMining() {
+            const character = document.getElementById('mining-character').value;
+            const options = document.getElementById('mining-options').value;
+            const args = [];
+            
+            if (character) {
+                args.push(character);
+            }
+            
+            if (options) {
+                args.push(options);
+            }
+            
+            startScript(currentMiningScript, args);
+            document.getElementById('mining-form').style.display = 'none';
+        }
+        
+        // Woodcutting functions
+        function showWoodcuttingForm(script, hasOptions = false) {
+            currentWoodcuttingScript = script;
+            document.getElementById('woodcutting-form-title').textContent = `Start Woodcutting: ${script.replace('-harvesting-loop.js', '')}`;
+            
+            // Hide all woodcutting-related forms
+            document.getElementById('woodcutting-form').style.display = 'none';
+            document.getElementById('hardwood-plank-crafting-form').style.display = 'none';
+            
+            // Show only the appropriate woodcutting form
+            document.getElementById('woodcutting-form').style.display = 'block';
+            
+            // Show or hide the crafting option based on whether the script supports it
+            const craftingOption = document.getElementById('woodcutting-crafting-option');
+            if (craftingOption) {
+                craftingOption.style.display = hasOptions ? 'block' : 'none';
+            }
+            
+            // Ensure character dropdown is populated
+            if (charactersList.length > 0) {
+                const select = document.getElementById('woodcutting-character');
+                if (select && select.options.length <= 1) {
+                    // Repopulate the dropdown if it's empty
+                    createCharacterDropdowns();
+                }
+            }
+        }
+        
+        function startWoodcutting() {
+            const character = document.getElementById('woodcutting-character').value;
+            let args = character ? [character] : [];
+            
+            // Add crafting option for the deadwood script if checked
+            const craftOption = document.getElementById('woodcutting-crafting-option');
+            if (craftOption && craftOption.style.display !== 'none') {
+                const craftPlanks = document.getElementById('woodcutting-craft-planks').checked;
+                if (craftPlanks) {
+                    args.push('--craft');
+                }
+            }
+            
+            // Add target quantity if provided and not zero (zero is the default for infinite)
+            const targetInput = document.getElementById('woodcutting-target');
+            if (targetInput && targetInput.value && parseInt(targetInput.value) > 0) {
+                args.push(`--target=${targetInput.value}`);
+            }
+            
+            startScript(currentWoodcuttingScript, args);
+            document.getElementById('woodcutting-form').style.display = 'none';
+        }
+        
+        // Fishing functions
+        function showFishingForm(script) {
+            currentFishingScript = script;
+            document.getElementById('fishing-form-title').textContent = `Start Fishing: ${script.replace('-harvesting-loop.js', '')}`;
+            
+            // Hide all fishing-related forms
+            document.getElementById('fishing-form').style.display = 'none';
+            document.getElementById('cook-wolf-meat-form').style.display = 'none';
+            document.getElementById('cook-trout-form').style.display = 'none';
+            
+            // Show only the fishing form
+            document.getElementById('fishing-form').style.display = 'block';
+            
+            // Ensure character dropdown is populated
+            if (charactersList.length > 0) {
+                const select = document.getElementById('fishing-character');
+                if (select && select.options.length <= 1) {
+                    // Repopulate the dropdown if it's empty
+                    createCharacterDropdowns();
+                }
+            }
+        }
+        
+        function startFishing() {
+            const character = document.getElementById('fishing-character').value;
+            const args = character ? [character] : [];
+            
+            startScript(currentFishingScript, args);
+            document.getElementById('fishing-form').style.display = 'none';
+        }
+        
+        function showCookWolfMeatForm() {
+            // Hide all fishing-related forms
+            document.getElementById('fishing-form').style.display = 'none';
+            document.getElementById('cook-wolf-meat-form').style.display = 'none';
+            document.getElementById('cook-trout-form').style.display = 'none';
+            
+            // Show only the cook wolf meat form
+            document.getElementById('cook-wolf-meat-form').style.display = 'block';
+            
+            // Ensure character dropdown is populated
+            if (charactersList.length > 0) {
+                const select = document.getElementById('cook-wolf-meat-character');
+                if (select) {
+                    // Force repopulation of the dropdown
+                    let characterOptions = '<option value="">Select a character</option>';
+                    charactersList.forEach(name => {
+                        if (name) {
+                            characterOptions += `<option value="${name}">${name}</option>`;
+                        }
+                    });
+                    select.innerHTML = characterOptions;
+                }
+            }
+        }
+        
+        function startCookWolfMeat() {
+            const character = document.getElementById('cook-wolf-meat-character').value;
+            
+            console.log(`Starting wolf meat cooking with character: ${character}`);
+            
+            // Make sure we have a valid character name
+            if (!character) {
+                alert('Please select a character for cooking wolf meat');
+                return;
+            }
+            
+            // Always pass the character name explicitly
+            const args = [character];
+            
+            startScript('cook-wolf-meat-loop.js', args);
+            document.getElementById('cook-wolf-meat-form').style.display = 'none';
+        }
+        
+        function showCookTroutForm() {
+            // Hide all fishing-related forms
+            document.getElementById('fishing-form').style.display = 'none';
+            document.getElementById('cook-wolf-meat-form').style.display = 'none';
+            document.getElementById('cook-trout-form').style.display = 'none';
+            
+            // Show only the cook trout form
+            document.getElementById('cook-trout-form').style.display = 'block';
+            
+            // Ensure character dropdown is populated
+            if (charactersList.length > 0) {
+                const select = document.getElementById('cook-trout-character');
+                if (select) {
+                    // Force repopulation of the dropdown
+                    let characterOptions = '<option value="">Select a character</option>';
+                    charactersList.forEach(name => {
+                        if (name) {
+                            characterOptions += `<option value="${name}">${name}</option>`;
+                        }
+                    });
+                    select.innerHTML = characterOptions;
+                }
+            }
+        }
+        
+        function startCookTrout() {
+            const character = document.getElementById('cook-trout-character').value;
+            
+            console.log(`Starting trout cooking with character: ${character}`);
+            
+            // Make sure we have a valid character name
+            if (!character) {
+                alert('Please select a character for cooking trout');
+                return;
+            }
+            
+            // Always pass the character name explicitly
+            const args = [character];
+            
+            startScript('cook-trout-loop.js', args);
+            document.getElementById('cook-trout-form').style.display = 'none';
+        }
+        
+        // Alchemy functions
+        function showAlchemyForm(script) {
+            currentAlchemyScript = script;
+            document.getElementById('alchemy-form-title').textContent = `Start Harvesting: ${script.replace('-harvesting-loop.js', '')}`;
+            
+            // Hide all alchemy-related forms
+            document.getElementById('alchemy-form').style.display = 'none';
+            document.getElementById('air-boost-potion-form').style.display = 'none';
+            document.getElementById('minor-health-potion-form').style.display = 'none';
+            
+            // Show only the alchemy form
+            document.getElementById('alchemy-form').style.display = 'block';
+            
+            // Ensure character dropdown is populated
+            if (charactersList.length > 0) {
+                const select = document.getElementById('alchemy-character');
+                if (select && select.options.length <= 1) {
+                    // Repopulate the dropdown if it's empty
+                    createCharacterDropdowns();
+                }
+            }
+        }
+        
+        function startAlchemy() {
+            const character = document.getElementById('alchemy-character').value;
+            const args = character ? [character] : [];
+            
+            startScript(currentAlchemyScript, args);
+            document.getElementById('alchemy-form').style.display = 'none';
+        }
+        
+        function showAirBoostPotionForm() {
+            // Hide all alchemy-related forms that might be visible
+            document.getElementById('alchemy-form').style.display = 'none';
+            document.getElementById('air-boost-potion-form').style.display = 'none';
+            document.getElementById('minor-health-potion-form').style.display = 'none';
+            // Show the air boost potion form
+            document.getElementById('air-boost-potion-form').style.display = 'block';
+            
+            // Ensure character dropdown is populated
+            if (charactersList.length > 0) {
+                const select = document.getElementById('air-boost-character');
+                if (select) {
+                    // Force repopulation of the dropdown
+                    let characterOptions = '<option value="">Select a character</option>';
+                    charactersList.forEach(name => {
+                        if (name) {
+                            characterOptions += `<option value="${name}">${name}</option>`;
+                        }
+                    });
+                    select.innerHTML = characterOptions;
+                }
+            }
+        }
+        
+        function startAirBoostPotion() {
+            const character = document.getElementById('air-boost-character').value;
+            
+            console.log(`Starting air boost potion with character: ${character}`);
+            
+            // Make sure we have a valid character name
+            if (!character) {
+                alert('Please enter a character name for Air Boost Potion crafting');
+                return;
+            }
+            
+            // Always pass the character name explicitly
+            const args = [character];
+            
+            startScript('air-boost-potion-loop.js', args);
+            document.getElementById('air-boost-potion-form').style.display = 'none';
+        }
+        
+        function showMinorHealthPotionForm() {
+            // Hide all alchemy-related forms that might be visible
+            document.getElementById('alchemy-form').style.display = 'none';
+            document.getElementById('air-boost-potion-form').style.display = 'none';
+            document.getElementById('minor-health-potion-form').style.display = 'none';
+            
+            // Show the minor health potion form
+            document.getElementById('minor-health-potion-form').style.display = 'block';
+            
+            // Ensure character dropdown is populated
+            if (charactersList.length > 0) {
+                const select = document.getElementById('minor-health-potion-character');
+                if (select) {
+                    // Force repopulation of the dropdown
+                    let characterOptions = '<option value="">Select a character</option>';
+                    charactersList.forEach(name => {
+                        if (name) {
+                            characterOptions += `<option value="${name}">${name}</option>`;
+                        }
+                    });
+                    select.innerHTML = characterOptions;
+                }
+            }
+        }
+        
+        function startMinorHealthPotion() {
+            const character = document.getElementById('minor-health-potion-character').value;
+            
+            console.log(`Starting minor health potion crafting with character: ${character}`);
+            
+            // Make sure we have a valid character name
+            if (!character) {
+                alert('Please select a character for Minor Health Potion crafting');
+                return;
+            }
+            
+            // Always pass the character name explicitly
+            const args = [character];
+            
+            startScript('minor-health-potion-loop.js', args);
+            document.getElementById('minor-health-potion-form').style.display = 'none';
+        }
+        
+        // Combat functions
+        function startCombat() {
+            const x = document.getElementById('combat-x').value;
+            const y = document.getElementById('combat-y').value;
+            const character = document.getElementById('combat-character').value;
+            
+            if (!x || !y) {
+                alert('Please enter X and Y coordinates');
+                return;
+            }
+            
+            const args = [`(${x},${y})`];
+            if (character) {
+                args.push(character);
+            }
+            
+            startScript('go-fight-heal-loop.js', args);
+        }
+        
+        // Crafting functions
+        function startCrafting() {
+            const x = document.getElementById('craft-x').value;
+            const y = document.getElementById('craft-y').value;
+            const item = document.getElementById('craft-item').value;
+            const quantity = document.getElementById('craft-quantity').value;
+            
+            if (!x || !y || !item || !quantity) {
+                alert('Please fill in all crafting fields');
+                return;
+            }
+            
+            const args = [`(${x},${y})`, item, quantity];
+            startScript('go-craft.js', args);
+        }
+        
+        // Equipment functions
+        function equipItem() {
+            const item = document.getElementById('equip-item').value;
+            const slot = document.getElementById('equip-slot').value;
+            
+            if (!item) {
+                alert('Please enter an item code');
+                return;
+            }
+            
+            startScript('equip.js', [item, slot]);
+        }
+        
+        function unequipItem() {
+            const slot = document.getElementById('equip-slot').value;
+            startScript('unequip.js', [slot]);
+        }
+        
+        // Gathering functions
+        function startGathering() {
+            const x = document.getElementById('gather-x').value;
+            const y = document.getElementById('gather-y').value;
+            const count = document.getElementById('gather-count').value;
+            
+            if (!x || !y) {
+                alert('Please enter X and Y coordinates');
+                return;
+            }
+            
+            const args = [`(${x},${y})`, count];
+            startScript('go-gather-loop.js', args);
+        }
+        
+        // API functions
+        async function startScript(script, args = []) {
+            try {
+                // Debug log to ensure args are correctly passed
+                console.log(`Starting script: ${script} with args:`, args);
+                
+                const response = await fetch('/api/start', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ script, args })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(`Started ${script} successfully!`);
+                    loadProcesses();
+                } else {
+                    alert(`Failed to start ${script}: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Error starting script:', error);
+                alert(`Error starting script: ${error.message}`);
+            }
+        }
+        
+        async function stopProcess(id) {
+            try {
+                console.log(`Attempting to stop process: ${id}`);
+                const response = await fetch('/api/stop', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ id })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    console.log(`Successfully stopped process ${id}`);
+                    // Refresh the process list immediately
+                    loadProcesses();
+                } else {
+                    alert(`Failed to stop process: ${data.error || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Error stopping process:', error);
+                alert(`Error stopping process: ${error.message}`);
+            }
+        }
+        
+        // Kill all running processes
+        async function killAllProcesses() {
+            if (!confirm('Are you sure you want to kill all running processes?')) {
+                return;
+            }
+            
+            const runningProcessIds = [];
+            
+            // Collect IDs of all running processes
+            document.querySelectorAll('.process-card.running').forEach(card => {
+                const stopButton = card.querySelector('button.danger');
+                if (stopButton) {
+                    const processId = stopButton.getAttribute('data-process-id');
+                    if (processId) {
+                        runningProcessIds.push(processId);
+                    }
+                }
+            });
+            
+            if (runningProcessIds.length === 0) {
+                alert('No running processes to kill.');
+                return;
+            }
+            
+            // Kill each process
+            for (const id of runningProcessIds) {
+                try {
+                    await fetch('/api/stop', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ id })
+                    });
+                } catch (error) {
+                    console.error(`Error stopping process ${id}:`, error);
+                }
+            }
+            
+            // Refresh the process list
+            loadProcesses();
+            alert(`Attempted to kill ${runningProcessIds.length} processes.`);
+        }
+        
+        // Clear stopped processes from the UI
+        async function clearStoppedProcesses() {
+            // Create a new API endpoint on the server to clear stopped processes
+            try {
+                const response = await fetch('/api/clear-stopped', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }).catch(error => {
+                    // If the endpoint doesn't exist yet, handle it client-side
+                    console.log('Clear stopped API not implemented, handling client-side');
+                    return { ok: false, status: 404 };
+                });
+                
+                // If server implementation exists, use it
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Mark cleared processes in local storage too for client-side filtering
+                    if (data.clearedIds && Array.isArray(data.clearedIds)) {
+                        data.clearedIds.forEach(id => markProcessAsCleared(id));
+                    }
+                    
+                    alert(`Cleared ${data.count} stopped processes.`);
+                    loadProcesses();
+                    return;
+                }
+                
+                // Client-side implementation if server endpoint doesn't exist
+                // Get all stopped processes by class
+                const stoppedCards = document.querySelectorAll('.process-card.stopped');
+                const count = stoppedCards.length;
+                
+                if (count === 0) {
+                    alert('No stopped processes to clear.');
+                    return;
+                }
+                
+                console.log(`Clearing ${count} stopped processes...`);
+                
+                // We need to find the IDs of the stopped processes to remove them from runningProcesses
+                const stoppedIds = [];
+                stoppedCards.forEach(card => {
+                    // Try to extract the ID from viewButton (which should always be present)
+                    const viewButton = card.querySelector('button:not(.danger)');
+                    if (viewButton) {
+                        // Extract process ID from onclick handler
+                        const onclickText = viewButton.getAttribute('onclick') || '';
+                        const match = onclickText.match(/process-selector'\)\.value\s*=\s*['"]([^'"]+)['"]/);
+                        if (match && match[1]) {
+                            const processId = match[1];
+                            stoppedIds.push(processId);
+                            
+                            // Mark this process as cleared in our local registry
+                            markProcessAsCleared(processId);
+                        }
+                    }
+                });
+                
+                // Now remove the stopped cards from the DOM
+                stoppedCards.forEach(card => {
+                    card.remove();
+                });
+                
+                // Clear from the process selector dropdown
+                const selector = document.getElementById('process-selector');
+                if (selector) {
+                    // Remove options for stopped processes
+                    Array.from(selector.options).forEach(option => {
+                        if (stoppedIds.includes(option.value)) {
+                            selector.removeChild(option);
+                        }
+                    });
+                    
+                    // If the currently selected process was removed, reset the terminal
+                    if (stoppedIds.includes(selector.value)) {
+                        selector.value = '';
+                        document.getElementById('terminal').innerHTML = '<pre>Select a process to view its output...</pre>';
+                    }
+                }
+                
+                // If there are no processes left, show a message
+                if (document.querySelectorAll('.process-card').length === 0) {
+                    document.getElementById('processes-container').innerHTML = '<p>No active processes</p>';
+                }
+                
+                alert(`Cleared ${count} stopped processes.`);
+            } catch (error) {
+                console.error('Error clearing stopped processes:', error);
+                alert(`Error clearing stopped processes: ${error.message}`);
+            }
+        }
+        
+        // Store cleared process IDs in localStorage for persistence across reloads
+        const clearedProcessIds = new Set(JSON.parse(localStorage.getItem('clearedProcessIds') || '[]'));
+        
+        // Track current process filter setting (default to running only)
+        let currentProcessFilter = localStorage.getItem('processFilter') || 'running';
+        
+        // Show the leather boots crafting form when the leather boots card is clicked
+        function showLeatherBootsCraftingForm() {
+            // Hide all gear-related forms that might be visible
+            document.getElementById('leather-boots-crafting-form').style.display = 'none';
+            document.getElementById('iron-sword-crafting-form').style.display = 'none';
+            document.getElementById('iron-dagger-crafting-form').style.display = 'none';
+            
+            // Show only the leather boots crafting form
+            document.getElementById('leather-boots-crafting-form').style.display = 'block';
+            
+            // Ensure character dropdown is populated
+            if (charactersList.length > 0) {
+                const select = document.getElementById('leather-boots-character');
+                if (select) {
+                    // Force repopulation of the dropdown
+                    let characterOptions = '<option value="">Select a character</option>';
+                    charactersList.forEach(name => {
+                        if (name) {
+                            characterOptions += `<option value="${name}">${name}</option>`;
+                        }
+                    });
+                    select.innerHTML = characterOptions;
+                }
+            }
+        }
+        
+        // Start the leather boots crafting process
+        function startLeatherBootsCrafting() {
+            const character = document.getElementById('leather-boots-character').value;
+            
+            console.log(`Starting leather boots crafting with character: ${character}`);
+            
+            // Make sure we have a valid character name
+            if (!character) {
+                alert('Please select a character for Leather Boots crafting');
+                return;
+            }
+            
+            // Always pass the character name explicitly
+            const args = [character];
+            
+            startScript('leather-boots-crafting-loop.js', args);
+            document.getElementById('leather-boots-crafting-form').style.display = 'none';
+        }
+        
+        // Show the iron sword crafting form when the iron sword card is clicked
+        function showIronSwordCraftingForm() {
+            // Hide all gear-related forms that might be visible
+            document.getElementById('leather-boots-crafting-form').style.display = 'none';
+            document.getElementById('iron-sword-crafting-form').style.display = 'none';
+            document.getElementById('iron-dagger-crafting-form').style.display = 'none';
+            
+            // Show only the iron sword crafting form
+            document.getElementById('iron-sword-crafting-form').style.display = 'block';
+            
+            // Ensure character dropdown is populated
+            if (charactersList.length > 0) {
+                const select = document.getElementById('iron-sword-character');
+                if (select) {
+                    // Force repopulation of the dropdown
+                    let characterOptions = '<option value="">Select a character</option>';
+                    charactersList.forEach(name => {
+                        if (name) {
+                            characterOptions += `<option value="${name}">${name}</option>`;
+                        }
+                    });
+                    select.innerHTML = characterOptions;
+                }
+            }
+        }
+        
+        // Start the iron sword crafting process
+        function startIronSwordCrafting() {
+            const character = document.getElementById('iron-sword-character').value;
+            
+            console.log(`Starting iron sword crafting with character: ${character}`);
+            
+            // Make sure we have a valid character name
+            if (!character) {
+                alert('Please select a character for Iron Sword crafting');
+                return;
+            }
+            
+            // Always pass the character name explicitly
+            const args = [character];
+            
+            startScript('iron-sword-crafting-loop.js', args);
+            document.getElementById('iron-sword-crafting-form').style.display = 'none';
+        }
+        
+        // Show the iron dagger crafting form when the iron dagger card is clicked
+        function showIronDaggerCraftingForm() {
+            // Hide all gear-related forms that might be visible
+            document.getElementById('leather-boots-crafting-form').style.display = 'none';
+            document.getElementById('iron-sword-crafting-form').style.display = 'none';
+            document.getElementById('iron-dagger-crafting-form').style.display = 'none';
+            
+            // Show only the iron dagger crafting form
+            document.getElementById('iron-dagger-crafting-form').style.display = 'block';
+            
+            // Ensure character dropdown is populated
+            if (charactersList.length > 0) {
+                const select = document.getElementById('iron-dagger-character');
+                if (select) {
+                    // Force repopulation of the dropdown
+                    let characterOptions = '<option value="">Select a character</option>';
+                    charactersList.forEach(name => {
+                        if (name) {
+                            characterOptions += `<option value="${name}">${name}</option>`;
+                        }
+                    });
+                    select.innerHTML = characterOptions;
+                }
+            }
+        }
+        
+        // Start the iron dagger crafting process
+        function startIronDaggerCrafting() {
+            const character = document.getElementById('iron-dagger-character').value;
+            const quantity = document.getElementById('iron-dagger-quantity').value;
+            
+            console.log(`Starting iron dagger crafting with character: ${character}, quantity: ${quantity}`);
+            
+            // Make sure we have a valid character name
+            if (!character) {
+                alert('Please select a character for Iron Dagger crafting');
+                return;
+            }
+            
+            // Always pass the character name and quantity explicitly
+            const args = [character, quantity];
+            
+            startScript('iron-dagger-crafting-loop.js', args);
+            document.getElementById('iron-dagger-crafting-form').style.display = 'none';
+        }
+        
+        // Show the steel crafting form when the steel bar card is clicked
+        function showSteelCraftingForm() {
+            // Hide all mining-related forms that might be visible
+            document.getElementById('mining-form').style.display = 'none';
+            document.getElementById('steel-crafting-form').style.display = 'none';
+            document.getElementById('hardwood-plank-crafting-form').style.display = 'none';
+            
+            // Show only the steel crafting form
+            document.getElementById('steel-crafting-form').style.display = 'block';
+            
+            // Ensure character dropdown is populated
+            if (charactersList.length > 0) {
+                const select = document.getElementById('steel-crafting-character');
+                if (select) {
+                    // Force repopulation of the dropdown
+                    let characterOptions = '<option value="">Select a character</option>';
+                    charactersList.forEach(name => {
+                        if (name) {
+                            characterOptions += `<option value="${name}">${name}</option>`;
+                        }
+                    });
+                    select.innerHTML = characterOptions;
+                }
+            }
+        }
+        
+        // Show the hardwood plank crafting form when the hardwood plank card is clicked
+        function showHardwoodPlankCraftingForm() {
+            // Hide all woodcutting-related forms that might be visible
+            document.getElementById('woodcutting-form').style.display = 'none';
+            document.getElementById('hardwood-plank-crafting-form').style.display = 'none';
+            
+            // Show only the hardwood plank crafting form
+            document.getElementById('hardwood-plank-crafting-form').style.display = 'block';
+            
+            // Ensure character dropdown is populated
+            if (charactersList.length > 0) {
+                const select = document.getElementById('hardwood-plank-character');
+                if (select) {
+                    // Force repopulation of the dropdown
+                    let characterOptions = '<option value="">Select a character</option>';
+                    charactersList.forEach(name => {
+                        if (name) {
+                            characterOptions += `<option value="${name}">${name}</option>`;
+                        }
+                    });
+                    select.innerHTML = characterOptions;
+                }
+            }
+        }
+        
+        // Start the steel bar crafting process
+        function startSteelCrafting() {
+            const character = document.getElementById('steel-crafting-character').value;
+            
+            console.log(`Starting steel bar crafting with character: ${character}`);
+            
+            // Make sure we have a valid character name
+            if (!character) {
+                alert('Please enter a character name for Steel Bar crafting');
+                return;
+            }
+            
+            // Always pass the character name explicitly
+            const args = [character];
+            
+            startScript('steel-bar-crafting-loop.js', args);
+            document.getElementById('steel-crafting-form').style.display = 'none';
+        }
+        
+        // Start the hardwood plank crafting process
+        function startHardwoodPlankCrafting() {
+            const character = document.getElementById('hardwood-plank-character').value;
+            
+            console.log(`Starting hardwood plank crafting with character: ${character}`);
+            
+            // Make sure we have a valid character name
+            if (!character) {
+                alert('Please enter a character name for Hardwood Plank crafting');
+                return;
+            }
+            
+            // Always pass the character name explicitly
+            const args = [character];
+            
+            startScript('hardwood-plank-crafting-loop.js', args);
+            document.getElementById('hardwood-plank-crafting-form').style.display = 'none';
+        }
+        
+        // Update filter dropdown to match saved preference
+        window.addEventListener('DOMContentLoaded', () => {
+            const filterDropdown = document.getElementById('process-filter');
+            if (filterDropdown) {
+                filterDropdown.value = currentProcessFilter;
+            }
+        });
+        
+        // Skills tab functionality
+        // Function to fetch character skills data
+        async function fetchCharacterSkills() {
+            // Show loading spinner
+            document.getElementById('skills-loading').style.display = 'flex';
+            document.getElementById('skills-table-container').style.display = 'none';
+            
+            try {
+                // Use the characters list from the global variable
+                if (!charactersList || charactersList.length === 0) {
+                    throw new Error('No characters available. Please refresh the page.');
+                }
+                
+                // Prepare to fetch details for each character
+                const skillsData = [];
+                const fetchPromises = [];
+                
+                // Create a promise for each character's details
+                for (const name of charactersList) {
+                    if (!name) continue;
+                    
+                    const fetchPromise = fetch(`/api/character/${encodeURIComponent(name)}`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`Failed to fetch details for ${name}: ${response.statusText}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            // Extract character data from API response
+                            // The API returns a data array containing character objects, or a single character object
+                            let character = null;
+                            
+                            // Handle different API response formats
+                            if (data.data) {
+                                // If data.data is an array, find the character in the array
+                                if (Array.isArray(data.data)) {
+                                    character = data.data.find(char => char && char.name === name);
+                                } 
+                                // If data.data is a single object (not array), check if it's the character we want
+                                else if (typeof data.data === 'object' && data.data.name === name) {
+                                    character = data.data;
+                                }
+                            } 
+                            // If data itself is the character object
+                            else if (data.name === name) {
+                                character = data;
+                            }
+                            
+                            if (!character) {
+                                console.error(`Character data format:`, data);
+                                throw new Error(`Character ${name} not found in the API response`);
+                            }
+                            
+                            // Extract skill levels directly from the character data
+                            // The API uses the format <skill_name>_level
+                            const characterSkills = {
+                                name: name,
+                                level: character.level || 0,
+                                combat: character.level || 0, // Combat level is the character level
+                                mining: character.mining_level || 0,
+                                woodcutting: character.woodcutting_level || 0,
+                                fishing: character.fishing_level || 0,
+                                weaponcrafting: character.weaponcrafting_level || 0,
+                                gearcrafting: character.gearcrafting_level || 0,
+                                jewelrycrafting: character.jewelrycrafting_level || 0,
+                                cooking: character.cooking_level || 0,
+                                alchemy: character.alchemy_level || 0
+                            };
+                            
+                            skillsData.push(characterSkills);
+                        })
+                        .catch(err => {
+                            console.error(`Error fetching data for ${name}:`, err);
+                            // Add character with error state
+                            skillsData.push({
+                                name: name,
+                                level: 0,
+                                combat: 0,
+                                mining: 0,
+                                woodcutting: 0,
+                                fishing: 0,
+                                weaponcrafting: 0,
+                                gearcrafting: 0,
+                                jewelrycrafting: 0,
+                                cooking: 0,
+                                alchemy: 0,
+                                error: true
+                            });
+                        });
+                    
+                    fetchPromises.push(fetchPromise);
+                }
+                
+                // Wait for all fetch operations to complete
+                await Promise.all(fetchPromises);
+                
+                // If no skills data was retrieved, use mock data
+                if (skillsData.length === 0) {
+                    // Fallback to mock data for testing
+                    console.log('No skill data available, using mock data');
+                    for (const name of charactersList) {
+                        if (!name) continue;
+                        
+                        skillsData.push({
+                            name: name,
+                            level: Math.floor(Math.random() * 40) + 1,
+                            combat: Math.floor(Math.random() * 40) + 1,
+                            mining: Math.floor(Math.random() * 40) + 1,
+                            woodcutting: Math.floor(Math.random() * 40) + 1,
+                            fishing: Math.floor(Math.random() * 40) + 1,
+                            weaponcrafting: Math.floor(Math.random() * 40) + 1,
+                            gearcrafting: Math.floor(Math.random() * 40) + 1,
+                            jewelrycrafting: Math.floor(Math.random() * 40) + 1,
+                            cooking: Math.floor(Math.random() * 40) + 1,
+                            alchemy: Math.floor(Math.random() * 40) + 1
+                        });
+                    }
+                }
+                
+                // Render the skills table with the collected data
+                renderSkillsTable(skillsData);
+                
+            } catch (error) {
+                console.error('Error fetching skills data:', error);
+                // Show error in table container
+                document.getElementById('skills-loading').innerHTML = 
+                    `<div class="error-message">Error loading skills data: ${error.message}</div>`;
+            }
+        }
+        
+        // Helper function to extract skill level from character data
+        function getSkillLevel(character, skillName) {
+            if (!character) return 0;
+            
+            // Try different possible paths to find the skill level
+            if (character.skills && character.skills[skillName]) {
+                return character.skills[skillName].level || 0;
+            }
+            
+            if (character[skillName] && character[skillName].level) {
+                return character[skillName].level;
+            }
+            
+            if (character[`${skillName}_level`]) {
+                return character[`${skillName}_level`];
+            }
+            
+            // If we can't find the skill level, return 0
+            return 0;
+        }
+        
+        // Function to render the skills table
+        function renderSkillsTable(skillsData) {
+            const tableBody = document.getElementById('skills-table-body');
+            tableBody.innerHTML = '';
+            
+            // Sort characters by name
+            skillsData.sort((a, b) => a.name.localeCompare(b.name));
+            
+            // Create rows for each character
+            skillsData.forEach(character => {
+                const row = document.createElement('tr');
+                
+                // Character name cell
+                const nameCell = document.createElement('td');
+                nameCell.textContent = character.name;
+                
+                // Mark characters with fetch errors
+                if (character.error) {
+                    nameCell.innerHTML = `${character.name} <span class="error-badge" title="Failed to fetch data">!</span>`;
+                    nameCell.classList.add('error-name');
+                    row.classList.add('error-row');
+                }
+                
+                row.appendChild(nameCell);
+                
+                // Add skill cells
+                addSkillCell(row, character.level, character.error);              // Character Level
+                addSkillCell(row, character.combat, character.error);             // Combat
+                addSkillCell(row, character.mining, character.error);             // Mining
+                addSkillCell(row, character.woodcutting, character.error);        // Woodcutting
+                addSkillCell(row, character.fishing, character.error);            // Fishing
+                addSkillCell(row, character.weaponcrafting, character.error);     // Weapon Crafting
+                addSkillCell(row, character.gearcrafting, character.error);       // Gear Crafting
+                addSkillCell(row, character.jewelrycrafting, character.error);    // Jewelry Crafting
+                addSkillCell(row, character.cooking, character.error);            // Cooking
+                addSkillCell(row, character.alchemy, character.error);            // Alchemy
+                
+                tableBody.appendChild(row);
+            });
+            
+            // Hide loading spinner and show table
+            document.getElementById('skills-loading').style.display = 'none';
+            document.getElementById('skills-table-container').style.display = 'block';
+        }
+        
+        // Helper function to create a skill cell with color based on level
+        function addSkillCell(row, level, hasError = false) {
+            const cell = document.createElement('td');
+            const skillCell = document.createElement('div');
+            skillCell.className = 'skill-cell';
+            
+            // Handle error state or no skill data
+            if (hasError) {
+                skillCell.textContent = '?';
+                skillCell.classList.add('skill-error');
+                skillCell.title = 'Data unavailable';
+            } else {
+                skillCell.textContent = level || 0;
+                
+                // Determine color class based on level (1-40)
+                // If level is 0, it means the skill doesn't exist for this character
+                let colorClass;
+                if (level === 0) {
+                    colorClass = 'skill-none';
+                    skillCell.title = 'Skill not trained';
+                } else if (level <= 8) {
+                    colorClass = 'skill-level-1';
+                } else if (level <= 16) {
+                    colorClass = 'skill-level-2';
+                } else if (level <= 24) {
+                    colorClass = 'skill-level-3';
+                } else if (level <= 32) {
+                    colorClass = 'skill-level-4';
+                } else {
+                    colorClass = 'skill-level-5';
+                }
+                
+                skillCell.classList.add(colorClass);
+            }
+            
+            cell.appendChild(skillCell);
+            row.appendChild(cell);
+        }
+        
+        // Function to filter processes based on user selection
+        function filterProcesses() {
+            const filterValue = document.getElementById('process-filter').value;
+            currentProcessFilter = filterValue;
+            
+            // Save preference to localStorage
+            localStorage.setItem('processFilter', filterValue);
+            
+            // Apply filter to existing cards
+            const cards = document.querySelectorAll('.process-card');
+            cards.forEach(card => {
+                if (filterValue === 'all') {
+                    card.style.display = 'block';
+                } else if (filterValue === 'running') {
+                    card.style.display = card.classList.contains('running') ? 'block' : 'none';
+                } else if (filterValue === 'stopped') {
+                    card.style.display = card.classList.contains('stopped') ? 'block' : 'none';
+                }
+            });
+            
+            // Check if no cards are visible and show a message
+            let visibleCards = 0;
+            cards.forEach(card => {
+                if (card.style.display !== 'none') {
+                    visibleCards++;
+                }
+            });
+            
+            const container = document.getElementById('processes-container');
+            if (visibleCards === 0 && container) {
+                const message = document.createElement('p');
+                message.className = 'no-processes-message';
+                message.textContent = `No ${filterValue === 'all' ? '' : filterValue + ' '}processes found`;
+                
+                // Remove any existing messages
+                const existingMessage = container.querySelector('.no-processes-message');
+                if (existingMessage) {
+                    container.removeChild(existingMessage);
+                }
+                
+                container.appendChild(message);
+            } else {
+                // Remove message if cards are visible
+                const existingMessage = container.querySelector('.no-processes-message');
+                if (existingMessage) {
+                    container.removeChild(existingMessage);
+                }
+            }
+        }
+        
+        // Function to add a process ID to the cleared list
+        function markProcessAsCleared(processId) {
+            clearedProcessIds.add(processId);
+            localStorage.setItem('clearedProcessIds', JSON.stringify([...clearedProcessIds]));
+            console.log(`Marked process ${processId} as cleared (total: ${clearedProcessIds.size})`);
+        }
+        
+        async function loadProcesses() {
+            try {
+                const response = await fetch('/api/processes');
+                const data = await response.json();
+                
+                const container = document.getElementById('processes-container');
+                container.innerHTML = '';
+                
+                const selector = document.getElementById('process-selector');
+                // Save the currently selected value
+                const currentValue = selector.value;
+                selector.innerHTML = '<option value="">Select a process</option>';
+                
+                // Filter out processes that are in the local cleared list
+                const filteredProcesses = data.processes.filter(proc => !clearedProcessIds.has(proc.id));
+                
+                if (filteredProcesses.length === 0) {
+                    container.innerHTML = '<p>No active processes</p>';
+                    return;
+                }
+                
+                filteredProcesses.forEach(proc => {
+                    // Skip stopped processes that are in our cleared list
+                    if (!proc.running && clearedProcessIds.has(proc.id)) {
+                        return;
+                    }
+                    
+                    // Create process card
+                    const card = document.createElement('div');
+                    card.className = `process-card ${proc.running ? 'running' : 'stopped'}`;
+                    
+                    // Apply current filter
+                    if (currentProcessFilter === 'running' && !proc.running) {
+                        card.style.display = 'none';
+                    } else if (currentProcessFilter === 'stopped' && proc.running) {
+                        card.style.display = 'none';
+                    }
+                    
+                    const status = document.createElement('span');
+                    status.className = `status ${proc.running ? 'running' : 'stopped'}`;
+                    status.textContent = proc.running ? 'Running' : 'Stopped';
+                    
+                    const title = document.createElement('h3');
+                    title.textContent = proc.script;
+                    title.appendChild(status);
+                    
+                    const args = document.createElement('p');
+                    args.textContent = `Args: ${proc.args.join(' ') || 'none'}`;
+                    
+                    const startTime = document.createElement('p');
+                    startTime.textContent = `Started: ${new Date(proc.startTime).toLocaleString()}`;
+                    
+                    const actions = document.createElement('div');
+                    
+                    if (proc.running) {
+                        const stopButton = document.createElement('button');
+                        stopButton.className = 'danger';
+                        stopButton.textContent = 'Stop';
+                        stopButton.setAttribute('data-process-id', proc.id);
+                        stopButton.onclick = () => stopProcess(proc.id);
+                        actions.appendChild(stopButton);
+                    }
+                    
+                    const viewButton = document.createElement('button');
+                    viewButton.textContent = 'View Output';
+                    viewButton.onclick = () => {
+                        document.getElementById('process-selector').value = proc.id;
+                        loadProcessOutput();
+                        // Switch to dashboard tab
+                        openTab({ currentTarget: document.querySelector('.tab-button') }, 'dashboard');
+                    };
+                    actions.appendChild(viewButton);
+                    
+                    card.appendChild(title);
+                    card.appendChild(args);
+                    card.appendChild(startTime);
+                    card.appendChild(actions);
+                    
+                    container.appendChild(card);
+                    
+                    // Add to selector
+                    const option = document.createElement('option');
+                    option.value = proc.id;
+                    option.textContent = `${proc.script} ${proc.args.join(' ')}`;
+                    selector.appendChild(option);
+                });
+                
+                // Restore the selected value if it still exists
+                if (currentValue && Array.from(selector.options).some(opt => opt.value === currentValue)) {
+                    selector.value = currentValue;
+                }
+                
+                // Check if we need to display "no processes" message based on current filter
+                let visibleCards = 0;
+                document.querySelectorAll('.process-card').forEach(card => {
+                    if (card.style.display !== 'none') {
+                        visibleCards++;
+                    }
+                });
+                
+                if (visibleCards === 0) {
+                    const message = document.createElement('p');
+                    message.className = 'no-processes-message';
+                    message.textContent = `No ${currentProcessFilter === 'all' ? '' : currentProcessFilter + ' '}processes found`;
+                    container.appendChild(message);
+                }
+            } catch (error) {
+                console.error('Error loading processes:', error);
+            }
+        }
+        
+        async function loadProcessOutput() {
+            // Clear any existing interval
+            if (outputInterval) {
+                clearInterval(outputInterval);
+                outputInterval = null;
+            }
+            
+            const id = document.getElementById('process-selector').value;
+            selectedProcessId = id;
+            
+            if (!id) {
+                document.getElementById('terminal').innerHTML = '<pre>Select a process to view its output...</pre>';
+                return;
+            }
+            
+            // Set up interval to refresh output
+            outputInterval = setInterval(refreshOutput, 2000);
+            refreshOutput();
+        }
+        
+        async function refreshOutput() {
+            if (!selectedProcessId) return;
+            
+            try {
+                const response = await fetch(`/api/output/${selectedProcessId}`);
+                const data = await response.json();
+                
+                const terminal = document.getElementById('terminal');
+                terminal.innerHTML = '';
+                
+                if (!data.output || data.output.length === 0) {
+                    terminal.innerHTML = '<pre>No output yet...</pre>';
+                    return;
+                }
+                
+                data.output.forEach(line => {
+                    const pre = document.createElement('pre');
+                    pre.className = line.type === 'stderr' ? 'error' : '';
+                    pre.textContent = line.text;
+                    terminal.appendChild(pre);
+                });
+                
+                // Scroll to bottom
+                terminal.scrollTop = terminal.scrollHeight;
+                
+                // If process is no longer running, stop the interval
+                if (!data.running && outputInterval) {
+                    clearInterval(outputInterval);
+                    outputInterval = null;
+                }
+            } catch (error) {
+                console.error('Error refreshing output:', error);
+                if (outputInterval) {
+                    clearInterval(outputInterval);
+                    outputInterval = null;
+                }
+            }
+        }
+        
+        // Directly replace all character inputs with selects
+        function createCharacterDropdowns() {
+            // For each tab that contains character inputs
+            const characterInputs = [
+                'mining-character',
+                'woodcutting-character',
+                'fishing-character',
+                'alchemy-character',
+                'air-boost-character',
+                'combat-character',
+                'deposit-character',
+                'steel-crafting-character',
+                'hardwood-plank-character',
+                'leather-boots-character',
+                'iron-sword-character',
+                'minor-health-potion-character',
+                'cook-wolf-meat-character',
+                'cook-trout-character'
+            ];
+            
+            // For each character input
+            characterInputs.forEach(inputId => {
+                const input = document.getElementById(inputId);
+                if (!input) {
+                    console.warn(`Character input with ID ${inputId} not found`);
+                    return;
+                }
+                
+                // Get the parent form group
+                const formGroup = input.parentElement;
+                if (!formGroup) return;
+                
+                // Create the HTML for the select
+                const label = formGroup.querySelector('label');
+                const labelText = label ? label.textContent : 'Character Name:';
+                
+                // Create a select element HTML
+                let characterOptions = '<option value="">Select a character</option>';
+                charactersList.forEach(name => {
+                    if (name) {
+                        characterOptions += `<option value="${name}">${name}</option>`;
+                    }
+                });
+                
+                // Create the replacement HTML
+                const newHTML = `
+                    <label for="${inputId}">${labelText}</label>
+                    <select id="${inputId}">
+                        ${characterOptions}
+                    </select>
+                `;
+                
+                // Replace the content of the form group
+                formGroup.innerHTML = newHTML;
+                console.log(`Replaced input ${inputId} with dropdown`);
+            });
+        }
+        
+        // Show user a notification
+        function showNotification(message, isError = false) {
+            // Create a notification element if it doesn't exist
+            let notification = document.getElementById('notification');
+            if (!notification) {
+                notification = document.createElement('div');
+                notification.id = 'notification';
+                notification.style.position = 'fixed';
+                notification.style.top = '20px';
+                notification.style.right = '20px';
+                notification.style.padding = '10px 20px';
+                notification.style.borderRadius = '5px';
+                notification.style.zIndex = '1000';
+                notification.style.minWidth = '200px';
+                notification.style.textAlign = 'center';
+                document.body.appendChild(notification);
+            }
+            
+            // Set styles based on notification type
+            if (isError) {
+                notification.style.backgroundColor = '#e74c3c';
+                notification.style.color = 'white';
+            } else {
+                notification.style.backgroundColor = '#2ecc71';
+                notification.style.color = 'white';
+            }
+            
+            // Set the message and show the notification
+            notification.textContent = message;
+            notification.style.display = 'block';
+            
+            // Hide the notification after 5 seconds
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Fetch character names from the API
+        async function fetchCharacterNames() {
+            try {
+                console.log('[DEBUG-CLIENT] Starting character fetch...');
+                
+                // Create a debug panel for advanced debugging
+                let debugPanel = document.getElementById('debug-panel');
+                if (!debugPanel) {
+                    debugPanel = document.createElement('div');
+                    debugPanel.id = 'debug-panel';
+                    debugPanel.style.position = 'fixed';
+                    debugPanel.style.bottom = '0';
+                    debugPanel.style.left = '0';
+                    debugPanel.style.right = '0';
+                    debugPanel.style.maxHeight = '200px';
+                    debugPanel.style.overflow = 'auto';
+                    debugPanel.style.backgroundColor = 'rgba(0,0,0,0.8)';
+                    debugPanel.style.color = '#00ff00';
+                    debugPanel.style.fontFamily = 'monospace';
+                    debugPanel.style.fontSize = '12px';
+                    debugPanel.style.padding = '10px';
+                    debugPanel.style.zIndex = '1000';
+                    debugPanel.style.display = 'none'; // Hidden by default
+                    
+                    // Add a close button
+                    const closeBtn = document.createElement('button');
+                    closeBtn.textContent = 'Close';
+                    closeBtn.style.position = 'absolute';
+                    closeBtn.style.top = '5px';
+                    closeBtn.style.right = '5px';
+                    closeBtn.onclick = () => { debugPanel.style.display = 'none'; };
+                    debugPanel.appendChild(closeBtn);
+                    
+                    // Add a clear button
+                    const clearBtn = document.createElement('button');
+                    clearBtn.textContent = 'Clear';
+                    clearBtn.style.position = 'absolute';
+                    clearBtn.style.top = '5px';
+                    clearBtn.style.right = '70px';
+                    clearBtn.onclick = () => { 
+                        const logArea = debugPanel.querySelector('pre');
+                        if (logArea) logArea.textContent = '';
+                    };
+                    debugPanel.appendChild(clearBtn);
+                    
+                    // Add enable mock data button
+                    const enableMockBtn = document.createElement('button');
+                    enableMockBtn.textContent = 'Use Mock Data';
+                    enableMockBtn.style.position = 'absolute';
+                    enableMockBtn.style.top = '5px';
+                    enableMockBtn.style.right = '130px';
+                    enableMockBtn.onclick = async () => {
+                        try {
+                            // Try server-side mock data first
+                            try {
+                                const response = await fetch('/api/enable-mock-data');
+                                const data = await response.json();
+                                logArea.textContent += `Enabled mock data on server: ${JSON.stringify(data)}\n`;
+                            } catch (e) {
+                                logArea.textContent += `Couldn't enable server mock data, using client-side mock: ${e.message}\n`;
+                            }
+                            
+                            // Set up client-side mock data as backup
+                            charactersList = ['MockCharacter1', 'MockCharacter2', 'MockCharacter3'];
+                            showNotification('Mock data enabled for testing', false);
+                            logArea.textContent += `Using mock characters: ${charactersList.join(', ')}\n`;
+                            
+                            // Create dropdowns with the mock character list
+                            createCharacterDropdowns();
+                        } catch (e) {
+                            logArea.textContent += `Error setting up mock data: ${e.message}\n`;
+                        }
+                    };
+                    debugPanel.appendChild(enableMockBtn);
+                    
+                    // Add reload characters button
+                    const reloadBtn = document.createElement('button');
+                    reloadBtn.textContent = 'Reload Characters';
+                    reloadBtn.style.position = 'absolute';
+                    reloadBtn.style.top = '5px';
+                    reloadBtn.style.right = '250px';
+                    reloadBtn.onclick = () => {
+                        logArea.textContent += 'Reloading character list...\n';
+                        fetchCharacterNames();
+                    };
+                    debugPanel.appendChild(reloadBtn);
+                    
+                    // Add a log area
+                    const logArea = document.createElement('pre');
+                    logArea.style.margin = '30px 0 0 0';
+                    debugPanel.appendChild(logArea);
+                    
+                    document.body.appendChild(debugPanel);
+                    
+                    // Add a show debug button to header
+                    const header = document.querySelector('header');
+                    if (header) {
+                        const debugBtn = document.createElement('button');
+                        debugBtn.textContent = 'Debug';
+                        debugBtn.style.position = 'absolute';
+                        debugBtn.style.right = '10px';
+                        debugBtn.style.top = '10px';
+                        debugBtn.onclick = () => { debugPanel.style.display = debugPanel.style.display === 'none' ? 'block' : 'none'; };
+                        header.appendChild(debugBtn);
+                    }
+                }
+                
+                // Helper function to log to debug panel
+                const debugLog = (message) => {
+                    console.log(message);
+                    const logArea = debugPanel.querySelector('pre');
+                    if (logArea) {
+                        const timestamp = new Date().toISOString().split('T')[1].slice(0, -1);
+                        logArea.textContent += `[${timestamp}] ${message}\n`;
+                        logArea.scrollTop = logArea.scrollHeight;
+                    }
+                };
+                
+                // Use our server endpoint that proxies the request to avoid CORS issues
+                const url = '/api/characters';
+                debugLog(`[DEBUG-CLIENT] Fetching from ${url}`);
+                
+                const options = {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Debug-Client': 'true'
+                    },
+                    // Include credentials to send cookies
+                    credentials: 'include'
+                };
+                
+                debugLog('[DEBUG-CLIENT] Sending request with credentials included');
+                const response = await fetch(url, options);
+                
+                debugLog(`[DEBUG-CLIENT] Response status: ${response.status} ${response.statusText}`);
+                
+                // Log response headers for debugging
+                const responseHeaders = {};
+                response.headers.forEach((value, name) => {
+                    responseHeaders[name] = value;
+                });
+                debugLog(`[DEBUG-CLIENT] Response headers: ${JSON.stringify(responseHeaders)}`);
+                
+                if (!response.ok) {
+                    console.error(`Failed to fetch characters: ${response.status} ${response.statusText}`);
+                    debugLog(`[DEBUG-CLIENT] Request failed with status ${response.status}`);
+                    
+                    // Try to get the error details
+                    let errorDetails = '';
+                    try {
+                        const errorJson = await response.json();
+                        errorDetails = JSON.stringify(errorJson);
+                        debugLog(`[DEBUG-CLIENT] Error details: ${errorDetails}`);
+                    } catch (e) {
+                        try {
+                            errorDetails = await response.text();
+                            debugLog(`[DEBUG-CLIENT] Error response (text): ${errorDetails}`);
+                        } catch (e2) {
+                            debugLog('[DEBUG-CLIENT] Could not read error response');
+                        }
+                    }
+                    
+                    // Show user a notification
+                    if (response.status === 401 || response.status === 403) {
+                        showNotification('Authentication required for character list. Using text inputs instead.', true);
+                        debugLog('[DEBUG-CLIENT] Authentication error detected');
+                    } else {
+                        showNotification(`Failed to load character list (${response.status}). Using text inputs instead.`, true);
+                    }
+                    
+                    return;
+                }
+                
+                // Get response as text first for debugging
+                const responseText = await response.text();
+                debugLog(`[DEBUG-CLIENT] Response body (first 200 chars): ${responseText.substring(0, 200)}`);
+                
+                // Now parse the JSON
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                    debugLog(`[DEBUG-CLIENT] Successfully parsed JSON response`);
+                } catch (e) {
+                    debugLog(`[DEBUG-CLIENT] JSON parse error: ${e.message}`);
+                    showNotification('Invalid JSON response from server', true);
+                    return;
+                }
+                
+                debugLog(`[DEBUG-CLIENT] Data type: ${typeof data}, is array: ${Array.isArray(data)}`);
+                if (data && Array.isArray(data)) {
+                    debugLog(`[DEBUG-CLIENT] Array length: ${data.length}`);
+                    
+                    if (data.length > 0) {
+                        debugLog(`[DEBUG-CLIENT] First item: ${JSON.stringify(data[0])}`);
+                    }
+                    
+                    charactersList = data.map(char => {
+                        if (!char) {
+                            debugLog('[DEBUG-CLIENT] Found null/undefined item in response array');
+                            return '';
+                        }
+                        
+                        if (typeof char === 'object' && char.name) {
+                            return char.name;
+                        } else if (typeof char === 'string') {
+                            return char;
+                        } else {
+                            debugLog(`[DEBUG-CLIENT] Unexpected item format: ${JSON.stringify(char)}`);
+                            return '';
+                        }
+                    }).filter(name => name); // Filter out empty names
+                    
+                    debugLog(`[DEBUG-CLIENT] Characters extracted: ${charactersList.join(', ')}`);
+                    
+                    // Create dropdowns with the character list
+                    if (charactersList.length > 0) {
+                        createCharacterDropdowns();
+                        showNotification(`Loaded ${charactersList.length} characters successfully!`);
+                        debugLog('[DEBUG-CLIENT] Character dropdowns created');
+                    } else {
+                        debugLog('[DEBUG-CLIENT] Character list is empty after processing');
+                        showNotification('No valid characters found. Using text inputs instead.', true);
+                    }
+                } else {
+                    debugLog(`[DEBUG-CLIENT] Unexpected data format: ${typeof data}`);
+                    showNotification('Invalid character data format. Using text inputs instead.', true);
+                }
+            } catch (error) {
+                console.error('Error fetching character names:', error);
+                
+                // Try to create debug panel for error if it doesn't exist
+                try {
+                    if (!document.getElementById('debug-panel')) {
+                        const errorPanel = document.createElement('div');
+                        errorPanel.style.position = 'fixed';
+                        errorPanel.style.bottom = '10px';
+                        errorPanel.style.left = '10px';
+                        errorPanel.style.backgroundColor = 'rgba(255,0,0,0.1)';
+                        errorPanel.style.padding = '10px';
+                        errorPanel.style.borderRadius = '5px';
+                        errorPanel.style.maxWidth = '80%';
+                        errorPanel.style.color = 'red';
+                        errorPanel.textContent = `Error: ${error.message}\nStack: ${error.stack}`;
+                        document.body.appendChild(errorPanel);
+                    }
+                } catch (e) {}
+                
+                // Show error notification
+                showNotification(`Error: ${error.message}. Using text inputs instead.`, true);
+                
+                // Fall back to default mode - we won't use mock data anymore
+                // as it's better to keep the original input fields in case of errors
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProcesses();
+            
+            // Set up the filter dropdown with the saved value
+            const filterDropdown = document.getElementById('process-filter');
+            if (filterDropdown) {
+                filterDropdown.value = currentProcessFilter;
+            }
+            
+            // Apply filter immediately (in case processes are already loaded)
+            setTimeout(filterProcesses, 500);
+            
+            // Fetch character names
+            fetchCharacterNames();
+            
+            // Add debug info to check for elements
+            console.log("Tab buttons found:", document.getElementsByClassName("tab-button").length);
+            console.log("Tab contents found:", document.getElementsByClassName("tab-content").length);
+            
+            // Skills tab functionality
+            const skillsTabButton = Array.from(document.getElementsByClassName('tab-button'))
+                .find(btn => btn.textContent.trim() === 'Skills');
+                
+            if (skillsTabButton) {
+                skillsTabButton.addEventListener('click', function() {
+                    fetchCharacterSkills();
+                });
+            }
+            
+            // Check if alchemy tab exists
+            const alchemyTab = document.getElementById('alchemy');
+            console.log("Alchemy tab exists:", alchemyTab !== null);
+            if (alchemyTab) {
+                console.log("Alchemy tab display:", window.getComputedStyle(alchemyTab).display);
+            }
+            
+            // Refresh processes list every 10 seconds
+            setInterval(loadProcesses, 10000);
+        });
+    </script>
+</body>
+</html>

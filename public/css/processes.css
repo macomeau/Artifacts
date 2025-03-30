@@ -1,0 +1,325 @@
+/**
+ * Process management styles for ArtifactsMMO Client
+ */
+
+/* Process filter */
+.process-filter-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.process-filter-container select {
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    margin-right: 12px;
+}
+
+.clear-btn {
+    padding: 8px 16px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.clear-btn:hover {
+    background-color: var(--primary-hover);
+}
+
+/* Process list */
+.process-list {
+    margin-top: 16px;
+}
+
+.process-row {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border-radius: 4px;
+    background-color: var(--card-bg);
+    margin-bottom: 8px;
+    box-shadow: 0 2px 8px var(--shadow-color);
+    transition: all 0.2s ease;
+}
+
+.process-row:hover {
+    box-shadow: 0 4px 12px var(--shadow-hover);
+}
+
+/* Dark mode process rows */
+.dark-mode .process-row {
+    border: 1px solid #333;
+}
+
+.dark-mode .process-row:hover {
+    background-color: #232323;
+}
+
+.process-row.running {
+    border-left: 4px solid var(--success-color);
+}
+
+.process-row.stopped {
+    border-left: 4px solid var(--neutral-color);
+}
+
+.process-row.failed {
+    border-left: 4px solid var(--error-color);
+}
+
+.process-script {
+    flex: 2;
+    font-weight: 500;
+}
+
+.process-character {
+    flex: 1;
+    color: var(--text-muted);
+}
+
+.process-status {
+    flex: 1;
+    font-weight: 500;
+}
+
+.process-row.running .process-status {
+    color: var(--success-color);
+}
+
+.process-row.stopped .process-status {
+    color: var(--neutral-color);
+}
+
+.process-row.failed .process-status {
+    color: var(--error-color);
+    font-weight: 500;
+}
+
+.process-progress {
+    flex: 1;
+    color: var(--text-muted);
+    font-size: 0.9em;
+    display: flex;
+    align-items: center;
+}
+
+.progress-icon {
+    margin-right: 4px;
+    font-size: 1.1em;
+}
+
+.progress-value {
+    font-weight: 500;
+}
+
+.process-duration {
+    flex: 1;
+    color: var(--text-muted);
+    font-size: 0.9em;
+}
+
+.process-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.action-button {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.action-button.view {
+    background-color: var(--info-bg);
+    color: var(--info-color);
+}
+
+.action-button.view:hover {
+    background-color: rgba(33, 150, 243, 0.3);
+}
+
+.action-button.stop {
+    background-color: var(--error-bg);
+    color: var(--error-color);
+}
+
+.action-button.stop:hover {
+    background-color: rgba(244, 67, 54, 0.3);
+}
+
+/* Dark mode button enhancements */
+.dark-mode .action-button.view {
+    background-color: rgba(33, 150, 243, 0.2);
+    color: #64b5f6;
+    border: 1px solid rgba(33, 150, 243, 0.3);
+}
+
+.dark-mode .action-button.view:hover {
+    background-color: rgba(33, 150, 243, 0.3);
+    border-color: rgba(33, 150, 243, 0.5);
+}
+
+.dark-mode .action-button.stop {
+    background-color: rgba(244, 67, 54, 0.2);
+    color: #ff7777;
+    border: 1px solid rgba(244, 67, 54, 0.3);
+}
+
+.dark-mode .action-button.stop:hover {
+    background-color: rgba(244, 67, 54, 0.3);
+    border-color: rgba(244, 67, 54, 0.5);
+}
+
+/* Process output modal */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: var(--card-bg);
+    width: 80%;
+    max-width: 800px;
+    max-height: 80vh;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px var(--shadow-color);
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.modal-title {
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+/* Process details section */
+.process-details {
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 12px 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 24px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.dark-mode .process-details {
+    background-color: #282828;
+    border-bottom: 1px solid #3a3a3a;
+}
+
+.process-detail {
+    display: flex;
+    align-items: baseline;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-right: 8px;
+    min-width: 80px;
+}
+
+.modal-body {
+    padding: 16px;
+    overflow-y: auto;
+    flex: 1;
+    max-height: calc(80vh - 200px);
+}
+
+.output-container {
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 12px;
+    border-radius: 4px;
+    font-family: monospace;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-x: auto;
+    height: 100%;
+    color: var(--text-color);
+}
+
+.dark-mode .output-container {
+    background-color: #252525;
+    border: 1px solid #333;
+}
+
+.output-line {
+    margin: 2px 0;
+}
+
+.output-line.stdout {
+    color: var(--text-color);
+}
+
+.output-line.stderr {
+    color: var(--error-color);
+}
+
+/* Empty message */
+.empty-message {
+    padding: 24px;
+    text-align: center;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* Coordinate indicator */
+.coord-indicator {
+    font-size: 0.8em;
+    opacity: 0.7;
+    margin-left: 4px;
+    cursor: help;
+}
+
+/* Progress indicators */
+.has-progress {
+    color: var(--success-color);
+    font-weight: bold;
+    animation: pulse 2s ease-in-out 1;
+}
+
+.dark-mode .has-progress {
+    color: #7cd777; /* Brighter green for better visibility in dark mode */
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}

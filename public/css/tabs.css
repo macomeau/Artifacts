@@ -1,0 +1,71 @@
+/**
+ * Tab styles for ArtifactsMMO Client
+ */
+
+/* Tabs container */
+.tabs-container {
+    position: relative;
+}
+
+.tabs {
+    display: flex;
+    background-color: var(--bg-color);
+    border-bottom: 1px solid var(--border-color);
+    padding: 0 20px;
+    overflow-x: auto;
+}
+
+.tab-button {
+    position: relative;
+    background: none;
+    border: none;
+    padding: 16px 24px;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--primary-color);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.tab-button:hover {
+    background-color: var(--primary-light);
+}
+
+.dark-mode .tab-button:hover {
+    background-color: #2d2d3d;
+}
+
+.tab-button.active {
+    color: var(--primary-hover);
+    font-weight: 600;
+}
+
+.tab-button.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background-color: var(--primary-color);
+}
+
+.tab-content {
+    display: none;
+    padding: 24px;
+    animation: fadeIn 0.3s ease;
+    box-shadow: 0 2px 8px var(--shadow-color);
+    border-radius: 0 0 8px 8px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}

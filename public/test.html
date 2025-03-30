@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tab Test</title>
+    <style>
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+            background-color: lightgray;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <button onclick="openTab('dashboard')">Dashboard</button>
+        <button onclick="openTab('mining')">Mining</button>
+        <button onclick="openTab('alchemy')">Alchemy</button>
+    </div>
+    
+    <div id="dashboard" class="tab-content active">
+        <h2>Dashboard Content</h2>
+        <p>This is the dashboard tab</p>
+    </div>
+    
+    <div id="mining" class="tab-content">
+        <h2>Mining Content</h2>
+        <p>This is the mining tab</p>
+    </div>
+    
+    <div id="alchemy" class="tab-content">
+        <h2>Alchemy Content</h2>
+        <p>This is the alchemy tab</p>
+    </div>
+    
+    <script>
+        function openTab(tabName) {
+            // Hide all tabs
+            const tabs = document.getElementsByClassName('tab-content');
+            for (let i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+            }
+            
+            // Show the selected tab
+            document.getElementById(tabName).classList.add('active');
+        }
+    </script>
+</body>
+</html>

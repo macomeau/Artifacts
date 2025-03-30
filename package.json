@@ -1,0 +1,53 @@
+{
+  "name": "artifactsmmo-client",
+  "version": "1.0.0",
+  "description": "A client for interacting with the ArtifactsMMO API",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "gui": "node gui.js",
+    "fight": "node fight.js",
+    "fight-heal": "node fight-with-heal.js",
+    "fight-loop": "node fight-loop.js",
+    "fight-loop-heal": "node fight-loop-with-heal.js",
+    "gather": "node gathering.js",
+    "gather-loop": "node gathering-loop.js",
+    "go-gather-loop": "node go-gather-loop.js",
+    "go-fight-heal-loop": "node go-fight-heal-loop.js",
+    "rest": "node rest.js",
+    "craft": "node crafting.js",
+    "recycle": "node recycling.js",
+    "unequip": "node unequip.js",
+    "equip": "node equip.js",
+    "go-craft": "node go-craft.js",
+    "deposit-all": "node go-deposit-all.js",
+    "spruce-harvest": "node spruce-harvesting-loop.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "keywords": [
+    "artifactsmmo",
+    "api",
+    "client"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "fs": "^0.0.1-security",
+    "helmet": "^8.1.0",
+    "joi": "^17.13.3",
+    "node-fetch": "^3.3.2",
+    "pg": "^8.14.1",
+    "winston": "^3.17.0",
+    "winston-daily-rotate-file": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.3.0"
+  }
+}
