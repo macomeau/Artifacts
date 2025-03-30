@@ -39,7 +39,8 @@ module.exports = {
       'fishing-loop',
       'combat-loop',
       'maple-harvesting-loop', // Added maple harvesting script
-      'salmon-harvesting-loop' // Added salmon harvesting script
+      'salmon-harvesting-loop', // Added salmon harvesting script
+      'glowstem-harvesting-loop' // Added glowstem harvesting script
     ]
   },
   dbPool: {
