@@ -37,7 +37,8 @@ module.exports = {
       'iron-mining-loop',
       'woodcutting-loop',
       'fishing-loop',
-      'combat-loop'
+      'combat-loop',
+      'maple-harvesting-loop' // Added maple harvesting script
     ]
   },
   dbPool: {
