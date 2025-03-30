@@ -492,7 +492,11 @@ class CopperMiningLoop extends BaseLoop {
 }
 
 // Execute the main function defined above
-CopperMiningLoop.main().catch(error => {
-  console.error('Fatal error in CopperMiningLoop.main():', error);
-  process.exit(1);
-});
+(async () => {
+  try {
+    await CopperMiningLoop.main();
+  } catch (error) {
+    console.error('Fatal error in CopperMiningLoop.main():', error);
+    process.exit(1);
+  }
+})();
