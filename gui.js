@@ -96,6 +96,24 @@ const runningProcesses = {};
 const MAX_CONCURRENT_PROCESSES = parseInt(process.env.MAX_CONCURRENT_PROCESSES) || 10; // Limit concurrent processes
 
 /**
+ * Validates and sanitizes script arguments.
+ * Currently, just ensures args is an array.
+ * @param {any} args - The arguments passed from the API request.
+ * @returns {Array} - A validated array of arguments.
+ */
+function validateAndSanitizeArgs(args) {
+  if (!args) {
+    return []; // Return empty array if args is null or undefined
+  }
+  if (!Array.isArray(args)) {
+    console.warn(`Received non-array arguments: ${JSON.stringify(args)}. Converting to empty array.`);
+    return []; // Return empty array if not an array
+  }
+  // Basic sanitization could be added here if needed, e.g., trimming strings
+  return args;
+}
+
+/**
  * Process output parser to extract progress metrics
  * @param {string} output - The process output text
  * @returns {Object} - Extracted metrics
