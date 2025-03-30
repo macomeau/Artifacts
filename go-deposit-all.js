@@ -30,14 +30,21 @@ function parseCoordinates(coordString) {
 /**
  * Deposit all items from inventory into the bank.
  * Handles cooldowns between deposits and logs each deposit operation.
+ * @param {string} characterName - The name of the character performing the deposit.
  * @returns {Promise<void>}
  * @throws {Error} If deposit operation fails
  */
-async function depositAllItems() {
+async function depositAllItems(characterName) {
+  // Validate characterName
+  if (!characterName) {
+    console.error('DepositAllItems Error: Character name is required.');
+    throw new Error('Character name is required for depositAllItems.');
+  }
+
   try {
-    // Get character details to access inventory
-    const characterDetails = await getCharacterDetails();
-    
+    // Get character details for the specified character
+    const characterDetails = await getCharacterDetails(characterName);
+
     if (!characterDetails || !characterDetails.inventory) {
       console.log('No items to deposit');
       return;
@@ -53,10 +60,10 @@ async function depositAllItems() {
     }
     
     // First check if we're in cooldown before starting deposits
-    console.log('Checking initial cooldown status...');
+    console.log(`[${characterName}] Checking initial cooldown status...`);
     try {
-      const freshDetails = await getCharacterDetails();
-      
+      const freshDetails = await getCharacterDetails(characterName);
+
       if (freshDetails.cooldown && freshDetails.cooldown > 0) {
         const now = new Date();
         const expirationDate = new Date(freshDetails.cooldown_expiration);
@@ -90,14 +97,15 @@ async function depositAllItems() {
           }
         }
 
-        // Make API request to deposit single item
+        // Make API request to deposit single item for the specified character
         const result = await makeApiRequest('action/bank/deposit', 'POST', {
           code: item.code,
-          quantity: item.quantity || 1
-        });
+          quantity: item.quantity || 1,
+          character: characterName // Ensure character is passed in body if API requires it
+        }, characterName); // Pass characterName to makeApiRequest
 
         // Check for new cooldown after deposit
-        freshDetails = await getCharacterDetails();
+        freshDetails = await getCharacterDetails(characterName);
         if (freshDetails.cooldown && freshDetails.cooldown > 0) {
           const now = new Date();
           const expirationDate = new Date(freshDetails.cooldown_expiration);
@@ -111,21 +119,21 @@ async function depositAllItems() {
           // Add a small delay between deposits even if no cooldown
           await new Promise(resolve => setTimeout(resolve, 500));
         }
-        
-        console.log(`Successfully deposited ${item.code}`);
-          
-        // Log inventory snapshot
+
+        console.log(`[${characterName}] Successfully deposited ${item.code}`);
+
+        // Log inventory snapshot for the correct character
         await db.query(
           `INSERT INTO inventory_snapshots(character, items)
            VALUES ($1, $2)`,
-          [config.character, JSON.stringify(result.inventory || [])]
+          [characterName, JSON.stringify(result.inventory || [])]
         );
-        
-        // Log deposit to database
+
+        // Log deposit to database for the correct character
         await db.query(
           `INSERT INTO action_logs(character, action_type, result)
            VALUES ($1, 'bank_deposit', $2)`,
-          [config.character, {
+          [characterName, {
             item: item.code,
             quantity: item.quantity || 1
           }]
@@ -133,20 +141,20 @@ async function depositAllItems() {
       } catch (error) {
         // Handle specific deposit errors
         if (error.message.includes('404')) {
-          console.error(`Failed to deposit ${item.code}: Deposit endpoint not found. Please check if the deposit feature is available.`);
+          console.error(`[${characterName}] Failed to deposit ${item.code}: Deposit endpoint not found. Please check if the deposit feature is available.`);
         } else {
-          console.error(`Failed to deposit ${item.code}:`, error.message);
+          console.error(`[${characterName}] Failed to deposit ${item.code}:`, error.message);
         }
-        
+
         // Continue with next item even if one fails
         continue;
       }
     }
-    
-    console.log('Finished depositing all items');
+
+    console.log(`[${characterName}] Finished depositing all items`);
     return;
   } catch (error) {
-    console.error('Deposit failed:', error.message);
+    console.error(`[${characterName}] Deposit failed:`, error.message);
     throw error;
   }
 }
