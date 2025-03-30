@@ -198,6 +198,24 @@ class AshHarvestingLoop extends BaseLoop {
             error.message.includes('Character inventory is full') || 
             (error.message.includes('API error') && error.message.includes('497'))) {
           console.log('Inventory is full. Proceeding to deposit items...');
+          
+          // Move to bank and deposit immediately when inventory is full
+          try {
+            console.log(`Moving to bank at (${this.bankCoords.x}, ${this.bankCoords.y})`);
+            await moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName);
+            
+            console.log('Starting emergency deposit of all items...');
+            await depositAllItems(this.characterName);
+            console.log('Emergency deposit complete');
+            
+            // Return to ash forest to continue harvesting
+            console.log(`Returning to ash forest at (${this.ashForestCoords.x}, ${this.ashForestCoords.y})`);
+            await moveCharacter(this.ashForestCoords.x, this.ashForestCoords.y, this.characterName);
+            continue; // Continue harvesting after deposit
+          } catch (depositError) {
+            console.error('Emergency deposit failed:', depositError.message);
+            // If deposit fails, break the harvesting loop and continue with normal flow
+          }
           break;
         }
         
@@ -490,7 +508,25 @@ class AshHarvestingLoop extends BaseLoop {
                 if (error.message.includes('inventory is full') || 
                     error.message.includes('Character inventory is full') || 
                     (error.message.includes('API error') && error.message.includes('497'))) {
-                  console.log('Inventory is full. Proceeding to deposit items...');
+                  console.log('Inventory is full. Proceeding to emergency deposit...');
+                
+                  // Move to bank and deposit immediately when inventory is full
+                  try {
+                    console.log(`Moving to bank at (${this.bankCoords.x}, ${this.bankCoords.y})`);
+                    await moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName);
+                  
+                    console.log('Starting emergency deposit of all items...');
+                    await depositAllItems(this.characterName);
+                    console.log('Emergency deposit complete');
+                  
+                    // Return to ash forest to continue harvesting
+                    console.log(`Returning to ash forest at (${this.ashForestCoords.x}, ${this.ashForestCoords.y})`);
+                    await moveCharacter(this.ashForestCoords.x, this.ashForestCoords.y, this.characterName);
+                    continue; // Continue harvesting after deposit
+                  } catch (depositError) {
+                    console.error('Emergency deposit failed:', depositError.message);
+                    // If deposit fails, break the harvesting loop and continue with normal flow
+                  }
                   break;
                 }
                 
