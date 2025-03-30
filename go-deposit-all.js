@@ -84,13 +84,13 @@ async function depositAllItems(characterName) {
       
       try {
         // Check for cooldown before each deposit
-        let freshDetails = await getCharacterDetails();
-        
+        let freshDetails = await getCharacterDetails(characterName); // Pass characterName
+
         if (freshDetails.cooldown && freshDetails.cooldown > 0) {
           const now = new Date();
           const expirationDate = new Date(freshDetails.cooldown_expiration);
           const cooldownSeconds = Math.max(0, (expirationDate - now) / 1000);
-          
+
           if (cooldownSeconds > 0) {
             console.log(`Character is in cooldown. Waiting ${cooldownSeconds.toFixed(1)} seconds before deposit...`);
             await new Promise(resolve => setTimeout(resolve, cooldownSeconds * 1000 + 500)); // Add 500ms buffer
