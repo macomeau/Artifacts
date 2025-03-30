@@ -377,26 +377,28 @@ async function startScript(script, args = []) {
   }
   
   // Prepare the command line arguments for the script
-  let nodeArgs = [script];
+  let scriptArguments = []; // Arguments intended *for the script itself*
 
   // Add the --no-recycle flag if it was present
   if (!shouldRecycle) {
-    nodeArgs.push(noRecycleFlag);
+    scriptArguments.push(noRecycleFlag);
   }
 
   // Add the processed script arguments (character name, coords, etc.)
-  nodeArgs.push(...scriptArgs);
+  scriptArguments.push(...scriptArgs);
 
   // Add the --env argument if we're using a custom env file
-  // Note: This prepends the env arg, ensure 'node' is the first element for spawn
-  let finalSpawnArgs = nodeArgs;
+  // This argument is for our script's env-loader, not for node itself
   if (customEnvFile) {
-    finalSpawnArgs = [`--env=${customEnvFile}`, ...nodeArgs];
+    scriptArguments.push(`--env=${customEnvFile}`);
   }
+
+  // The final arguments array for spawn should be: [scriptName, ...scriptArguments]
+  const finalSpawnArgs = [script, ...scriptArguments];
 
   console.log(`Spawning node with args: ${finalSpawnArgs.join(' ')}`); // Log final args
 
-  // Spawn the new process with the enhanced environment
+  // Spawn the new process with the script name first, followed by its arguments
   const childProcess = spawn('node', finalSpawnArgs, { env });
 
   // Store process information
