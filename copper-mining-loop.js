@@ -410,64 +410,63 @@ class CopperMiningLoop extends BaseLoop {
     
     console.log(`Completed mining loop #${this.loopCount}\n`);
   }
+}
 
-  /**
-   * Main entry point for the application that handles command line arguments and initiates the mining loop.
-   * Parses command line arguments for character name and processing options.
-   * @static
-   * @async
-   * @example
-   * node copper-mining-loop.js [characterName] [processOption] [targetOre] [mineX] [mineY] [bankX] [bankY] [smithX] [smithY] [barsToSmelt]
-   * node copper-mining-loop.js MyChar smelt 150 2 0 4 1 1 5 15
-   * node copper-mining-loop.js MyOtherChar store 200 2 0 4 1
-   * @returns {Promise<void>}
-   * @throws {Error} If there's an error in the main process
-   */
-  static async main() {
-    const args = process.argv.slice(2);
-    const characterName = args[0] || process.env.control_character || config.character;
+/**
+ * Main entry point for the application that handles command line arguments and initiates the mining loop.
+ * Parses command line arguments for character name and processing options.
+ * @async
+ * @example
+ * node copper-mining-loop.js [characterName] [processOption] [targetOre] [mineX] [mineY] [bankX] [bankY] [smithX] [smithY] [barsToSmelt]
+ * node copper-mining-loop.js MyChar smelt 150 2 0 4 1 1 5 15
+ * node copper-mining-loop.js MyOtherChar store 200 2 0 4 1
+ * @returns {Promise<void>}
+ * @throws {Error} If there's an error in the main process
+ */
+async function main() { // Moved outside the class
+  const args = process.argv.slice(2);
+  const characterName = args[0] || process.env.control_character || config.character;
 
-    // --- Parse options from command line arguments ---
-    const options = {};
-    const processOption = args[1] || 'store'; // Default to storing ore
-    options.skipSmelting = processOption !== 'smelt';
+  // --- Parse options from command line arguments ---
+  const options = {};
+  const processOption = args[1] || 'store'; // Default to storing ore
+  options.skipSmelting = processOption !== 'smelt';
 
-    if (args[2]) options.targetCopperOre = parseInt(args[2], 10);
-    if (args[3] && args[4]) options.mineCoords = { x: parseInt(args[3], 10), y: parseInt(args[4], 10) };
-    if (args[5] && args[6]) options.bankCoords = { x: parseInt(args[5], 10), y: parseInt(args[6], 10) };
-    if (args[7] && args[8]) options.smithCoords = { x: parseInt(args[7], 10), y: parseInt(args[8], 10) };
-    if (args[9]) options.copperBarsToSmelt = parseInt(args[9], 10);
+  if (args[2]) options.targetCopperOre = parseInt(args[2], 10);
+  if (args[3] && args[4]) options.mineCoords = { x: parseInt(args[3], 10), y: parseInt(args[4], 10) };
+  if (args[5] && args[6]) options.bankCoords = { x: parseInt(args[5], 10), y: parseInt(args[6], 10) };
+  if (args[7] && args[8]) options.smithCoords = { x: parseInt(args[7], 10), y: parseInt(args[8], 10) };
+  if (args[9]) options.copperBarsToSmelt = parseInt(args[9], 10);
 
-    // Create an instance with potentially overridden options
-    const miningLoop = new CopperMiningLoop(characterName, options);
+  // Create an instance with potentially overridden options
+  const miningLoop = new CopperMiningLoop(characterName, options);
 
-    try {
-      console.log(`Starting copper mining automation for character ${characterName}`);
-      console.log(`Processing option: ${processOption} (skipSmelting: ${miningLoop.skipSmelting})`);
-      console.log('Using configuration:');
-      console.log(`  - Target Copper Ore: ${miningLoop.targetCopperOre}`);
-      console.log(`  - Mine Coords: (${miningLoop.mineCoords.x}, ${miningLoop.mineCoords.y})`);
-      console.log(`  - Bank Coords: (${miningLoop.bankCoords.x}, ${miningLoop.bankCoords.y})`);
-      if (!miningLoop.skipSmelting) {
-        console.log(`  - Smith Coords: (${miningLoop.smithCoords.x}, ${miningLoop.smithCoords.y})`);
-        console.log(`  - Bars to Smelt per Cycle: ${miningLoop.copperBarsToSmelt}`);
-      }
-      console.log('\nWill perform the following steps in a loop:');
-      console.log(`1. Mine at (${miningLoop.mineCoords.x},${miningLoop.mineCoords.y}) until ${miningLoop.targetCopperOre} copper ore collected`);
-
-      if (!miningLoop.skipSmelting) {
-        console.log(`2. Smelt at (${miningLoop.smithCoords.x},${miningLoop.smithCoords.y}) into copper bars`);
-        console.log(`3. Deposit all items at bank (${miningLoop.bankCoords.x},${miningLoop.bankCoords.y})`);
-      } else {
-        console.log(`2. Skip smelting and directly deposit all ore at bank (${miningLoop.bankCoords.x},${miningLoop.bankCoords.y})`);
-      }
-      console.log('Press Ctrl+C to stop the script at any time');
-      await miningLoop.mainLoop();
-    } catch (error) {
-      console.error('Error in main process:', error.message);
+  try {
+    console.log(`Starting copper mining automation for character ${characterName}`);
+    console.log(`Processing option: ${processOption} (skipSmelting: ${miningLoop.skipSmelting})`);
+    console.log('Using configuration:');
+    console.log(`  - Target Copper Ore: ${miningLoop.targetCopperOre}`);
+    console.log(`  - Mine Coords: (${miningLoop.mineCoords.x}, ${miningLoop.mineCoords.y})`);
+    console.log(`  - Bank Coords: (${miningLoop.bankCoords.x}, ${miningLoop.bankCoords.y})`);
+    if (!miningLoop.skipSmelting) {
+      console.log(`  - Smith Coords: (${miningLoop.smithCoords.x}, ${miningLoop.smithCoords.y})`);
+      console.log(`  - Bars to Smelt per Cycle: ${miningLoop.copperBarsToSmelt}`);
     }
+    console.log('\nWill perform the following steps in a loop:');
+    console.log(`1. Mine at (${miningLoop.mineCoords.x},${miningLoop.mineCoords.y}) until ${miningLoop.targetCopperOre} copper ore collected`);
+
+    if (!miningLoop.skipSmelting) {
+      console.log(`2. Smelt at (${miningLoop.smithCoords.x},${miningLoop.smithCoords.y}) into copper bars`);
+      console.log(`3. Deposit all items at bank (${miningLoop.bankCoords.x},${miningLoop.bankCoords.y})`);
+    } else {
+      console.log(`2. Skip smelting and directly deposit all ore at bank (${miningLoop.bankCoords.x},${miningLoop.bankCoords.y})`);
+    }
+    console.log('Press Ctrl+C to stop the script at any time');
+    await miningLoop.mainLoop();
+  } catch (error) {
+    console.error('Error in main process:', error.message);
   }
 }
 
-// Execute the main function
-CopperMiningLoop.main();
+// Execute the main function defined above
+main();
