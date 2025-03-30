@@ -310,32 +310,33 @@ class CopperMiningLoop extends BaseLoop {
       } catch (error) {
         console.error('Smelting failed:', error.message);
       
-      // Handle cooldown errors for smelting
-      const cooldownMatch = error.message.match(/Character in cooldown: (\d+\.\d+) seconds left/);
-      if (cooldownMatch) {
-        const cooldownSeconds = parseFloat(cooldownMatch[1]);
-        console.log(`Smelting action in cooldown. Waiting ${cooldownSeconds.toFixed(1)} seconds...`);
-        
-        // Wait for the cooldown
-        await new Promise(resolve => setTimeout(resolve, cooldownSeconds * 1000 + 500));
-        
-        // Try again after cooldown
-        console.log('Retrying smelting after cooldown...');
-        try {
-          // Recalculate bars to make after cooldown
-          const oreAfterCooldown = await this.getCopperOreCount();
-          const barsToRetry = Math.min(this.copperBarsToSmelt, Math.floor(oreAfterCooldown / 10));
-          if (barsToRetry > 0) {
-            const result = await craftingAction('copper', barsToRetry, 'copper_ore', this.characterName);
-            console.log('Smelting successful:', result);
-          } else {
-            console.log('Not enough ore to retry smelting.');
+        // Handle cooldown errors for smelting
+        const cooldownMatch = error.message.match(/Character in cooldown: (\d+\.\d+) seconds left/);
+        if (cooldownMatch) {
+          const cooldownSeconds = parseFloat(cooldownMatch[1]);
+          console.log(`Smelting action in cooldown. Waiting ${cooldownSeconds.toFixed(1)} seconds...`);
+          
+          // Wait for the cooldown
+          await new Promise(resolve => setTimeout(resolve, cooldownSeconds * 1000 + 500));
+          
+          // Try again after cooldown
+          console.log('Retrying smelting after cooldown...');
+          try {
+            // Recalculate bars to make after cooldown
+            const oreAfterCooldown = await this.getCopperOreCount();
+            const barsToRetry = Math.min(this.copperBarsToSmelt, Math.floor(oreAfterCooldown / 10));
+            if (barsToRetry > 0) {
+              const result = await craftingAction('copper', barsToRetry, 'copper_ore', this.characterName);
+              console.log('Smelting successful:', result);
+            } else {
+              console.log('Not enough ore to retry smelting.');
+            }
+          } catch (retryError) {
+            console.error('Smelting failed after retry:', retryError.message);
           }
-        } catch (retryError) {
-          console.error('Smelting failed after retry:', retryError.message);
+        } else {
+          throw error;
         }
-      } else {
-        throw error;
       }
     }
       console.log('Smelting complete');
