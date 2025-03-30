@@ -18,19 +18,36 @@ class AshHarvestingLoop extends BaseLoop {
   /**
    * Create an ash harvesting loop instance
    * @param {string} characterName - Name of character to perform actions with
+   * @param {Object} [options={}] - Configuration options for the loop
+   * @param {Object} [options.ashForestCoords={ x: -1, y: 0 }] - Coordinates of the ash forest
+   * @param {Object} [options.workshopCoords={ x: -2, y: -3 }] - Coordinates of the workshop
+   * @param {Object} [options.bankCoords={ x: 4, y: 1 }] - Coordinates of the bank
+   * @param {number} [options.targetAshWood=100] - Target ash wood quantity to collect
+   * @param {number} [options.ashPlanksToProcess=10] - Number of ash planks to process per loop (if processing)
    */
-  constructor(characterName) {
+  constructor(characterName, options = {}) {
     super(characterName);
+
+    // Default coordinates and targets
+    const defaults = {
+      ashForestCoords: { x: -1, y: 0 },
+      workshopCoords: { x: -2, y: -3 },
+      bankCoords: { x: 4, y: 1 },
+      targetAshWood: 100,
+      ashPlanksToProcess: 10, // Note: This might be implicitly handled by crafting logic based on available wood
+    };
+
+    // Merge options with defaults
     /** @type {Object} Coordinates of ash forest */
-    this.ASH_FOREST_COORDS = { x: -1, y: 0 };
+    this.ashForestCoords = options.ashForestCoords || defaults.ashForestCoords;
     /** @type {Object} Coordinates of workshop */
-    this.WORKSHOP_COORDS = { x: -2, y: -3 };
+    this.workshopCoords = options.workshopCoords || defaults.workshopCoords;
     /** @type {Object} Coordinates of bank */
-    this.BANK_COORDS = { x: 4, y: 1 };
+    this.bankCoords = options.bankCoords || defaults.bankCoords;
     /** @type {number} Target ash wood quantity to collect */
-    this.TARGET_ASH_WOOD = 100;
+    this.targetAshWood = options.targetAshWood || defaults.targetAshWood;
     /** @type {number} Number of ash planks to process per loop */
-    this.ASH_PLANKS_TO_PROCESS = 10;
+    this.ashPlanksToProcess = options.ashPlanksToProcess || defaults.ashPlanksToProcess; // Keep for potential future use if needed
   }
 
   /**
@@ -60,7 +77,7 @@ class AshHarvestingLoop extends BaseLoop {
    */
   async hasEnoughAshWood() {
     const currentAsh = await this.getAshWoodCount();
-    return currentAsh >= this.TARGET_ASH_WOOD;
+    return currentAsh >= this.targetAshWood; // Use configured target
   }
 
   /**
@@ -101,12 +118,12 @@ class AshHarvestingLoop extends BaseLoop {
       
       // Check if already at ash forest
       const currentDetails = await getCharacterDetails(this.characterName);
-      if (currentDetails.x === this.ASH_FOREST_COORDS.x && currentDetails.y === this.ASH_FOREST_COORDS.y) {
+      if (currentDetails.x === this.ashForestCoords.x && currentDetails.y === this.ashForestCoords.y) {
         console.log('Character is already at the ash forest. Continuing with harvesting...');
       } else {
-        console.log(`Moving to ash forest at (${this.ASH_FOREST_COORDS.x}, ${this.ASH_FOREST_COORDS.y})`);
+        console.log(`Moving to ash forest at (${this.ashForestCoords.x}, ${this.ashForestCoords.y})`);
         try {
-          await moveCharacter(this.ASH_FOREST_COORDS.x, this.ASH_FOREST_COORDS.y, this.characterName);
+          await moveCharacter(this.ashForestCoords.x, this.ashForestCoords.y, this.characterName);
         } catch (error) {
           if (error.message.includes('Character already at destination')) {
             console.log('Character is already at the ash forest. Continuing with harvesting...');
@@ -118,9 +135,9 @@ class AshHarvestingLoop extends BaseLoop {
     } catch (error) {
       console.error('Failed to check cooldown:', error.message);
       // Continue with movement even if we can't check cooldown
-      console.log(`Moving to ash forest at (${this.ASH_FOREST_COORDS.x}, ${this.ASH_FOREST_COORDS.y})`);
+      console.log(`Moving to ash forest at (${this.ashForestCoords.x}, ${this.ashForestCoords.y})`);
       try {
-        await moveCharacter(this.ASH_FOREST_COORDS.x, this.ASH_FOREST_COORDS.y, this.characterName);
+        await moveCharacter(this.ashForestCoords.x, this.ashForestCoords.y, this.characterName);
       } catch (error) {
         if (error.message.includes('Character already at destination')) {
           console.log('Character is already at the ash forest. Continuing with harvesting...');
@@ -197,7 +214,7 @@ class AshHarvestingLoop extends BaseLoop {
         }
       }
     }
-    console.log(`Collected ${this.TARGET_ASH_WOOD} ash wood`);
+    console.log(`Collected target of ${this.targetAshWood} ash wood`); // Use configured target
     
     // Step 2: Process ash into planks
     // Check for cooldown before moving to workshop
@@ -218,17 +235,17 @@ class AshHarvestingLoop extends BaseLoop {
       
       // Check if already at workshop
       const currentDetails = await getCharacterDetails();
-      if (currentDetails.x === this.WORKSHOP_COORDS.x && currentDetails.y === this.WORKSHOP_COORDS.y) {
+      if (currentDetails.x === this.workshopCoords.x && currentDetails.y === this.workshopCoords.y) {
         console.log('Character is already at the workshop. Continuing with processing...');
       } else {
-        console.log(`Moving to workshop at (${this.WORKSHOP_COORDS.x}, ${this.WORKSHOP_COORDS.y})`);
-        await moveCharacter(this.WORKSHOP_COORDS.x, this.WORKSHOP_COORDS.y, this.characterName);
+        console.log(`Moving to workshop at (${this.workshopCoords.x}, ${this.workshopCoords.y})`);
+        await moveCharacter(this.workshopCoords.x, this.workshopCoords.y, this.characterName);
       }
     } catch (error) {
       console.error('Failed to check cooldown:', error.message);
       // Continue with movement even if we can't check cooldown
-      console.log(`Moving to workshop at (${this.WORKSHOP_COORDS.x}, ${this.WORKSHOP_COORDS.y})`);
-      await moveCharacter(this.WORKSHOP_COORDS.x, this.WORKSHOP_COORDS.y, this.characterName);
+      console.log(`Moving to workshop at (${this.workshopCoords.x}, ${this.workshopCoords.y})`);
+      await moveCharacter(this.workshopCoords.x, this.workshopCoords.y, this.characterName);
     }
     
     // Calculate how many ash planks we can make based on ash wood inventory
@@ -275,8 +292,15 @@ class AshHarvestingLoop extends BaseLoop {
         // Try again after cooldown
         console.log('Retrying processing after cooldown...');
         try {
-          const result = await craftingAction('ash_plank', this.ASH_PLANKS_TO_PROCESS, 'ash_wood', this.characterName);
-          console.log('Processing successful:', result);
+          // Recalculate planks to make based on current wood count after cooldown
+          const currentAshWood = await this.getAshWoodCount();
+          const planksToRetry = Math.floor(currentAshWood / 10);
+          if (planksToRetry > 0) {
+            const result = await craftingAction('ash_plank', planksToRetry, 'ash_wood', this.characterName);
+            console.log('Processing successful:', result);
+          } else {
+            console.log('Not enough ash wood to retry processing.');
+          }
         } catch (retryError) {
           console.error('Processing failed after retry:', retryError.message);
         }
@@ -305,17 +329,17 @@ class AshHarvestingLoop extends BaseLoop {
       
       // Check if already at bank
       const currentDetails = await getCharacterDetails();
-      if (currentDetails.x === this.BANK_COORDS.x && currentDetails.y === this.BANK_COORDS.y) {
+      if (currentDetails.x === this.bankCoords.x && currentDetails.y === this.bankCoords.y) {
         console.log('Character is already at the bank. Continuing with deposit...');
       } else {
-        console.log(`Moving to bank at (${this.BANK_COORDS.x}, ${this.BANK_COORDS.y})`);
-        await moveCharacter(this.BANK_COORDS.x, this.BANK_COORDS.y, this.characterName);
+        console.log(`Moving to bank at (${this.bankCoords.x}, ${this.bankCoords.y})`);
+        await moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName);
       }
     } catch (error) {
       console.error('Failed to check cooldown:', error.message);
       // Continue with movement even if we can't check cooldown
-      console.log(`Moving to bank at (${this.BANK_COORDS.x}, ${this.BANK_COORDS.y})`);
-      await moveCharacter(this.BANK_COORDS.x, this.BANK_COORDS.y, this.characterName);
+      console.log(`Moving to bank at (${this.bankCoords.x}, ${this.bankCoords.y})`);
+      await moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName);
     }
     
     console.log('Starting deposit of all items...');
@@ -376,7 +400,8 @@ class AshHarvestingLoop extends BaseLoop {
    * @static
    * @async
    * @example
-   * node ash-harvesting-loop.js [characterName] [processOption]
+   * node ash-harvesting-loop.js [characterName] [processOption] [targetAsh] [ashX] [ashY] [bankX] [bankY] [workshopX] [workshopY]
+   * node ash-harvesting-loop.js MyChar store 150 -1 0 4 1 -2 -3
    * @returns {Promise<void>}
    * @throws {Error} If fatal error occurs in main process
    */
@@ -384,26 +409,39 @@ class AshHarvestingLoop extends BaseLoop {
     const args = process.argv.slice(2);
     const characterName = args[0] || process.env.control_character || config.character;
     
-    // Get processing option from args[1]
-    const processOption = args[1] || 'store';
-    
-    // Create flag to skip workshop processing if processOption is 'store'
+    // Get processing option (store or process)
+    const processOption = args[1] || 'store'; // Default to storing wood
     const skipProcessing = processOption === 'store';
-    
-    // Create a modified instance with processing preferences
-    const harvestingLoop = new AshHarvestingLoop(characterName);
+
+    // --- Parse options from command line arguments ---
+    const options = {};
+    if (args[2]) options.targetAshWood = parseInt(args[2], 10);
+    if (args[3] && args[4]) options.ashForestCoords = { x: parseInt(args[3], 10), y: parseInt(args[4], 10) };
+    if (args[5] && args[6]) options.bankCoords = { x: parseInt(args[5], 10), y: parseInt(args[6], 10) };
+    if (args[7] && args[8]) options.workshopCoords = { x: parseInt(args[7], 10), y: parseInt(args[8], 10) };
+    // Note: ashPlanksToProcess is not currently configurable via CLI, uses default/calculated
+
+    // Create an instance with potentially overridden options
+    const harvestingLoop = new AshHarvestingLoop(characterName, options);
     
     try {
       console.log(`Starting ash harvesting automation for character ${characterName}`);
       console.log(`Processing option: ${processOption} (skipProcessing: ${skipProcessing})`);
-      console.log('Will perform the following steps in a loop:');
-      console.log(`1. Harvest at (${harvestingLoop.ASH_FOREST_COORDS.x},${harvestingLoop.ASH_FOREST_COORDS.y}) until ${harvestingLoop.TARGET_ASH_WOOD} ash wood collected`);
+      console.log('Using configuration:');
+      console.log(`  - Target Ash Wood: ${harvestingLoop.targetAshWood}`);
+      console.log(`  - Ash Forest Coords: (${harvestingLoop.ashForestCoords.x}, ${harvestingLoop.ashForestCoords.y})`);
+      console.log(`  - Bank Coords: (${harvestingLoop.bankCoords.x}, ${harvestingLoop.bankCoords.y})`);
+      if (!skipProcessing) {
+        console.log(`  - Workshop Coords: (${harvestingLoop.workshopCoords.x}, ${harvestingLoop.workshopCoords.y})`);
+      }
+      console.log('\nWill perform the following steps in a loop:');
+      console.log(`1. Harvest at (${harvestingLoop.ashForestCoords.x},${harvestingLoop.ashForestCoords.y}) until ${harvestingLoop.targetAshWood} ash wood collected`);
       
       if (!skipProcessing) {
-        console.log(`2. Process at (${harvestingLoop.WORKSHOP_COORDS.x},${harvestingLoop.WORKSHOP_COORDS.y}) into ash planks`);
-        console.log(`3. Deposit all items at bank (${harvestingLoop.BANK_COORDS.x},${harvestingLoop.BANK_COORDS.y})`);
+        console.log(`2. Process at (${harvestingLoop.workshopCoords.x},${harvestingLoop.workshopCoords.y}) into ash planks`);
+        console.log(`3. Deposit all items at bank (${harvestingLoop.bankCoords.x},${harvestingLoop.bankCoords.y})`);
       } else {
-        console.log(`2. Skip processing and directly deposit all wood at bank (${harvestingLoop.BANK_COORDS.x},${harvestingLoop.BANK_COORDS.y})`);
+        console.log(`2. Skip processing and directly deposit all wood at bank (${harvestingLoop.bankCoords.x},${harvestingLoop.bankCoords.y})`);
       }
       console.log('Press Ctrl+C to stop the script at any time');
       
