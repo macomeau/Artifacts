@@ -489,6 +489,7 @@ class CopperMiningLoop extends BaseLoop {
   } catch (error) {
     console.error('Error in main process:', error.message);
   }
+  }
 }
 
 // Execute the main function defined above
