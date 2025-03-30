@@ -9,10 +9,10 @@ const path = require('path');
 const fetch = require('node-fetch');
 const fs = require('fs');
 
-// Load environment variables first
-const envLoader = require('./env-loader');
-// This will handle both default and custom env files via the --env parameter
-envLoader.loadEnv();
+// Load environment variables first.
+// Requiring env-loader automatically loads the environment and modifies process.env.
+// It also exports the final loaded config object, though we might not use it directly here.
+const envConfig = require('./env-loader');
 
 // Load modules that depend on environment configuration
 const rootConfig = require('./config'); // Load root config for token etc. (Corrected path)
