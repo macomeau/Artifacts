@@ -20,15 +20,24 @@ class StrangeOreMiningLoop extends BaseLoop {
    * @param {string} characterName - Name of character to perform actions with
    * @param {number} oreX - X coordinate of the strange ore location
    * @param {number} oreY - Y coordinate of the strange ore location
+   * @param {Object} [options={}] - Configuration options for the loop.
+   * @param {number} [options.targetOre=25] - Target ore quantity to collect.
+   * @param {Object} [options.bankCoords={ x: 4, y: 1 }] - Coordinates for the bank.
    */
-  constructor(characterName, oreX, oreY) {
+  constructor(characterName, oreX, oreY, options = {}) {
     super(characterName);
+
+    const defaults = {
+      targetOre: 25,
+      bankCoords: { x: 4, y: 1 },
+    };
+
     /** @type {Object} Coordinates of strange ore location */
-    this.STRANGE_ORE_COORDS = { x: parseInt(oreX), y: parseInt(oreY) };
+    this.strangeOreCoords = { x: parseInt(oreX), y: parseInt(oreY) }; // Keep constructor args for coords
     /** @type {Object} Coordinates of bank */
-    this.BANK_COORDS = { x: 4, y: 1 };
+    this.bankCoords = options.bankCoords || defaults.bankCoords;
     /** @type {number} Target ore quantity to collect before depositing */
-    this.TARGET_ORE = 25;
+    this.targetOre = options.targetOre || defaults.targetOre;
   }
 
   /**
@@ -58,7 +67,7 @@ class StrangeOreMiningLoop extends BaseLoop {
    */
   async hasEnoughOre() {
     const currentOre = await this.getOreCount();
-    return currentOre >= this.TARGET_ORE;
+    return currentOre >= this.targetOre; // Use configured target
   }
 
   /**
@@ -92,15 +101,15 @@ class StrangeOreMiningLoop extends BaseLoop {
             await new Promise(resolve => setTimeout(resolve, cooldownSeconds * 1000 + 500)); // Add 500ms buffer
           }
         }
-        
+      
         // Check if already at the ore location
         const currentDetails = await getCharacterDetails(this.characterName);
-        if (currentDetails.x === this.STRANGE_ORE_COORDS.x && currentDetails.y === this.STRANGE_ORE_COORDS.y) {
+        if (currentDetails.x === this.strangeOreCoords.x && currentDetails.y === this.strangeOreCoords.y) {
           console.log('Character is already at the strange ore location. Continuing with mining...');
         } else {
-          console.log(`Moving to strange ore location at (${this.STRANGE_ORE_COORDS.x}, ${this.STRANGE_ORE_COORDS.y})`);
+          console.log(`Moving to strange ore location at (${this.strangeOreCoords.x}, ${this.strangeOreCoords.y})`);
           try {
-            await moveCharacter(this.STRANGE_ORE_COORDS.x, this.STRANGE_ORE_COORDS.y, this.characterName);
+            await moveCharacter(this.strangeOreCoords.x, this.strangeOreCoords.y, this.characterName);
           } catch (error) {
             if (error.message.includes('Character already at destination')) {
               console.log('Character is already at the strange ore location. Continuing with mining...');
@@ -112,9 +121,9 @@ class StrangeOreMiningLoop extends BaseLoop {
       } catch (error) {
         console.error('Failed to check cooldown:', error.message);
         // Continue with movement even if we can't check cooldown
-        console.log(`Moving to strange ore location at (${this.STRANGE_ORE_COORDS.x}, ${this.STRANGE_ORE_COORDS.y})`);
+        console.log(`Moving to strange ore location at (${this.strangeOreCoords.x}, ${this.strangeOreCoords.y})`);
         try {
-          await moveCharacter(this.STRANGE_ORE_COORDS.x, this.STRANGE_ORE_COORDS.y, this.characterName);
+          await moveCharacter(this.strangeOreCoords.x, this.strangeOreCoords.y, this.characterName);
         } catch (error) {
           if (error.message.includes('Character already at destination')) {
             console.log('Character is already at the strange ore location. Continuing with mining...');
@@ -191,8 +200,8 @@ class StrangeOreMiningLoop extends BaseLoop {
           }
         }
       }
-      console.log(`Collected ${this.TARGET_ORE} strange ore`);
-      
+      console.log(`Collected target of ${this.targetOre} strange ore`); // Use configured target
+    
       // Step 2: Deposit everything in the bank
       // Check for cooldown before moving to bank
       console.log('Checking for cooldown before moving to bank...');
@@ -209,22 +218,22 @@ class StrangeOreMiningLoop extends BaseLoop {
             await new Promise(resolve => setTimeout(resolve, cooldownSeconds * 1000 + 500)); // Add 500ms buffer
           }
         }
-        
+      
         // Check if already at bank
         const currentDetails = await getCharacterDetails(this.characterName);
-        if (currentDetails.x === this.BANK_COORDS.x && currentDetails.y === this.BANK_COORDS.y) {
+        if (currentDetails.x === this.bankCoords.x && currentDetails.y === this.bankCoords.y) {
           console.log('Character is already at the bank. Continuing with deposit...');
         } else {
-          console.log(`Moving to bank at (${this.BANK_COORDS.x}, ${this.BANK_COORDS.y})`);
-          await moveCharacter(this.BANK_COORDS.x, this.BANK_COORDS.y, this.characterName);
+          console.log(`Moving to bank at (${this.bankCoords.x}, ${this.bankCoords.y})`);
+          await moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName);
         }
       } catch (error) {
         console.error('Failed to check cooldown:', error.message);
         // Continue with movement even if we can't check cooldown
-        console.log(`Moving to bank at (${this.BANK_COORDS.x}, ${this.BANK_COORDS.y})`);
-        await moveCharacter(this.BANK_COORDS.x, this.BANK_COORDS.y, this.characterName);
+        console.log(`Moving to bank at (${this.bankCoords.x}, ${this.bankCoords.y})`);
+        await moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName);
       }
-      
+    
       console.log('Starting deposit of all items...');
       
       // Check if character is in cooldown before depositing
@@ -283,40 +292,68 @@ class StrangeOreMiningLoop extends BaseLoop {
    * @static
    * @async
    * @returns {Promise<void>} 
+   * @static
+   * @async
+   * @example
+   * node strange-ore-mining-loop.js [characterName] "(oreX,oreY)" [targetOre] [bankX] [bankY]
+   * node strange-ore-mining-loop.js MyChar "(15,-5)" 50 4 1
+   * @returns {Promise<void>}
    * @throws {Error} If fatal error occurs in main process
    */
   static async main() {
-    // Get command line arguments
     const args = process.argv.slice(2);
-    
-    // Extract coordinates (first argument) if provided in format (x,y) or x,y
-    let oreX = 0;
-    let oreY = 0;
-    
-    if (args.length > 0) {
-      // Parse coordinates from first argument
-      const coordMatch = args[0].match(/\(?(-?\d+)\s*,\s*(-?\d+)\)?/);
-      if (coordMatch) {
-        oreX = parseInt(coordMatch[1]);
-        oreY = parseInt(coordMatch[2]);
-        // Shift args array to remove the coordinates
-        args.shift();
-      }
+    let characterName = args[0];
+    let oreX, oreY;
+
+    // Fallback logic for character name
+    if (!characterName || characterName.startsWith('--')) {
+      characterName = process.env.control_character || config.character;
+    } else {
+      args.shift(); // Remove character name if it was provided first
     }
-    
-    // Get character name from remaining args or config
-    const characterName = args[0] || process.env.control_character || config.character;
-    
-    // Create mining loop instance with coordinates and character
-    const miningLoop = new StrangeOreMiningLoop(characterName, oreX, oreY);
-    
+
+    // --- Parse coordinates and options from remaining arguments ---
+    const options = {};
+    let coordArgIndex = -1;
+
+    // Find coordinate argument "(x,y)" or "x,y"
+    for (let i = 0; i < args.length; i++) {
+        const coordMatch = args[i].match(/\(?(-?\d+)\s*,\s*(-?\d+)\)?/);
+        if (coordMatch) {
+            oreX = parseInt(coordMatch[1]);
+            oreY = parseInt(coordMatch[2]);
+            coordArgIndex = i;
+            break;
+        }
+    }
+
+    if (oreX === undefined || oreY === undefined) {
+        console.error('Error: Coordinates must be provided in format "(X,Y)" or "X,Y".');
+        process.exit(1);
+    }
+
+    // Remove coordinate arg from list before parsing others
+    if (coordArgIndex !== -1) {
+        args.splice(coordArgIndex, 1);
+    }
+
+    // Parse remaining args for options
+    if (args[0]) options.targetOre = parseInt(args[0], 10);
+    if (args[1] && args[2]) options.bankCoords = { x: parseInt(args[1], 10), y: parseInt(args[2], 10) };
+
+    // Create mining loop instance with coordinates and options
+    const miningLoop = new StrangeOreMiningLoop(characterName, oreX, oreY, options);
+
     try {
       console.log(`Starting strange ore mining automation for character ${characterName}`);
-      console.log('Will perform the following steps in a loop:');
-      console.log(`1. Mine at (${miningLoop.STRANGE_ORE_COORDS.x},${miningLoop.STRANGE_ORE_COORDS.y}) until ${miningLoop.TARGET_ORE} strange ore collected`);
-      console.log(`2. Deposit all items at bank (${miningLoop.BANK_COORDS.x},${miningLoop.BANK_COORDS.y})`);
+      console.log('Using configuration:');
+      console.log(`  - Target Ore: ${miningLoop.targetOre}`);
+      console.log(`  - Ore Coords: (${miningLoop.strangeOreCoords.x}, ${miningLoop.strangeOreCoords.y})`);
+      console.log(`  - Bank Coords: (${miningLoop.bankCoords.x}, ${miningLoop.bankCoords.y})`);
+      console.log('\nWill perform the following steps in a loop:');
+      console.log(`1. Mine at (${miningLoop.strangeOreCoords.x},${miningLoop.strangeOreCoords.y}) until ${miningLoop.targetOre} strange ore collected`);
+      console.log(`2. Deposit all items at bank (${miningLoop.bankCoords.x},${miningLoop.bankCoords.y})`);
       console.log('Press Ctrl+C to stop the script at any time');
-      
       await miningLoop.mainLoop();
     } catch (error) {
       console.error('Error in main process:', error.message);

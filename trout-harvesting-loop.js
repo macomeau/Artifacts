@@ -19,15 +19,24 @@ class TroutHarvestingLoop extends BaseLoop {
   /**
    * Create a trout fishing loop.
    * @param {string} [characterName=config.character] - The character name to perform actions with.
+   * @param {Object} [options={}] - Configuration options for the loop.
+   * @param {Object} [options.harvestCoords={ x: 7, y: 12 }] - Coordinates for fishing.
+   * @param {Object} [options.bankCoords={ x: 4, y: 1 }] - Coordinates for the bank.
    */
-  constructor(characterName) {
+  constructor(characterName, options = {}) {
     super(characterName || config.character);
+
+    const defaults = {
+      harvestCoords: { x: 7, y: 12 },
+      bankCoords: { x: 4, y: 1 },
+    };
+
     /** @type {Object} Coordinates of the trout fishing location */
-    this.harvestCoords = { x: 7, y: 12 };
+    this.harvestCoords = options.harvestCoords || defaults.harvestCoords;
     /** @type {Object} Coordinates of the bank */
-    this.bankCoords = { x: 4, y: 1 };
+    this.bankCoords = options.bankCoords || defaults.bankCoords;
     /** @type {number} Counter for total fish caught */
-    this.resourceCount = 0;
+    this.resourceCount = 0; // Reset per instance
   }
 
   /**
@@ -158,36 +167,32 @@ class TroutHarvestingLoop extends BaseLoop {
 
   /**
    * Main execution method for command line usage
+   * @example
+   * node trout-harvesting-loop.js [characterName] [harvestX] [harvestY] [bankX] [bankY]
+   * node trout-harvesting-loop.js MyChar 7 12 4 1
    */
   static async main() {
-    let characterName;
-    
-    // Safe access to command line arguments
-    try {
-      const args = process.argv.slice(2);
-      characterName = args[0];
-    } catch (error) {
-      console.log('Error accessing command line arguments, using fallback character');
-    }
-    
-    // Fallback to environment variable or config if no command line argument
+    const args = process.argv.slice(2);
+    let characterName = args[0];
+
+    // Fallback logic for character name
     if (!characterName) {
-      try {
-        characterName = process.env.control_character;
-      } catch (error) {
-        console.log('Error accessing environment variables, using config character');
-      }
+      characterName = process.env.control_character || config.character;
     }
-    
-    // Final fallback to config
-    characterName = characterName || config.character;
-    
-    const loop = new TroutHarvestingLoop(characterName);
-    console.log('Starting trout fishing loop...');
-    console.log(`Will fish at (${loop.harvestCoords.x}, ${loop.harvestCoords.y}) and deposit at (${loop.bankCoords.x}, ${loop.bankCoords.y})`);
+
+    // --- Parse options from command line arguments ---
+    const options = {};
+    if (args[1] && args[2]) options.harvestCoords = { x: parseInt(args[1], 10), y: parseInt(args[2], 10) };
+    if (args[3] && args[4]) options.bankCoords = { x: parseInt(args[3], 10), y: parseInt(args[4], 10) };
+
+    const loop = new TroutHarvestingLoop(characterName, options);
+
+    console.log(`Starting trout fishing loop for character ${characterName}...`);
+    console.log('Using configuration:');
+    console.log(`  - Harvest Coords: (${loop.harvestCoords.x}, ${loop.harvestCoords.y})`);
+    console.log(`  - Bank Coords: (${loop.bankCoords.x}, ${loop.bankCoords.y})`);
     console.log('Press Ctrl+C to stop the script at any time.');
     console.log('---------------------------------------------------');
-    
     // Set up safe process event handling
     try {
       process.on('SIGINT', async () => {

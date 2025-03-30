@@ -18,15 +18,26 @@ class CoalMiningLoop extends BaseLoop {
   /**
    * Create a coal mining loop instance
    * @param {string} characterName - Name of character to perform actions with
+   * @param {Object} [options={}] - Configuration options for the loop.
+   * @param {Object} [options.mineCoords={ x: 1, y: 6 }] - Coordinates for mining.
+   * @param {Object} [options.bankCoords={ x: 4, y: 1 }] - Coordinates for the bank.
+   * @param {number} [options.targetCoal=100] - Target coal quantity to collect.
    */
-  constructor(characterName) {
+  constructor(characterName, options = {}) {
     super(characterName);
+
+    const defaults = {
+      mineCoords: { x: 1, y: 6 },
+      bankCoords: { x: 4, y: 1 },
+      targetCoal: 100,
+    };
+
     /** @type {Object} Coordinates of coal mine */
-    this.COAL_MINE_COORDS = { x: 1, y: 6 };
+    this.mineCoords = options.mineCoords || defaults.mineCoords;
     /** @type {Object} Coordinates of bank */
-    this.BANK_COORDS = { x: 4, y: 1 };
+    this.bankCoords = options.bankCoords || defaults.bankCoords;
     /** @type {number} Target coal quantity to collect before depositing */
-    this.TARGET_COAL = 100;
+    this.targetCoal = options.targetCoal || defaults.targetCoal;
   }
 
   /**
@@ -56,7 +67,7 @@ class CoalMiningLoop extends BaseLoop {
    */
   async hasEnoughCoal() {
     const currentCoal = await this.getCoalCount();
-    return currentCoal >= this.TARGET_COAL;
+    return currentCoal >= this.targetCoal; // Use configured target
   }
 
   /**
@@ -90,15 +101,15 @@ class CoalMiningLoop extends BaseLoop {
             await new Promise(resolve => setTimeout(resolve, cooldownSeconds * 1000 + 500)); // Add 500ms buffer
           }
         }
-        
+      
         // Check if already at coal mine
         const currentDetails = await getCharacterDetails(this.characterName);
-        if (currentDetails.x === this.COAL_MINE_COORDS.x && currentDetails.y === this.COAL_MINE_COORDS.y) {
+        if (currentDetails.x === this.mineCoords.x && currentDetails.y === this.mineCoords.y) {
           console.log('Character is already at the coal mine. Continuing with mining...');
         } else {
-          console.log(`Moving to coal mine at (${this.COAL_MINE_COORDS.x}, ${this.COAL_MINE_COORDS.y})`);
+          console.log(`Moving to coal mine at (${this.mineCoords.x}, ${this.mineCoords.y})`);
           try {
-            await moveCharacter(this.COAL_MINE_COORDS.x, this.COAL_MINE_COORDS.y, this.characterName);
+            await moveCharacter(this.mineCoords.x, this.mineCoords.y, this.characterName);
           } catch (error) {
             if (error.message.includes('Character already at destination')) {
               console.log('Character is already at the coal mine. Continuing with mining...');
@@ -110,9 +121,9 @@ class CoalMiningLoop extends BaseLoop {
       } catch (error) {
         console.error('Failed to check cooldown:', error.message);
         // Continue with movement even if we can't check cooldown
-        console.log(`Moving to coal mine at (${this.COAL_MINE_COORDS.x}, ${this.COAL_MINE_COORDS.y})`);
+        console.log(`Moving to coal mine at (${this.mineCoords.x}, ${this.mineCoords.y})`);
         try {
-          await moveCharacter(this.COAL_MINE_COORDS.x, this.COAL_MINE_COORDS.y, this.characterName);
+          await moveCharacter(this.mineCoords.x, this.mineCoords.y, this.characterName);
         } catch (error) {
           if (error.message.includes('Character already at destination')) {
             console.log('Character is already at the coal mine. Continuing with mining...');
@@ -189,8 +200,8 @@ class CoalMiningLoop extends BaseLoop {
           }
         }
       }
-      console.log(`Collected ${this.TARGET_COAL} coal`);
-      
+      console.log(`Collected target of ${this.targetCoal} coal`); // Use configured target
+    
       // Step 2: Deposit everything in the bank
       // Check for cooldown before moving to bank
       console.log('Checking for cooldown before moving to bank...');
@@ -207,22 +218,22 @@ class CoalMiningLoop extends BaseLoop {
             await new Promise(resolve => setTimeout(resolve, cooldownSeconds * 1000 + 500)); // Add 500ms buffer
           }
         }
-        
+      
         // Check if already at bank
         const currentDetails = await getCharacterDetails(this.characterName);
-        if (currentDetails.x === this.BANK_COORDS.x && currentDetails.y === this.BANK_COORDS.y) {
+        if (currentDetails.x === this.bankCoords.x && currentDetails.y === this.bankCoords.y) {
           console.log('Character is already at the bank. Continuing with deposit...');
         } else {
-          console.log(`Moving to bank at (${this.BANK_COORDS.x}, ${this.BANK_COORDS.y})`);
-          await moveCharacter(this.BANK_COORDS.x, this.BANK_COORDS.y, this.characterName);
+          console.log(`Moving to bank at (${this.bankCoords.x}, ${this.bankCoords.y})`);
+          await moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName);
         }
       } catch (error) {
         console.error('Failed to check cooldown:', error.message);
         // Continue with movement even if we can't check cooldown
-        console.log(`Moving to bank at (${this.BANK_COORDS.x}, ${this.BANK_COORDS.y})`);
-        await moveCharacter(this.BANK_COORDS.x, this.BANK_COORDS.y, this.characterName);
+        console.log(`Moving to bank at (${this.bankCoords.x}, ${this.bankCoords.y})`);
+        await moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName);
       }
-      
+    
       console.log('Starting deposit of all items...');
       
       // Check if character is in cooldown before depositing
@@ -281,21 +292,37 @@ class CoalMiningLoop extends BaseLoop {
    * @static
    * @async
    * @returns {Promise<void>} 
+   * @static
+   * @async
+   * @example
+   * node coal-mining-loop.js [characterName] [targetCoal] [mineX] [mineY] [bankX] [bankY]
+   * node coal-mining-loop.js MyChar 150 1 6 4 1
+   * @returns {Promise<void>}
    * @throws {Error} If fatal error occurs in main process
    */
   static async main() {
     const args = process.argv.slice(2);
     const characterName = args[0] || process.env.control_character || config.character;
-    
-    const miningLoop = new CoalMiningLoop(characterName);
-    
+
+    // --- Parse options from command line arguments ---
+    const options = {};
+    if (args[1]) options.targetCoal = parseInt(args[1], 10);
+    if (args[2] && args[3]) options.mineCoords = { x: parseInt(args[2], 10), y: parseInt(args[3], 10) };
+    if (args[4] && args[5]) options.bankCoords = { x: parseInt(args[4], 10), y: parseInt(args[5], 10) };
+
+    // Create an instance with potentially overridden options
+    const miningLoop = new CoalMiningLoop(characterName, options);
+
     try {
       console.log(`Starting coal mining automation for character ${characterName}`);
-      console.log('Will perform the following steps in a loop:');
-      console.log(`1. Mine at (${miningLoop.COAL_MINE_COORDS.x},${miningLoop.COAL_MINE_COORDS.y}) until ${miningLoop.TARGET_COAL} coal collected`);
-      console.log(`2. Deposit all items at bank (${miningLoop.BANK_COORDS.x},${miningLoop.BANK_COORDS.y})`);
+      console.log('Using configuration:');
+      console.log(`  - Target Coal: ${miningLoop.targetCoal}`);
+      console.log(`  - Mine Coords: (${miningLoop.mineCoords.x}, ${miningLoop.mineCoords.y})`);
+      console.log(`  - Bank Coords: (${miningLoop.bankCoords.x}, ${miningLoop.bankCoords.y})`);
+      console.log('\nWill perform the following steps in a loop:');
+      console.log(`1. Mine at (${miningLoop.mineCoords.x},${miningLoop.mineCoords.y}) until ${miningLoop.targetCoal} coal collected`);
+      console.log(`2. Deposit all items at bank (${miningLoop.bankCoords.x},${miningLoop.bankCoords.y})`);
       console.log('Press Ctrl+C to stop the script at any time');
-      
       await miningLoop.mainLoop();
     } catch (error) {
       console.error('Error in main process:', error.message);

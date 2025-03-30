@@ -18,15 +18,26 @@ class GoldMiningLoop extends BaseLoop {
   /**
    * Create a gold mining loop instance
    * @param {string} characterName - Name of character to perform actions with
+   * @param {Object} [options={}] - Configuration options for the loop.
+   * @param {Object} [options.mineCoords={ x: 6, y: -3 }] - Coordinates for mining.
+   * @param {Object} [options.bankCoords={ x: 4, y: 1 }] - Coordinates for the bank.
+   * @param {number} [options.targetGold=50] - Target gold ore quantity to collect.
    */
-  constructor(characterName) {
+  constructor(characterName, options = {}) {
     super(characterName);
+
+    const defaults = {
+      mineCoords: { x: 6, y: -3 },
+      bankCoords: { x: 4, y: 1 },
+      targetGold: 50,
+    };
+
     /** @type {Object} Coordinates of gold mine */
-    this.GOLD_MINE_COORDS = { x: 6, y: -3 };
+    this.mineCoords = options.mineCoords || defaults.mineCoords;
     /** @type {Object} Coordinates of bank */
-    this.BANK_COORDS = { x: 4, y: 1 };
+    this.bankCoords = options.bankCoords || defaults.bankCoords;
     /** @type {number} Target gold quantity to collect before depositing */
-    this.TARGET_GOLD = 50;
+    this.targetGold = options.targetGold || defaults.targetGold;
   }
 
   /**
@@ -56,7 +67,7 @@ class GoldMiningLoop extends BaseLoop {
    */
   async hasEnoughGold() {
     const currentGold = await this.getGoldCount();
-    return currentGold >= this.TARGET_GOLD;
+    return currentGold >= this.targetGold; // Use configured target
   }
 
   /**
@@ -90,15 +101,15 @@ class GoldMiningLoop extends BaseLoop {
             await new Promise(resolve => setTimeout(resolve, cooldownSeconds * 1000 + 500)); // Add 500ms buffer
           }
         }
-        
+      
         // Check if already at gold mine
         const currentDetails = await getCharacterDetails(this.characterName);
-        if (currentDetails.x === this.GOLD_MINE_COORDS.x && currentDetails.y === this.GOLD_MINE_COORDS.y) {
+        if (currentDetails.x === this.mineCoords.x && currentDetails.y === this.mineCoords.y) {
           console.log('Character is already at the gold mine. Continuing with mining...');
         } else {
-          console.log(`Moving to gold mine at (${this.GOLD_MINE_COORDS.x}, ${this.GOLD_MINE_COORDS.y})`);
+          console.log(`Moving to gold mine at (${this.mineCoords.x}, ${this.mineCoords.y})`);
           try {
-            await moveCharacter(this.GOLD_MINE_COORDS.x, this.GOLD_MINE_COORDS.y, this.characterName);
+            await moveCharacter(this.mineCoords.x, this.mineCoords.y, this.characterName);
           } catch (error) {
             if (error.message.includes('Character already at destination')) {
               console.log('Character is already at the gold mine. Continuing with mining...');
@@ -110,9 +121,9 @@ class GoldMiningLoop extends BaseLoop {
       } catch (error) {
         console.error('Failed to check cooldown:', error.message);
         // Continue with movement even if we can't check cooldown
-        console.log(`Moving to gold mine at (${this.GOLD_MINE_COORDS.x}, ${this.GOLD_MINE_COORDS.y})`);
+        console.log(`Moving to gold mine at (${this.mineCoords.x}, ${this.mineCoords.y})`);
         try {
-          await moveCharacter(this.GOLD_MINE_COORDS.x, this.GOLD_MINE_COORDS.y, this.characterName);
+          await moveCharacter(this.mineCoords.x, this.mineCoords.y, this.characterName);
         } catch (error) {
           if (error.message.includes('Character already at destination')) {
             console.log('Character is already at the gold mine. Continuing with mining...');
@@ -189,8 +200,8 @@ class GoldMiningLoop extends BaseLoop {
           }
         }
       }
-      console.log(`Collected ${this.TARGET_GOLD} gold ore`);
-      
+      console.log(`Collected target of ${this.targetGold} gold ore`); // Use configured target
+    
       // Step 2: Deposit everything in the bank
       // Check for cooldown before moving to bank
       console.log('Checking for cooldown before moving to bank...');
@@ -207,22 +218,22 @@ class GoldMiningLoop extends BaseLoop {
             await new Promise(resolve => setTimeout(resolve, cooldownSeconds * 1000 + 500)); // Add 500ms buffer
           }
         }
-        
+      
         // Check if already at bank
         const currentDetails = await getCharacterDetails(this.characterName);
-        if (currentDetails.x === this.BANK_COORDS.x && currentDetails.y === this.BANK_COORDS.y) {
+        if (currentDetails.x === this.bankCoords.x && currentDetails.y === this.bankCoords.y) {
           console.log('Character is already at the bank. Continuing with deposit...');
         } else {
-          console.log(`Moving to bank at (${this.BANK_COORDS.x}, ${this.BANK_COORDS.y})`);
-          await moveCharacter(this.BANK_COORDS.x, this.BANK_COORDS.y, this.characterName);
+          console.log(`Moving to bank at (${this.bankCoords.x}, ${this.bankCoords.y})`);
+          await moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName);
         }
       } catch (error) {
         console.error('Failed to check cooldown:', error.message);
         // Continue with movement even if we can't check cooldown
-        console.log(`Moving to bank at (${this.BANK_COORDS.x}, ${this.BANK_COORDS.y})`);
-        await moveCharacter(this.BANK_COORDS.x, this.BANK_COORDS.y, this.characterName);
+        console.log(`Moving to bank at (${this.bankCoords.x}, ${this.bankCoords.y})`);
+        await moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName);
       }
-      
+    
       console.log('Starting deposit of all items...');
       
       // Check if character is in cooldown before depositing
@@ -281,21 +292,37 @@ class GoldMiningLoop extends BaseLoop {
    * @static
    * @async
    * @returns {Promise<void>} 
+   * @static
+   * @async
+   * @example
+   * node gold-mining-loop.js [characterName] [targetGold] [mineX] [mineY] [bankX] [bankY]
+   * node gold-mining-loop.js MyChar 75 6 -3 4 1
+   * @returns {Promise<void>}
    * @throws {Error} If fatal error occurs in main process
    */
   static async main() {
     const args = process.argv.slice(2);
     const characterName = args[0] || process.env.control_character || config.character;
-    
-    const miningLoop = new GoldMiningLoop(characterName);
-    
+
+    // --- Parse options from command line arguments ---
+    const options = {};
+    if (args[1]) options.targetGold = parseInt(args[1], 10);
+    if (args[2] && args[3]) options.mineCoords = { x: parseInt(args[2], 10), y: parseInt(args[3], 10) };
+    if (args[4] && args[5]) options.bankCoords = { x: parseInt(args[4], 10), y: parseInt(args[5], 10) };
+
+    // Create an instance with potentially overridden options
+    const miningLoop = new GoldMiningLoop(characterName, options);
+
     try {
       console.log(`Starting gold mining automation for character ${characterName}`);
-      console.log('Will perform the following steps in a loop:');
-      console.log(`1. Mine at (${miningLoop.GOLD_MINE_COORDS.x},${miningLoop.GOLD_MINE_COORDS.y}) until ${miningLoop.TARGET_GOLD} gold ore collected`);
-      console.log(`2. Deposit all items at bank (${miningLoop.BANK_COORDS.x},${miningLoop.BANK_COORDS.y})`);
+      console.log('Using configuration:');
+      console.log(`  - Target Gold Ore: ${miningLoop.targetGold}`);
+      console.log(`  - Mine Coords: (${miningLoop.mineCoords.x}, ${miningLoop.mineCoords.y})`);
+      console.log(`  - Bank Coords: (${miningLoop.bankCoords.x}, ${miningLoop.bankCoords.y})`);
+      console.log('\nWill perform the following steps in a loop:');
+      console.log(`1. Mine at (${miningLoop.mineCoords.x},${miningLoop.mineCoords.y}) until ${miningLoop.targetGold} gold ore collected`);
+      console.log(`2. Deposit all items at bank (${miningLoop.bankCoords.x},${miningLoop.bankCoords.y})`);
       console.log('Press Ctrl+C to stop the script at any time');
-      
       await miningLoop.mainLoop();
     } catch (error) {
       console.error('Error in main process:', error.message);

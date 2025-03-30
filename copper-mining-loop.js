@@ -17,23 +17,40 @@ require('dotenv').config();
 class CopperMiningLoop extends BaseLoop {
   /**
    * Create a copper mining loop.
+   * Create a copper mining loop.
    * @param {string} characterName - The name of the character to perform actions with.
-   * @param {boolean} [skipSmelting=false] - Whether to skip the smelting step and go directly to the bank.
+   * @param {Object} [options={}] - Configuration options for the loop.
+   * @param {Object} [options.mineCoords={ x: 2, y: 0 }] - Coordinates for mining.
+   * @param {Object} [options.smithCoords={ x: 1, y: 5 }] - Coordinates for the smithy.
+   * @param {Object} [options.bankCoords={ x: 4, y: 1 }] - Coordinates for the bank.
+   * @param {number} [options.targetCopperOre=100] - Target ore quantity to collect.
+   * @param {number} [options.copperBarsToSmelt=10] - Number of bars to smelt per cycle.
+   * @param {boolean} [options.skipSmelting=false] - Whether to skip smelting.
    */
-  constructor(characterName, skipSmelting = false) {
+  constructor(characterName, options = {}) {
     super(characterName);
+
+    const defaults = {
+      mineCoords: { x: 2, y: 0 },
+      smithCoords: { x: 1, y: 5 },
+      bankCoords: { x: 4, y: 1 },
+      targetCopperOre: 100,
+      copperBarsToSmelt: 10,
+      skipSmelting: false,
+    };
+
     /** @type {Object} Coordinates of the copper mine */
-    this.COPPER_MINE_COORDS = { x: 2, y: 0 };
+    this.mineCoords = options.mineCoords || defaults.mineCoords;
     /** @type {Object} Coordinates of the smith */
-    this.SMITH_COORDS = { x: 1, y: 5 };
+    this.smithCoords = options.smithCoords || defaults.smithCoords;
     /** @type {Object} Coordinates of the bank */
-    this.BANK_COORDS = { x: 4, y: 1 };
+    this.bankCoords = options.bankCoords || defaults.bankCoords;
     /** @type {number} Target amount of copper ore to mine before proceeding */
-    this.TARGET_COPPER_ORE = 100;
+    this.targetCopperOre = options.targetCopperOre || defaults.targetCopperOre;
     /** @type {number} Amount of copper bars to smelt in each cycle */
-    this.COPPER_BARS_TO_SMELT = 10;
+    this.copperBarsToSmelt = options.copperBarsToSmelt || defaults.copperBarsToSmelt;
     /** @type {boolean} Whether to skip the smelting step */
-    this.skipSmelting = skipSmelting;
+    this.skipSmelting = options.skipSmelting || defaults.skipSmelting;
   }
 
   /**
@@ -62,7 +79,7 @@ class CopperMiningLoop extends BaseLoop {
    */
   async hasEnoughCopperOre() {
     const currentCopper = await this.getCopperOreCount();
-    return currentCopper >= this.TARGET_COPPER_ORE;
+    return currentCopper >= this.targetCopperOre; // Use configured target
   }
 
   /**
@@ -99,12 +116,12 @@ class CopperMiningLoop extends BaseLoop {
       
       // Check if already at copper mine
       const currentDetails = await getCharacterDetails(this.characterName);
-      if (currentDetails.x === this.COPPER_MINE_COORDS.x && currentDetails.y === this.COPPER_MINE_COORDS.y) {
+      if (currentDetails.x === this.mineCoords.x && currentDetails.y === this.mineCoords.y) {
         console.log('Character is already at the copper mine. Continuing with mining...');
       } else {
-        console.log(`Moving to copper mine at (${this.COPPER_MINE_COORDS.x}, ${this.COPPER_MINE_COORDS.y})`);
+        console.log(`Moving to copper mine at (${this.mineCoords.x}, ${this.mineCoords.y})`);
         try {
-          await moveCharacter(this.COPPER_MINE_COORDS.x, this.COPPER_MINE_COORDS.y, this.characterName);
+          await moveCharacter(this.mineCoords.x, this.mineCoords.y, this.characterName);
         } catch (error) {
           if (error.message.includes('Character already at destination')) {
             console.log('Character is already at the copper mine. Continuing with mining...');
@@ -116,9 +133,9 @@ class CopperMiningLoop extends BaseLoop {
     } catch (error) {
       console.error('Failed to check cooldown:', error.message);
       // Continue with movement even if we can't check cooldown
-      console.log(`Moving to copper mine at (${this.COPPER_MINE_COORDS.x}, ${this.COPPER_MINE_COORDS.y})`);
+      console.log(`Moving to copper mine at (${this.mineCoords.x}, ${this.mineCoords.y})`);
       try {
-        await moveCharacter(this.COPPER_MINE_COORDS.x, this.COPPER_MINE_COORDS.y, this.characterName);
+        await moveCharacter(this.mineCoords.x, this.mineCoords.y, this.characterName);
       } catch (error) {
         if (error.message.includes('Character already at destination')) {
           console.log('Character is already at the copper mine. Continuing with mining...');
@@ -207,7 +224,7 @@ class CopperMiningLoop extends BaseLoop {
         }
       }
     }
-    console.log(`Collected ${this.TARGET_COPPER_ORE} copper ore`);
+    console.log(`Collected target of ${this.targetCopperOre} copper ore`); // Use configured target
     
     // Check if smelting should be skipped
     if (this.skipSmelting) {
@@ -232,22 +249,28 @@ class CopperMiningLoop extends BaseLoop {
       
       // Check if already at smith
       const currentDetails = await getCharacterDetails(this.characterName);
-      if (currentDetails.x === this.SMITH_COORDS.x && currentDetails.y === this.SMITH_COORDS.y) {
+      if (currentDetails.x === this.smithCoords.x && currentDetails.y === this.smithCoords.y) {
         console.log('Character is already at the smith. Continuing with smelting...');
       } else {
-        console.log(`Moving to smith at (${this.SMITH_COORDS.x}, ${this.SMITH_COORDS.y})`);
-        await moveCharacter(this.SMITH_COORDS.x, this.SMITH_COORDS.y, this.characterName);
+        console.log(`Moving to smith at (${this.smithCoords.x}, ${this.smithCoords.y})`);
+        await moveCharacter(this.smithCoords.x, this.smithCoords.y, this.characterName);
       }
     } catch (error) {
       console.error('Failed to check cooldown:', error.message);
       // Continue with movement even if we can't check cooldown
-      console.log(`Moving to smith at (${this.SMITH_COORDS.x}, ${this.SMITH_COORDS.y})`);
-      await moveCharacter(this.SMITH_COORDS.x, this.SMITH_COORDS.y, this.characterName);
+      console.log(`Moving to smith at (${this.smithCoords.x}, ${this.smithCoords.y})`);
+      await moveCharacter(this.smithCoords.x, this.smithCoords.y, this.characterName);
     }
     
-    console.log(`Smelting ${this.COPPER_BARS_TO_SMELT} copper bars...`);
-    try {
-      
+    // Calculate how many bars can be made
+    const currentOre = await this.getCopperOreCount();
+    const barsToMake = Math.min(this.copperBarsToSmelt, Math.floor(currentOre / 10)); // Assuming 10 ore per bar
+
+    if (barsToMake <= 0) {
+      console.log('Not enough copper ore to smelt any bars.');
+    } else {
+      console.log(`Smelting ${barsToMake} copper bars...`);
+      try {
       // Check for cooldown before smelting
       console.log('Checking for cooldown before smelting...');
       const freshDetails = await getCharacterDetails(this.characterName);
@@ -261,13 +284,13 @@ class CopperMiningLoop extends BaseLoop {
           console.log(`Character is in cooldown. Waiting ${cooldownSeconds.toFixed(1)} seconds...`);
           await new Promise(resolve => setTimeout(resolve, cooldownSeconds * 1000 + 500));
         }
-      }
+        }
       
-      // Perform smelting - convert copper_ore to copper
-      await craftingAction('copper', this.COPPER_BARS_TO_SMELT, 'copper_ore', this.characterName);
-      console.log('Smelting successful');
-    } catch (error) {
-      console.error('Smelting failed:', error.message);
+        // Perform smelting - convert copper_ore to copper
+        await craftingAction('copper', barsToMake, 'copper_ore', this.characterName);
+        console.log('Smelting successful');
+      } catch (error) {
+        console.error('Smelting failed:', error.message);
       
       // Handle cooldown errors for smelting
       const cooldownMatch = error.message.match(/Character in cooldown: (\d+\.\d+) seconds left/);
@@ -281,8 +304,15 @@ class CopperMiningLoop extends BaseLoop {
         // Try again after cooldown
         console.log('Retrying smelting after cooldown...');
         try {
-          const result = await craftingAction('copper', this.COPPER_BARS_TO_SMELT, 'copper_ore', this.characterName);
-          console.log('Smelting successful:', result);
+          // Recalculate bars to make after cooldown
+          const oreAfterCooldown = await this.getCopperOreCount();
+          const barsToRetry = Math.min(this.copperBarsToSmelt, Math.floor(oreAfterCooldown / 10));
+          if (barsToRetry > 0) {
+            const result = await craftingAction('copper', barsToRetry, 'copper_ore', this.characterName);
+            console.log('Smelting successful:', result);
+          } else {
+            console.log('Not enough ore to retry smelting.');
+          }
         } catch (retryError) {
           console.error('Smelting failed after retry:', retryError.message);
         }
@@ -312,17 +342,17 @@ class CopperMiningLoop extends BaseLoop {
       
       // Check if already at bank
       const currentDetails = await getCharacterDetails(this.characterName);
-      if (currentDetails.x === this.BANK_COORDS.x && currentDetails.y === this.BANK_COORDS.y) {
+      if (currentDetails.x === this.bankCoords.x && currentDetails.y === this.bankCoords.y) {
         console.log('Character is already at the bank. Continuing with deposit...');
       } else {
-        console.log(`Moving to bank at (${this.BANK_COORDS.x}, ${this.BANK_COORDS.y})`);
-        await moveCharacter(this.BANK_COORDS.x, this.BANK_COORDS.y, this.characterName);
+        console.log(`Moving to bank at (${this.bankCoords.x}, ${this.bankCoords.y})`);
+        await moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName);
       }
     } catch (error) {
       console.error('Failed to check cooldown:', error.message);
       // Continue with movement even if we can't check cooldown
-      console.log(`Moving to bank at (${this.BANK_COORDS.x}, ${this.BANK_COORDS.y})`);
-      await moveCharacter(this.BANK_COORDS.x, this.BANK_COORDS.y, this.characterName);
+      console.log(`Moving to bank at (${this.bankCoords.x}, ${this.bankCoords.y})`);
+      await moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName);
     }
     
     console.log('Starting deposit of all items...');
@@ -390,35 +420,54 @@ class CopperMiningLoop extends BaseLoop {
    * Parses command line arguments for character name and processing options.
    * @static
    * @returns {Promise<void>}
+   * @static
+   * @async
+   * @example
+   * node copper-mining-loop.js [characterName] [processOption] [targetOre] [mineX] [mineY] [bankX] [bankY] [smithX] [smithY] [barsToSmelt]
+   * node copper-mining-loop.js MyChar smelt 150 2 0 4 1 1 5 15
+   * node copper-mining-loop.js MyOtherChar store 200 2 0 4 1
+   * @returns {Promise<void>}
    * @throws {Error} If there's an error in the main process
    */
   static async main() {
     const args = process.argv.slice(2);
     const characterName = args[0] || process.env.control_character || config.character;
-    
-    // Check processing option from args[1]
-    const processOption = args[1] || 'store';
-    
-    // Convert processOption to skipSmelting boolean
-    // 'store' -> true (skip smelting), 'smelt' -> false (do smelting)
-    const skipSmelting = processOption !== 'smelt';
-    
-    const miningLoop = new CopperMiningLoop(characterName, skipSmelting);
-    
+
+    // --- Parse options from command line arguments ---
+    const options = {};
+    const processOption = args[1] || 'store'; // Default to storing ore
+    options.skipSmelting = processOption !== 'smelt';
+
+    if (args[2]) options.targetCopperOre = parseInt(args[2], 10);
+    if (args[3] && args[4]) options.mineCoords = { x: parseInt(args[3], 10), y: parseInt(args[4], 10) };
+    if (args[5] && args[6]) options.bankCoords = { x: parseInt(args[5], 10), y: parseInt(args[6], 10) };
+    if (args[7] && args[8]) options.smithCoords = { x: parseInt(args[7], 10), y: parseInt(args[8], 10) };
+    if (args[9]) options.copperBarsToSmelt = parseInt(args[9], 10);
+
+    // Create an instance with potentially overridden options
+    const miningLoop = new CopperMiningLoop(characterName, options);
+
     try {
       console.log(`Starting copper mining automation for character ${characterName}`);
-      console.log(`Processing option: ${processOption} (skipSmelting: ${skipSmelting})`);
-      console.log('Will perform the following steps in a loop:');
-      console.log(`1. Mine at (${miningLoop.COPPER_MINE_COORDS.x},${miningLoop.COPPER_MINE_COORDS.y}) until ${miningLoop.TARGET_COPPER_ORE} copper ore collected`);
-      
-      if (!skipSmelting) {
-        console.log(`2. Smelt at (${miningLoop.SMITH_COORDS.x},${miningLoop.SMITH_COORDS.y}) into ${miningLoop.COPPER_BARS_TO_SMELT} copper bars`);
-        console.log(`3. Deposit all items at bank (${miningLoop.BANK_COORDS.x},${miningLoop.BANK_COORDS.y})`);
+      console.log(`Processing option: ${processOption} (skipSmelting: ${miningLoop.skipSmelting})`);
+      console.log('Using configuration:');
+      console.log(`  - Target Copper Ore: ${miningLoop.targetCopperOre}`);
+      console.log(`  - Mine Coords: (${miningLoop.mineCoords.x}, ${miningLoop.mineCoords.y})`);
+      console.log(`  - Bank Coords: (${miningLoop.bankCoords.x}, ${miningLoop.bankCoords.y})`);
+      if (!miningLoop.skipSmelting) {
+        console.log(`  - Smith Coords: (${miningLoop.smithCoords.x}, ${miningLoop.smithCoords.y})`);
+        console.log(`  - Bars to Smelt per Cycle: ${miningLoop.copperBarsToSmelt}`);
+      }
+      console.log('\nWill perform the following steps in a loop:');
+      console.log(`1. Mine at (${miningLoop.mineCoords.x},${miningLoop.mineCoords.y}) until ${miningLoop.targetCopperOre} copper ore collected`);
+
+      if (!miningLoop.skipSmelting) {
+        console.log(`2. Smelt at (${miningLoop.smithCoords.x},${miningLoop.smithCoords.y}) into copper bars`);
+        console.log(`3. Deposit all items at bank (${miningLoop.bankCoords.x},${miningLoop.bankCoords.y})`);
       } else {
-        console.log(`2. Skip smelting and directly deposit all ore at bank (${miningLoop.BANK_COORDS.x},${miningLoop.BANK_COORDS.y})`);
+        console.log(`2. Skip smelting and directly deposit all ore at bank (${miningLoop.bankCoords.x},${miningLoop.bankCoords.y})`);
       }
       console.log('Press Ctrl+C to stop the script at any time');
-      
       await miningLoop.mainLoop();
     } catch (error) {
       console.error('Error in main process:', error.message);

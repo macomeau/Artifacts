@@ -6,13 +6,37 @@ const db = require('./db');
 require('dotenv').config();
 
 class SpruceHarvestingLoop extends BaseLoop {
-  constructor(characterName) {
+  /**
+   * Create a spruce harvesting loop instance
+   * @param {string} characterName - Name of character to perform actions with
+   * @param {Object} [options={}] - Configuration options for the loop
+   * @param {Object} [options.spruceForestCoords={ x: 2, y: 6 }] - Coordinates of the spruce forest
+   * @param {Object} [options.workshopCoords={ x: -2, y: -3 }] - Coordinates of the workshop
+   * @param {Object} [options.bankCoords={ x: 4, y: 1 }] - Coordinates of the bank
+   * @param {number} [options.targetSpruceWood=100] - Target spruce wood quantity to collect
+   * @param {number} [options.sprucePlanksToProcess=10] - Number of spruce planks to process per loop (if processing)
+   */
+  constructor(characterName, options = {}) {
     super(characterName);
-    this.SPRUCE_FOREST_COORDS = { x: 2, y: 6 };
-    this.WORKSHOP_COORDS = { x: -2, y: -3 };
-    this.BANK_COORDS = { x: 4, y: 1 };
-    this.TARGET_SPRUCE_WOOD = 100;
-    this.SPRUCE_PLANKS_TO_PROCESS = 10;
+
+    const defaults = {
+      spruceForestCoords: { x: 2, y: 6 },
+      workshopCoords: { x: -2, y: -3 },
+      bankCoords: { x: 4, y: 1 },
+      targetSpruceWood: 100,
+      sprucePlanksToProcess: 10,
+    };
+
+    /** @type {Object} Coordinates of spruce forest */
+    this.spruceForestCoords = options.spruceForestCoords || defaults.spruceForestCoords;
+    /** @type {Object} Coordinates of workshop */
+    this.workshopCoords = options.workshopCoords || defaults.workshopCoords;
+    /** @type {Object} Coordinates of bank */
+    this.bankCoords = options.bankCoords || defaults.bankCoords;
+    /** @type {number} Target spruce wood quantity to collect */
+    this.targetSpruceWood = options.targetSpruceWood || defaults.targetSpruceWood;
+    /** @type {number} Number of spruce planks to process per loop */
+    this.sprucePlanksToProcess = options.sprucePlanksToProcess || defaults.sprucePlanksToProcess;
   }
 
   /**
@@ -41,7 +65,7 @@ class SpruceHarvestingLoop extends BaseLoop {
    */
   async hasEnoughSpruceWood() {
     const currentSpruce = await this.getSpruceWoodCount();
-    return currentSpruce >= this.TARGET_SPRUCE_WOOD;
+    return currentSpruce >= this.targetSpruceWood; // Use configured target
   }
 
   /**
@@ -95,12 +119,12 @@ class SpruceHarvestingLoop extends BaseLoop {
       
       // Check if already at spruce forest
       const currentDetails = await getCharacterDetails(this.characterName);
-      if (currentDetails.x === this.SPRUCE_FOREST_COORDS.x && currentDetails.y === this.SPRUCE_FOREST_COORDS.y) {
+      if (currentDetails.x === this.spruceForestCoords.x && currentDetails.y === this.spruceForestCoords.y) {
         console.log('Character is already at the spruce forest. Continuing with harvesting...');
       } else {
-        console.log(`Moving to spruce forest at (${this.SPRUCE_FOREST_COORDS.x}, ${this.SPRUCE_FOREST_COORDS.y})`);
+        console.log(`Moving to spruce forest at (${this.spruceForestCoords.x}, ${this.spruceForestCoords.y})`);
         try {
-          await moveCharacter(this.SPRUCE_FOREST_COORDS.x, this.SPRUCE_FOREST_COORDS.y, this.characterName);
+          await moveCharacter(this.spruceForestCoords.x, this.spruceForestCoords.y, this.characterName);
         } catch (error) {
           if (error.message.includes('Character already at destination')) {
             console.log('Character is already at the spruce forest. Continuing with harvesting...');
@@ -112,9 +136,9 @@ class SpruceHarvestingLoop extends BaseLoop {
     } catch (error) {
       console.error('Failed to check cooldown:', error.message);
       // Continue with movement even if we can't check cooldown
-      console.log(`Moving to spruce forest at (${this.SPRUCE_FOREST_COORDS.x}, ${this.SPRUCE_FOREST_COORDS.y})`);
+      console.log(`Moving to spruce forest at (${this.spruceForestCoords.x}, ${this.spruceForestCoords.y})`);
       try {
-        await moveCharacter(this.SPRUCE_FOREST_COORDS.x, this.SPRUCE_FOREST_COORDS.y, this.characterName);
+        await moveCharacter(this.spruceForestCoords.x, this.spruceForestCoords.y, this.characterName);
         } catch (error) {
           if (error.message.includes('Character already at destination')) {
             console.log('Character is already at the spruce forest. Continuing with harvesting...');
@@ -136,16 +160,16 @@ class SpruceHarvestingLoop extends BaseLoop {
         // Go to bank and deposit items
         try {
           // Move to bank
-          console.log(`Moving to bank at (${this.BANK_COORDS.x}, ${this.BANK_COORDS.y})`);
-          await moveCharacter(this.BANK_COORDS.x, this.BANK_COORDS.y, this.characterName);
+          console.log(`Moving to bank at (${this.bankCoords.x}, ${this.bankCoords.y})`);
+          await moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName);
           
           // Deposit items
           console.log('Depositing all items...');
           await depositAllItems(this.characterName);
           
           // Return to spruce forest
-          console.log(`Returning to spruce forest at (${this.SPRUCE_FOREST_COORDS.x}, ${this.SPRUCE_FOREST_COORDS.y})`);
-          await moveCharacter(this.SPRUCE_FOREST_COORDS.x, this.SPRUCE_FOREST_COORDS.y, this.characterName);
+          console.log(`Returning to spruce forest at (${this.spruceForestCoords.x}, ${this.spruceForestCoords.y})`);
+          await moveCharacter(this.spruceForestCoords.x, this.spruceForestCoords.y, this.characterName);
           
           console.log('Continuing harvesting after deposit...');
           continue;
@@ -203,16 +227,16 @@ class SpruceHarvestingLoop extends BaseLoop {
           // Go to bank and deposit items
           try {
             // Move to bank
-            console.log(`Moving to bank at (${this.BANK_COORDS.x}, ${this.BANK_COORDS.y})`);
-            await moveCharacter(this.BANK_COORDS.x, this.BANK_COORDS.y, this.characterName);
+            console.log(`Moving to bank at (${this.bankCoords.x}, ${this.bankCoords.y})`);
+            await moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName);
             
             // Deposit items
             console.log('Depositing all items...');
             await depositAllItems(this.characterName);
             
             // Return to spruce forest
-            console.log(`Returning to spruce forest at (${this.SPRUCE_FOREST_COORDS.x}, ${this.SPRUCE_FOREST_COORDS.y})`);
-            await moveCharacter(this.SPRUCE_FOREST_COORDS.x, this.SPRUCE_FOREST_COORDS.y, this.characterName);
+            console.log(`Returning to spruce forest at (${this.spruceForestCoords.x}, ${this.spruceForestCoords.y})`);
+            await moveCharacter(this.spruceForestCoords.x, this.spruceForestCoords.y, this.characterName);
             
             console.log('Continuing harvesting after deposit...');
             continue;
@@ -236,7 +260,7 @@ class SpruceHarvestingLoop extends BaseLoop {
         }
       }
     }
-    console.log(`Collected ${this.TARGET_SPRUCE_WOOD} spruce wood`);
+    console.log(`Collected target of ${this.targetSpruceWood} spruce wood`); // Use configured target
     
     // Step 2: Process spruce into planks
     // Check for cooldown before moving to workshop
@@ -257,17 +281,17 @@ class SpruceHarvestingLoop extends BaseLoop {
       
       // Check if already at workshop
       const currentDetails = await getCharacterDetails(this.characterName);
-      if (currentDetails.x === this.WORKSHOP_COORDS.x && currentDetails.y === this.WORKSHOP_COORDS.y) {
+      if (currentDetails.x === this.workshopCoords.x && currentDetails.y === this.workshopCoords.y) {
         console.log('Character is already at the workshop. Continuing with processing...');
       } else {
-        console.log(`Moving to workshop at (${this.WORKSHOP_COORDS.x}, ${this.WORKSHOP_COORDS.y})`);
-        await moveCharacter(this.WORKSHOP_COORDS.x, this.WORKSHOP_COORDS.y, this.characterName);
+        console.log(`Moving to workshop at (${this.workshopCoords.x}, ${this.workshopCoords.y})`);
+        await moveCharacter(this.workshopCoords.x, this.workshopCoords.y, this.characterName);
       }
     } catch (error) {
       console.error('Failed to check cooldown:', error.message);
       // Continue with movement even if we can't check cooldown
-      console.log(`Moving to workshop at (${this.WORKSHOP_COORDS.x}, ${this.WORKSHOP_COORDS.y})`);
-      await moveCharacter(this.WORKSHOP_COORDS.x, this.WORKSHOP_COORDS.y, this.characterName);
+      console.log(`Moving to workshop at (${this.workshopCoords.x}, ${this.workshopCoords.y})`);
+      await moveCharacter(this.workshopCoords.x, this.workshopCoords.y, this.characterName);
     }
     
     // Calculate how many spruce planks we can make based on spruce wood inventory
@@ -314,8 +338,15 @@ class SpruceHarvestingLoop extends BaseLoop {
         // Try again after cooldown
         console.log('Retrying processing after cooldown...');
         try {
-          const result = await craftingAction('spruce_plank', this.SPRUCE_PLANKS_TO_PROCESS, 'spruce_wood', this.characterName);
-          console.log('Processing successful:', result);
+          // Recalculate planks to make based on current wood count after cooldown
+          const currentSpruceWood = await this.getSpruceWoodCount();
+          const planksToRetry = Math.floor(currentSpruceWood / 10);
+          if (planksToRetry > 0) {
+            const result = await craftingAction('spruce_plank', planksToRetry, 'spruce_wood', this.characterName);
+            console.log('Processing successful:', result);
+          } else {
+            console.log('Not enough spruce wood to retry processing.');
+          }
         } catch (retryError) {
           console.error('Processing failed after retry:', retryError.message);
         }
@@ -344,17 +375,17 @@ class SpruceHarvestingLoop extends BaseLoop {
       
       // Check if already at bank
       const currentDetails = await getCharacterDetails(this.characterName);
-      if (currentDetails.x === this.BANK_COORDS.x && currentDetails.y === this.BANK_COORDS.y) {
+      if (currentDetails.x === this.bankCoords.x && currentDetails.y === this.bankCoords.y) {
         console.log('Character is already at the bank. Continuing with deposit...');
       } else {
-        console.log(`Moving to bank at (${this.BANK_COORDS.x}, ${this.BANK_COORDS.y})`);
-        await moveCharacter(this.BANK_COORDS.x, this.BANK_COORDS.y, this.characterName);
+        console.log(`Moving to bank at (${this.bankCoords.x}, ${this.bankCoords.y})`);
+        await moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName);
       }
     } catch (error) {
       console.error('Failed to check cooldown:', error.message);
       // Continue with movement even if we can't check cooldown
-      console.log(`Moving to bank at (${this.BANK_COORDS.x}, ${this.BANK_COORDS.y})`);
-      await moveCharacter(this.BANK_COORDS.x, this.BANK_COORDS.y, this.characterName);
+      console.log(`Moving to bank at (${this.bankCoords.x}, ${this.bankCoords.y})`);
+      await moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName);
     }
     
     console.log('Starting deposit of all items...');
@@ -410,20 +441,41 @@ class SpruceHarvestingLoop extends BaseLoop {
   }
 }
 
+   * @static
+   * @async
+   * @example
+   * node spruce-harvesting-loop.js [characterName] [targetSpruce] [forestX] [forestY] [bankX] [bankY] [workshopX] [workshopY]
+   * node spruce-harvesting-loop.js MyChar 150 2 6 4 1 -2 -3
+   * @returns {Promise<void>}
+   * @throws {Error} If fatal error occurs in main process
+   */
   static async main() {
     const args = process.argv.slice(2);
     const characterName = args[0] || process.env.control_character || config.character;
-    
-    const harvestingLoop = new SpruceHarvestingLoop(characterName);
-    
+
+    // --- Parse options from command line arguments ---
+    const options = {};
+    if (args[1]) options.targetSpruceWood = parseInt(args[1], 10);
+    if (args[2] && args[3]) options.spruceForestCoords = { x: parseInt(args[2], 10), y: parseInt(args[3], 10) };
+    if (args[4] && args[5]) options.bankCoords = { x: parseInt(args[4], 10), y: parseInt(args[5], 10) };
+    if (args[6] && args[7]) options.workshopCoords = { x: parseInt(args[6], 10), y: parseInt(args[7], 10) };
+    // Note: sprucePlanksToProcess is not currently configurable via CLI, uses default/calculated
+
+    // Create an instance with potentially overridden options
+    const harvestingLoop = new SpruceHarvestingLoop(characterName, options);
+
     try {
       console.log(`Starting spruce harvesting automation for character ${characterName}`);
-      console.log('Will perform the following steps in a loop:');
-      console.log(`1. Harvest at (${harvestingLoop.SPRUCE_FOREST_COORDS.x},${harvestingLoop.SPRUCE_FOREST_COORDS.y}) until ${harvestingLoop.TARGET_SPRUCE_WOOD} spruce wood collected`);
-      console.log(`2. Process at (${harvestingLoop.WORKSHOP_COORDS.x},${harvestingLoop.WORKSHOP_COORDS.y}) into ${harvestingLoop.SPRUCE_PLANKS_TO_PROCESS} spruce planks`);
-      console.log(`3. Deposit all items at bank (${harvestingLoop.BANK_COORDS.x},${harvestingLoop.BANK_COORDS.y})`);
+      console.log('Using configuration:');
+      console.log(`  - Target Spruce Wood: ${harvestingLoop.targetSpruceWood}`);
+      console.log(`  - Spruce Forest Coords: (${harvestingLoop.spruceForestCoords.x}, ${harvestingLoop.spruceForestCoords.y})`);
+      console.log(`  - Bank Coords: (${harvestingLoop.bankCoords.x}, ${harvestingLoop.bankCoords.y})`);
+      console.log(`  - Workshop Coords: (${harvestingLoop.workshopCoords.x}, ${harvestingLoop.workshopCoords.y})`);
+      console.log('\nWill perform the following steps in a loop:');
+      console.log(`1. Harvest at (${harvestingLoop.spruceForestCoords.x},${harvestingLoop.spruceForestCoords.y}) until ${harvestingLoop.targetSpruceWood} spruce wood collected`);
+      console.log(`2. Process at (${harvestingLoop.workshopCoords.x},${harvestingLoop.workshopCoords.y}) into spruce planks`);
+      console.log(`3. Deposit all items at bank (${harvestingLoop.bankCoords.x},${harvestingLoop.bankCoords.y})`);
       console.log('Press Ctrl+C to stop the script at any time');
-      
       await harvestingLoop.mainLoop();
     } catch (error) {
       console.error('Error in main process:', error.message);

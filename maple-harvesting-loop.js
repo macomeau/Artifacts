@@ -5,13 +5,37 @@ const config = require('./config');
 require('dotenv').config();
 
 class MapleHarvestingLoop extends BaseLoop {
-  constructor(characterName) {
+  /**
+   * Create a maple harvesting loop instance
+   * @param {string} characterName - Name of character to perform actions with
+   * @param {Object} [options={}] - Configuration options for the loop
+   * @param {Object} [options.mapleForestCoords={ x: 1, y: 12 }] - Coordinates of the maple forest
+   * @param {Object} [options.workshopCoords={ x: -2, y: -3 }] - Coordinates of the workshop
+   * @param {Object} [options.bankCoords={ x: 4, y: 1 }] - Coordinates of the bank
+   * @param {number} [options.targetMapleWood=100] - Target maple wood quantity to collect
+   * @param {number} [options.maplePlanksToProcess=10] - Number of maple planks to process per loop (if processing)
+   */
+  constructor(characterName, options = {}) {
     super(characterName);
-    this.MAPLE_FOREST_COORDS = { x: 1, y: 12 };  // Updated coordinates
-    this.WORKSHOP_COORDS = { x: -2, y: -3 };
-    this.BANK_COORDS = { x: 4, y: 1 };
-    this.TARGET_MAPLE_WOOD = 100;
-    this.MAPLE_PLANKS_TO_PROCESS = 10;
+
+    const defaults = {
+      mapleForestCoords: { x: 1, y: 12 },
+      workshopCoords: { x: -2, y: -3 },
+      bankCoords: { x: 4, y: 1 },
+      targetMapleWood: 100,
+      maplePlanksToProcess: 10,
+    };
+
+    /** @type {Object} Coordinates of maple forest */
+    this.mapleForestCoords = options.mapleForestCoords || defaults.mapleForestCoords;
+    /** @type {Object} Coordinates of workshop */
+    this.workshopCoords = options.workshopCoords || defaults.workshopCoords;
+    /** @type {Object} Coordinates of bank */
+    this.bankCoords = options.bankCoords || defaults.bankCoords;
+    /** @type {number} Target maple wood quantity to collect */
+    this.targetMapleWood = options.targetMapleWood || defaults.targetMapleWood;
+    /** @type {number} Number of maple planks to process per loop */
+    this.maplePlanksToProcess = options.maplePlanksToProcess || defaults.maplePlanksToProcess;
   }
 
   async getMapleWoodCount() {
@@ -32,7 +56,7 @@ class MapleHarvestingLoop extends BaseLoop {
 
   async hasEnoughMapleWood() {
     const currentMaple = await this.getMapleWoodCount();
-    return currentMaple >= this.TARGET_MAPLE_WOOD;
+    return currentMaple >= this.targetMapleWood; // Use configured target
   }
 
   async mainLoop() {
@@ -64,12 +88,12 @@ class MapleHarvestingLoop extends BaseLoop {
         
         // Check if already at maple forest
         const currentDetails = await getCharacterDetails(this.characterName);
-        if (currentDetails.x === this.MAPLE_FOREST_COORDS.x && currentDetails.y === this.MAPLE_FOREST_COORDS.y) {
+        if (currentDetails.x === this.mapleForestCoords.x && currentDetails.y === this.mapleForestCoords.y) {
           console.log('Character is already at the maple forest. Continuing with harvesting...');
         } else {
-          console.log(`Moving to maple forest at (${this.MAPLE_FOREST_COORDS.x}, ${this.MAPLE_FOREST_COORDS.y})`);
+          console.log(`Moving to maple forest at (${this.mapleForestCoords.x}, ${this.mapleForestCoords.y})`);
           try {
-            await moveCharacter(this.MAPLE_FOREST_COORDS.x, this.MAPLE_FOREST_COORDS.y, this.characterName);
+            await moveCharacter(this.mapleForestCoords.x, this.mapleForestCoords.y, this.characterName);
           } catch (error) {
             if (error.message.includes('Character already at destination')) {
               console.log('Character is already at the maple forest. Continuing with harvesting...');
@@ -112,7 +136,7 @@ class MapleHarvestingLoop extends BaseLoop {
           await this.checkAndDeposit();
         }
         
-        console.log(`Collected ${this.TARGET_MAPLE_WOOD} maple wood`);
+        console.log(`Collected target of ${this.targetMapleWood} maple wood`); // Use configured target
         
         // Step 2: Process maple into planks
         console.log('Checking for cooldown before moving to workshop...');
@@ -131,15 +155,16 @@ class MapleHarvestingLoop extends BaseLoop {
           }
           
           // Move to workshop
-          console.log(`Moving to workshop at (${this.WORKSHOP_COORDS.x}, ${this.WORKSHOP_COORDS.y})`);
-          await moveCharacter(this.WORKSHOP_COORDS.x, this.WORKSHOP_COORDS.y, this.characterName);
+          console.log(`Moving to workshop at (${this.workshopCoords.x}, ${this.workshopCoords.y})`);
+          await moveCharacter(this.workshopCoords.x, this.workshopCoords.y, this.characterName);
           
           // Process maple wood into planks
-          const planksToMake = Math.min(this.MAPLE_PLANKS_TO_PROCESS, Math.floor(await this.getMapleWoodCount() / 10));
-          
+          const currentMaple = await this.getMapleWoodCount();
+          const planksToMake = Math.min(this.maplePlanksToProcess, Math.floor(currentMaple / 10)); // Use configured planks to process
+
           if (planksToMake > 0) {
             console.log(`Processing ${planksToMake} maple planks...`);
-            await craftingAction('maple_plank', planksToMake, this.characterName);
+            await craftingAction('maple_plank', planksToMake, 'maple_wood', this.characterName); // Specify material
             console.log('Processing successful');
           } else {
             console.log('Not enough maple wood to make planks');
@@ -161,8 +186,8 @@ class MapleHarvestingLoop extends BaseLoop {
           }
           
           // Move to bank
-          console.log(`Moving to bank at (${this.BANK_COORDS.x}, ${this.BANK_COORDS.y})`);
-          await moveCharacter(this.BANK_COORDS.x, this.BANK_COORDS.y, this.characterName);
+          console.log(`Moving to bank at (${this.bankCoords.x}, ${this.bankCoords.y})`);
+          await moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName);
           
           // Deposit items
           console.log('Depositing all items...');
@@ -173,8 +198,8 @@ class MapleHarvestingLoop extends BaseLoop {
           console.error('Processing or deposit failed:', error.message);
           // Try to deposit items anyway in case of error
           try {
-            console.log(`Moving to bank at (${this.BANK_COORDS.x}, ${this.BANK_COORDS.y})`);
-            await moveCharacter(this.BANK_COORDS.x, this.BANK_COORDS.y, this.characterName);
+            console.log(`Moving to bank at (${this.bankCoords.x}, ${this.bankCoords.y})`);
+            await moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName);
             await depositAllItems(this.characterName);
           } catch (depositError) {
             console.error('Deposit after error failed:', depositError.message);
@@ -185,8 +210,8 @@ class MapleHarvestingLoop extends BaseLoop {
         console.error('Error in harvesting loop:', error.message);
         // Try to deposit items in case of error
         try {
-          console.log(`Moving to bank at (${this.BANK_COORDS.x}, ${this.BANK_COORDS.y})`);
-          await moveCharacter(this.BANK_COORDS.x, this.BANK_COORDS.y, this.characterName);
+          console.log(`Moving to bank at (${this.bankCoords.x}, ${this.bankCoords.y})`);
+          await moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName);
           await depositAllItems(this.characterName);
         } catch (depositError) {
           console.error('Deposit after error failed:', depositError.message);
@@ -199,16 +224,42 @@ class MapleHarvestingLoop extends BaseLoop {
     const args = process.argv.slice(2);
     const characterName = args[0] || process.env.control_character || config.character;
     
-    const harvestingLoop = new MapleHarvestingLoop(characterName);
-    
+   * @static
+   * @async
+   * @example
+   * node maple-harvesting-loop.js [characterName] [targetMaple] [forestX] [forestY] [bankX] [bankY] [workshopX] [workshopY] [planksToProcess]
+   * node maple-harvesting-loop.js MyChar 150 1 12 4 1 -2 -3 15
+   * @returns {Promise<void>}
+   * @throws {Error} If fatal error occurs in main process
+   */
+  static async main() {
+    const args = process.argv.slice(2);
+    const characterName = args[0] || process.env.control_character || config.character;
+
+    // --- Parse options from command line arguments ---
+    const options = {};
+    if (args[1]) options.targetMapleWood = parseInt(args[1], 10);
+    if (args[2] && args[3]) options.mapleForestCoords = { x: parseInt(args[2], 10), y: parseInt(args[3], 10) };
+    if (args[4] && args[5]) options.bankCoords = { x: parseInt(args[4], 10), y: parseInt(args[5], 10) };
+    if (args[6] && args[7]) options.workshopCoords = { x: parseInt(args[6], 10), y: parseInt(args[7], 10) };
+    if (args[8]) options.maplePlanksToProcess = parseInt(args[8], 10);
+
+    // Create an instance with potentially overridden options
+    const harvestingLoop = new MapleHarvestingLoop(characterName, options);
+
     try {
       console.log(`Starting maple harvesting automation for character ${characterName}`);
-      console.log('Will perform the following steps in a loop:');
-      console.log(`1. Harvest at (${harvestingLoop.MAPLE_FOREST_COORDS.x},${harvestingLoop.MAPLE_FOREST_COORDS.y}) until ${harvestingLoop.TARGET_MAPLE_WOOD} maple wood collected`);
-      console.log(`2. Process at (${harvestingLoop.WORKSHOP_COORDS.x},${harvestingLoop.WORKSHOP_COORDS.y}) into ${harvestingLoop.MAPLE_PLANKS_TO_PROCESS} maple planks`);
-      console.log(`3. Deposit all items at bank (${harvestingLoop.BANK_COORDS.x},${harvestingLoop.BANK_COORDS.y})`);
+      console.log('Using configuration:');
+      console.log(`  - Target Maple Wood: ${harvestingLoop.targetMapleWood}`);
+      console.log(`  - Maple Forest Coords: (${harvestingLoop.mapleForestCoords.x}, ${harvestingLoop.mapleForestCoords.y})`);
+      console.log(`  - Bank Coords: (${harvestingLoop.bankCoords.x}, ${harvestingLoop.bankCoords.y})`);
+      console.log(`  - Workshop Coords: (${harvestingLoop.workshopCoords.x}, ${harvestingLoop.workshopCoords.y})`);
+      console.log(`  - Planks to Process per Cycle: ${harvestingLoop.maplePlanksToProcess}`);
+      console.log('\nWill perform the following steps in a loop:');
+      console.log(`1. Harvest at (${harvestingLoop.mapleForestCoords.x},${harvestingLoop.mapleForestCoords.y}) until ${harvestingLoop.targetMapleWood} maple wood collected`);
+      console.log(`2. Process at (${harvestingLoop.workshopCoords.x},${harvestingLoop.workshopCoords.y}) into maple planks`);
+      console.log(`3. Deposit all items at bank (${harvestingLoop.bankCoords.x},${harvestingLoop.bankCoords.y})`);
       console.log('Press Ctrl+C to stop the script at any time');
-      
       await harvestingLoop.mainLoop();
     } catch (error) {
       console.error('Error in main process:', error.message);

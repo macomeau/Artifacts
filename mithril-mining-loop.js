@@ -32,18 +32,36 @@ class MithrilMiningLoop extends BaseLoop {
    * @param {Object} options - Configuration options.
    * @param {boolean} [options.refineOre=false] - Whether to refine ore into bars.
    * @param {number} [options.targetOre=0] - Target quantity of ore to collect before banking/refining. 0 means run until inventory full.
+   * @param {Object} [options.mineCoords={ x: -2, y: 13 }] - Coordinates for mining.
+   * @param {Object} [options.bankCoords={ x: 4, y: 1 }] - Coordinates for the bank.
+   * @param {Object} [options.refineryCoords={ x: -2, y: -3 }] - Coordinates for the refinery.
    */
   constructor(characterName, options = {}) {
     super(characterName);
+
+    const defaults = {
+      refineOre: false,
+      targetOre: 0,
+      mineCoords: { x: -2, y: 13 },
+      bankCoords: { x: 4, y: 1 },
+      refineryCoords: { x: -2, y: -3 },
+    };
+
     /** @type {boolean} Whether to refine the ore */
-    this.refineOre = options.refineOre || false;
+    this.refineOre = options.refineOre || defaults.refineOre;
     /** @type {number} Target amount of ore before banking/refining (0 for inventory full) */
-    this.targetOre = options.targetOre || 0;
+    this.targetOre = options.targetOre || defaults.targetOre;
+    /** @type {Object} Coordinates of the mithril mine */
+    this.mineCoords = options.mineCoords || defaults.mineCoords;
+    /** @type {Object} Coordinates of the bank */
+    this.bankCoords = options.bankCoords || defaults.bankCoords;
+    /** @type {Object} Coordinates of the refinery */
+    this.refineryCoords = options.refineryCoords || defaults.refineryCoords;
     /** @type {number} Amount of ore currently held (approximate, updated periodically) */
     this.currentOreCount = 0;
 
     console.log(`[${this.characterName}] Initialized Mithril Mining Loop.`);
-    console.log(`  - Target Coordinates: (${MITHRIL_COORDS.x}, ${MITHRIL_COORDS.y})`);
+    console.log(`  - Target Coordinates: (${this.mineCoords.x}, ${this.mineCoords.y})`);
     console.log(`  - Refine Ore: ${this.refineOre}`);
     console.log(`  - Target Ore per trip: ${this.targetOre === 0 ? 'Inventory Full' : this.targetOre}`);
   }
@@ -72,7 +90,7 @@ class MithrilMiningLoop extends BaseLoop {
   async run() {
     console.log(`[${this.characterName}] Starting mithril mining loop...`);
     // Initialize BaseLoop, including moving to start coords if necessary
-    await this.initialize(MITHRIL_COORDS);
+    await this.initialize(this.mineCoords); // Use configured mine coords
 
     while (true) {
       // Call startLoop from BaseLoop to log loop start and coordinates
@@ -135,8 +153,8 @@ class MithrilMiningLoop extends BaseLoop {
    * @returns {Promise<void>}
    */
   async mineMithril() {
-    console.log(`[${this.characterName}] Ensuring character is at mithril rocks (${MITHRIL_COORDS.x}, ${MITHRIL_COORDS.y})...`);
-    await this.handleAction(() => moveCharacter(MITHRIL_COORDS.x, MITHRIL_COORDS.y, this.characterName), 'Moving');
+    console.log(`[${this.characterName}] Ensuring character is at mithril rocks (${this.mineCoords.x}, ${this.mineCoords.y})...`);
+    await this.handleAction(() => moveCharacter(this.mineCoords.x, this.mineCoords.y, this.characterName), 'Moving');
     console.log(`[${this.characterName}] Arrived at mithril rocks. Starting mining.`);
 
     // Get initial ore count and inventory status
@@ -203,8 +221,8 @@ class MithrilMiningLoop extends BaseLoop {
       console.log(`[${this.characterName}] Not enough ore (${this.currentOreCount}) to make any bars. Skipping refining.`);
     } else {
       // 1. Move to Refinery
-      console.log(`[${this.characterName}] Moving to refinery at (${REFINERY_COORDS.x}, ${REFINERY_COORDS.y})...`);
-      await this.handleAction(() => moveCharacter(REFINERY_COORDS.x, REFINERY_COORDS.y, this.characterName), 'Moving');
+      console.log(`[${this.characterName}] Moving to refinery at (${this.refineryCoords.x}, ${this.refineryCoords.y})...`);
+      await this.handleAction(() => moveCharacter(this.refineryCoords.x, this.refineryCoords.y, this.characterName), 'Moving');
       console.log(`[${this.characterName}] Arrived at refinery.`);
       await sleep(1500); // Small delay after arrival
 
@@ -228,8 +246,8 @@ class MithrilMiningLoop extends BaseLoop {
     }
 
     // 3. Move to Bank (regardless of smelting success)
-    console.log(`[${this.characterName}] Moving to bank at (${BANK_COORDS.x}, ${BANK_COORDS.y}) for deposit...`);
-    await this.handleAction(() => moveCharacter(BANK_COORDS.x, BANK_COORDS.y, this.characterName), 'Moving');
+    console.log(`[${this.characterName}] Moving to bank at (${this.bankCoords.x}, ${this.bankCoords.y}) for deposit...`);
+    await this.handleAction(() => moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName), 'Moving');
     console.log(`[${this.characterName}] Arrived at bank.`);
     await sleep(1500); // Small delay
 
@@ -252,8 +270,8 @@ class MithrilMiningLoop extends BaseLoop {
     try {
       if (!alreadyAtBank) {
         // Move to Bank
-        console.log(`[${this.characterName}] Moving to bank at (${BANK_COORDS.x}, ${BANK_COORDS.y})...`);
-        await this.handleAction(() => moveCharacter(BANK_COORDS.x, BANK_COORDS.y, this.characterName), 'Moving');
+        console.log(`[${this.characterName}] Moving to bank at (${this.bankCoords.x}, ${this.bankCoords.y})...`);
+        await this.handleAction(() => moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName), 'Moving');
         console.log(`[${this.characterName}] Arrived at bank.`);
         await sleep(1500); // Small delay after arrival
       } else {
@@ -302,6 +320,10 @@ class MithrilMiningLoop extends BaseLoop {
 
 /**
  * Main execution function for command line usage
+ * @example
+ * node mithril-mining-loop.js [characterName] [--refine] [--target=N] [--mineX=X --mineY=Y] [--bankX=X --bankY=Y] [--refineryX=X --refineryY=Y]
+ * node mithril-mining-loop.js MyChar --refine --target=50 --mineX=-2 --mineY=13
+ * node mithril-mining-loop.js MyOtherChar --target=0
  */
 async function main() {
   // Parse command line arguments
@@ -309,19 +331,48 @@ async function main() {
   let characterName = args.find(arg => !arg.startsWith('--')); // First non-flag argument
   characterName = characterName || config.character; // Use default from config if not provided
 
-  const refineOre = args.includes('--refine'); // Check for --refine flag
+  const options = {
+    refineOre: args.includes('--refine'),
+    targetOre: 0, // Default to inventory full
+    // Default coordinates will be set in constructor if not provided
+  };
 
-  // Find target ore argument like --target=X (default 0 for inventory full)
+  // Find target ore argument like --target=X
   let targetOre = 0;
   const targetArg = args.find(arg => arg.startsWith('--target='));
   if (targetArg) {
       const targetValue = parseInt(targetArg.split('=')[1], 10);
       if (!isNaN(targetValue) && targetValue >= 0) { // Allow 0
-          targetOre = targetValue;
+          options.targetOre = targetValue;
       } else {
           console.warn(`Invalid target value: ${targetArg.split('=')[1]}. Using default (0 = inventory full).`);
       }
   }
+
+  // Parse coordinate arguments like --mineX=N
+  const coordArgs = ['mineX', 'mineY', 'bankX', 'bankY', 'refineryX', 'refineryY'];
+  const coordMap = {
+      mineX: 'mineCoords.x', mineY: 'mineCoords.y',
+      bankX: 'bankCoords.x', bankY: 'bankCoords.y',
+      refineryX: 'refineryCoords.x', refineryY: 'refineryCoords.y',
+  };
+
+  args.forEach(arg => {
+      if (arg.startsWith('--')) {
+          const [key, value] = arg.substring(2).split('=');
+          if (coordArgs.includes(key) && value !== undefined) {
+              const numValue = parseInt(value, 10);
+              if (!isNaN(numValue)) {
+                  const [coordsKey, axis] = coordMap[key].split('.');
+                  if (!options[coordsKey]) options[coordsKey] = {};
+                  options[coordsKey][axis] = numValue;
+              } else {
+                  console.warn(`Invalid numeric value for ${key}: ${value}`);
+              }
+          }
+      }
+  });
+
 
   if (!characterName) {
     console.error('Character name is required! Provide it as the first argument or set control_character in your .env file.');
@@ -331,15 +382,13 @@ async function main() {
   // Sanitize character name (redundant if BaseLoop does it, but safe)
   characterName = characterName.replace(/[^a-zA-Z0-9_-]/g, '');
 
-  const options = {
-    refineOre,
-    targetOre
-  };
-
   console.log(`--- Mithril Mining Loop ---`);
   console.log(`Character: ${characterName}`);
   console.log(`Refine Ore: ${options.refineOre}`);
   console.log(`Target Ore: ${options.targetOre === 0 ? 'Inventory Full' : options.targetOre}`);
+  if (options.mineCoords) console.log(`Mine Coords: (${options.mineCoords.x}, ${options.mineCoords.y})`);
+  if (options.bankCoords) console.log(`Bank Coords: (${options.bankCoords.x}, ${options.bankCoords.y})`);
+  if (options.refineryCoords) console.log(`Refinery Coords: (${options.refineryCoords.x}, ${options.refineryCoords.y})`);
   console.log(`---------------------------`);
   await sleep(2000); // Pause to read config
 

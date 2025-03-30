@@ -20,15 +20,24 @@ class StrangeWoodHarvestingLoop extends BaseLoop {
    * @param {string} characterName - Name of character to perform actions with
    * @param {number} woodX - X coordinate of the strange wood location
    * @param {number} woodY - Y coordinate of the strange wood location
+   * @param {Object} [options={}] - Configuration options for the loop.
+   * @param {number} [options.targetWood=100] - Target wood quantity to collect.
+   * @param {Object} [options.bankCoords={ x: 4, y: 1 }] - Coordinates for the bank.
    */
-  constructor(characterName, woodX, woodY) {
+  constructor(characterName, woodX, woodY, options = {}) {
     super(characterName);
+
+    const defaults = {
+      targetWood: 100,
+      bankCoords: { x: 4, y: 1 },
+    };
+
     /** @type {Object} Coordinates of strange wood location */
-    this.STRANGE_WOOD_COORDS = { x: parseInt(woodX), y: parseInt(woodY) };
+    this.strangeWoodCoords = { x: parseInt(woodX), y: parseInt(woodY) }; // Keep constructor args for coords
     /** @type {Object} Coordinates of bank */
-    this.BANK_COORDS = { x: 4, y: 1 };
+    this.bankCoords = options.bankCoords || defaults.bankCoords;
     /** @type {number} Target wood quantity to collect before depositing */
-    this.TARGET_WOOD = 100; // Target quantity for wood
+    this.targetWood = options.targetWood || defaults.targetWood;
     /** @type {string} Item code for the wood being harvested */
     this.WOOD_ITEM_CODE = 'strange_wood'; // Assuming this is the item code
   }
@@ -60,7 +69,7 @@ class StrangeWoodHarvestingLoop extends BaseLoop {
    */
   async hasEnoughWood() {
     const currentWood = await this.getWoodCount();
-    return currentWood >= this.TARGET_WOOD;
+    return currentWood >= this.targetWood; // Use configured target
   }
 
   /**
@@ -94,15 +103,15 @@ class StrangeWoodHarvestingLoop extends BaseLoop {
             await new Promise(resolve => setTimeout(resolve, cooldownSeconds * 1000 + 500)); // Add 500ms buffer
           }
         }
-        
+      
         // Check if already at the wood location
         const currentDetails = await getCharacterDetails(this.characterName);
-        if (currentDetails.x === this.STRANGE_WOOD_COORDS.x && currentDetails.y === this.STRANGE_WOOD_COORDS.y) {
+        if (currentDetails.x === this.strangeWoodCoords.x && currentDetails.y === this.strangeWoodCoords.y) {
           console.log('Character is already at the strange wood location. Continuing with harvesting...');
         } else {
-          console.log(`Moving to strange wood location at (${this.STRANGE_WOOD_COORDS.x}, ${this.STRANGE_WOOD_COORDS.y})`);
+          console.log(`Moving to strange wood location at (${this.strangeWoodCoords.x}, ${this.strangeWoodCoords.y})`);
           try {
-            await moveCharacter(this.STRANGE_WOOD_COORDS.x, this.STRANGE_WOOD_COORDS.y, this.characterName);
+            await moveCharacter(this.strangeWoodCoords.x, this.strangeWoodCoords.y, this.characterName);
           } catch (error) {
             if (error.message.includes('Character already at destination')) {
               console.log('Character is already at the strange wood location. Continuing with harvesting...');
@@ -114,9 +123,9 @@ class StrangeWoodHarvestingLoop extends BaseLoop {
       } catch (error) {
         console.error('Failed to check cooldown:', error.message);
         // Continue with movement even if we can't check cooldown
-        console.log(`Moving to strange wood location at (${this.STRANGE_WOOD_COORDS.x}, ${this.STRANGE_WOOD_COORDS.y})`);
+        console.log(`Moving to strange wood location at (${this.strangeWoodCoords.x}, ${this.strangeWoodCoords.y})`);
         try {
-          await moveCharacter(this.STRANGE_WOOD_COORDS.x, this.STRANGE_WOOD_COORDS.y, this.characterName);
+          await moveCharacter(this.strangeWoodCoords.x, this.strangeWoodCoords.y, this.characterName);
         } catch (error) {
           if (error.message.includes('Character already at destination')) {
             console.log('Character is already at the strange wood location. Continuing with harvesting...');
@@ -224,22 +233,22 @@ class StrangeWoodHarvestingLoop extends BaseLoop {
             await new Promise(resolve => setTimeout(resolve, cooldownSeconds * 1000 + 500)); // Add 500ms buffer
           }
         }
-        
+      
         // Check if already at bank
         const currentDetails = await getCharacterDetails(this.characterName);
-        if (currentDetails.x === this.BANK_COORDS.x && currentDetails.y === this.BANK_COORDS.y) {
+        if (currentDetails.x === this.bankCoords.x && currentDetails.y === this.bankCoords.y) {
           console.log('Character is already at the bank. Continuing with deposit...');
         } else {
-          console.log(`Moving to bank at (${this.BANK_COORDS.x}, ${this.BANK_COORDS.y})`);
-          await moveCharacter(this.BANK_COORDS.x, this.BANK_COORDS.y, this.characterName);
+          console.log(`Moving to bank at (${this.bankCoords.x}, ${this.bankCoords.y})`);
+          await moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName);
         }
       } catch (error) {
         console.error('Failed to check cooldown:', error.message);
         // Continue with movement even if we can't check cooldown
-        console.log(`Moving to bank at (${this.BANK_COORDS.x}, ${this.BANK_COORDS.y})`);
-        await moveCharacter(this.BANK_COORDS.x, this.BANK_COORDS.y, this.characterName);
+        console.log(`Moving to bank at (${this.bankCoords.x}, ${this.bankCoords.y})`);
+        await moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName);
       }
-      
+    
       console.log('Starting deposit of all items...');
       
       // Check if character is in cooldown before depositing
@@ -294,17 +303,76 @@ class StrangeWoodHarvestingLoop extends BaseLoop {
    * @static
    * @async
    * @returns {Promise<void>} 
+   * @static
+   * @async
+   * @example
+   * node strange-wood-harvesting-loop.js [characterName] "(woodX,woodY)" [targetWood] [bankX] [bankY]
+   * node strange-wood-harvesting-loop.js MyChar "(10,20)" 150 4 1
+   * @returns {Promise<void>}
    * @throws {Error} If fatal error occurs in main process
    */
   static async main() {
-    // Get command line arguments
-    // Get command line arguments [characterName, "(x,y)"]
     const args = process.argv.slice(2);
-    
-    // Get character name from first argument or fallback
-    const characterName = args[0] || process.env.control_character || config.character;
-    
-    // Extract coordinates (second argument) if provided in format (x,y) or x,y
+    let characterName = args[0];
+    let woodX, woodY;
+
+    // Fallback logic for character name
+    if (!characterName || characterName.startsWith('--')) {
+      characterName = process.env.control_character || config.character;
+    } else {
+      args.shift(); // Remove character name if it was provided first
+    }
+
+    // --- Parse coordinates and options from remaining arguments ---
+    const options = {};
+    let coordArgIndex = -1;
+
+    // Find coordinate argument "(x,y)" or "x,y"
+    for (let i = 0; i < args.length; i++) {
+        const coordMatch = args[i].match(/\(?(-?\d+)\s*,\s*(-?\d+)\)?/);
+        if (coordMatch) {
+            woodX = parseInt(coordMatch[1]);
+            woodY = parseInt(coordMatch[2]);
+            coordArgIndex = i;
+            break;
+        }
+    }
+
+    if (woodX === undefined || woodY === undefined) {
+        console.error('Error: Coordinates must be provided in format "(X,Y)" or "X,Y".');
+        process.exit(1);
+    }
+
+    // Remove coordinate arg from list before parsing others
+    if (coordArgIndex !== -1) {
+        args.splice(coordArgIndex, 1);
+    }
+
+    // Parse remaining args for options
+    if (args[0]) options.targetWood = parseInt(args[0], 10);
+    if (args[1] && args[2]) options.bankCoords = { x: parseInt(args[1], 10), y: parseInt(args[2], 10) };
+
+    // Create harvesting loop instance with coordinates and options
+    const harvestingLoop = new StrangeWoodHarvestingLoop(characterName, woodX, woodY, options);
+
+    try {
+      console.log(`Starting strange wood harvesting automation for character ${characterName}`);
+      console.log('Using configuration:');
+      console.log(`  - Target Wood: ${harvestingLoop.targetWood}`);
+      console.log(`  - Wood Coords: (${harvestingLoop.strangeWoodCoords.x}, ${harvestingLoop.strangeWoodCoords.y})`);
+      console.log(`  - Bank Coords: (${harvestingLoop.bankCoords.x}, ${harvestingLoop.bankCoords.y})`);
+      console.log('\nWill perform the following steps in a loop:');
+      console.log(`1. Harvest at (${harvestingLoop.strangeWoodCoords.x},${harvestingLoop.strangeWoodCoords.y}) until ${harvestingLoop.targetWood} ${harvestingLoop.WOOD_ITEM_CODE} collected or inventory full`);
+      console.log(`2. Deposit all items at bank (${harvestingLoop.bankCoords.x},${harvestingLoop.bankCoords.y})`);
+      console.log('Press Ctrl+C to stop the script at any time');
+
+      await harvestingLoop.mainLoop();
+    } catch (error) {
+      console.error('Error in main process:', error.message);
+      process.exit(1); // Exit with error code
+    }
+  }
+}
     let woodX = 0;
     let woodY = 0;
     

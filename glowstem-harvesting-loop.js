@@ -19,15 +19,24 @@ class GlowstemHarvestingLoop extends BaseLoop {
   /**
    * Create a glowstem harvesting loop.
    * @param {string} [characterName=config.character] - The character name to perform actions with.
+   * @param {Object} [options={}] - Configuration options for the loop.
+   * @param {Object} [options.harvestCoords={ x: 1, y: 10 }] - Coordinates for harvesting.
+   * @param {Object} [options.bankCoords={ x: 4, y: 1 }] - Coordinates for the bank.
    */
-  constructor(characterName = config.character) {
+  constructor(characterName = config.character, options = {}) {
     super(characterName);
+
+    const defaults = {
+      harvestCoords: { x: 1, y: 10 },
+      bankCoords: { x: 4, y: 1 },
+    };
+
     /** @type {Object} Coordinates of the glowstem harvesting location */
-    this.harvestCoords = { x: 1, y: 10 };
+    this.harvestCoords = options.harvestCoords || defaults.harvestCoords;
     /** @type {Object} Coordinates of the bank */
-    this.bankCoords = { x: 4, y: 1 };
+    this.bankCoords = options.bankCoords || defaults.bankCoords;
     /** @type {number} Counter for total resources harvested */
-    this.resourceCount = 0;
+    this.resourceCount = 0; // Reset per instance
   }
 
   /**
@@ -159,12 +168,27 @@ class GlowstemHarvestingLoop extends BaseLoop {
 
 // Execute the script if it's the main module
 if (require.main === module) {
-  const loop = new GlowstemHarvestingLoop();
-  console.log('Starting glowstem harvesting loop...');
-  console.log(`Will harvest at (${loop.harvestCoords.x}, ${loop.harvestCoords.y}) and deposit at (${loop.bankCoords.x}, ${loop.bankCoords.y})`);
+  const args = process.argv.slice(2);
+  let characterName = args[0];
+
+  // Fallback logic for character name
+  if (!characterName) {
+    characterName = process.env.control_character || config.character;
+  }
+
+  // --- Parse options from command line arguments ---
+  const options = {};
+  if (args[1] && args[2]) options.harvestCoords = { x: parseInt(args[1], 10), y: parseInt(args[2], 10) };
+  if (args[3] && args[4]) options.bankCoords = { x: parseInt(args[3], 10), y: parseInt(args[4], 10) };
+
+  const loop = new GlowstemHarvestingLoop(characterName, options);
+
+  console.log(`Starting glowstem harvesting loop for character ${characterName}...`);
+  console.log('Using configuration:');
+  console.log(`  - Harvest Coords: (${loop.harvestCoords.x}, ${loop.harvestCoords.y})`);
+  console.log(`  - Bank Coords: (${loop.bankCoords.x}, ${loop.bankCoords.y})`);
   console.log('Press Ctrl+C to stop the script at any time.');
   console.log('---------------------------------------------------');
-  
   // Handle graceful shutdown
   process.on('SIGINT', async () => {
     console.log('\nGracefully shutting down...');
