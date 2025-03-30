@@ -328,7 +328,7 @@ async function craftingAction(code = 'ITEM', quantity = 1, material, characterNa
     throw new Error('Quantity must be a positive number');
   }
   
-  const charName = characterName || config.character;
+  const charName = sanitizeCharacterName(characterName || getConfig().character); // Use getConfig()
   return makeApiRequest('action/crafting', 'POST', { 
     code: code,
     quantity: quantity,
