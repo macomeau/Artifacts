@@ -3,8 +3,10 @@
  * @module db
  */
 
+// Ensure the correct environment is loaded before initializing the pool!
+require('./env-loader');
+
 const { Pool } = require('pg');
-// env-loader is now loaded in config.js before db.js is imported
 
 /**
  * PostgreSQL connection pool

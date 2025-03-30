@@ -3,6 +3,9 @@
  * @module config
  */
 
+// Ensure the correct environment is loaded before reading process.env!
+require('../env-loader'); // Use relative path from config/ to root
+
 // Ensure DEFAULT_CHARACTER is loaded from environment
 const defaultCharacter = process.env.DEFAULT_CHARACTER;
 if (!defaultCharacter && process.env.NODE_ENV !== 'test') {
