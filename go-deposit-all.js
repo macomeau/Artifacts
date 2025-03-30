@@ -37,8 +37,14 @@ function parseCoordinates(coordString) {
 async function depositAllItems(characterName) {
   // Validate characterName
   if (!characterName) {
-    console.error('DepositAllItems Error: Character name is required.');
-    throw new Error('Character name is required for depositAllItems.');
+    // Try to use config.character as fallback
+    if (config.character) {
+      console.log(`No character name provided, using default character: ${config.character}`);
+      characterName = config.character;
+    } else {
+      console.error('DepositAllItems Error: Character name is required.');
+      throw new Error('Character name is required for depositAllItems.');
+    }
   }
 
   try {

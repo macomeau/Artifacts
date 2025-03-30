@@ -106,7 +106,7 @@ class SunflowerHarvestingLoop extends BaseLoop {
       
       // Deposit all items
       console.log('Depositing all items to bank...');
-      await depositAllItems();
+      await depositAllItems(this.characterName);
       
       // Move back to harvesting location
       console.log(`Moving back to harvesting location at (${this.harvestCoords.x}, ${this.harvestCoords.y})...`);
