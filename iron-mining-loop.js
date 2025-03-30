@@ -375,19 +375,6 @@ class IronMiningLoop extends BaseLoop {
   static async main() {
     const args = process.argv.slice(2);
     const characterName = args[0] || process.env.control_character || config.character;
-    
-   * @static
-   * @async
-   * @example
-   * node iron-mining-loop.js [characterName] [processOption] [targetOre] [mineX] [mineY] [bankX] [bankY] [smithX] [smithY] [barsToSmelt]
-   * node iron-mining-loop.js MyChar smelt 150 1 7 4 1 1 5 15
-   * node iron-mining-loop.js MyOtherChar store 200 1 7 4 1
-   * @returns {Promise<void>}
-   * @throws {Error} If there's an error in the main process
-   */
-  static async main() {
-    const args = process.argv.slice(2);
-    const characterName = args[0] || process.env.control_character || config.character;
 
     // --- Parse options from command line arguments ---
     const options = {};

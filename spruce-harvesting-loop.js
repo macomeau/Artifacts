@@ -439,8 +439,8 @@ class SpruceHarvestingLoop extends BaseLoop {
     
     console.log(`Completed harvesting loop #${loopCount}\n`);
   }
-}
 
+  /**
    * @static
    * @async
    * @example

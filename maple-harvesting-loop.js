@@ -223,18 +223,6 @@ class MapleHarvestingLoop extends BaseLoop {
   static async main() {
     const args = process.argv.slice(2);
     const characterName = args[0] || process.env.control_character || config.character;
-    
-   * @static
-   * @async
-   * @example
-   * node maple-harvesting-loop.js [characterName] [targetMaple] [forestX] [forestY] [bankX] [bankY] [workshopX] [workshopY] [planksToProcess]
-   * node maple-harvesting-loop.js MyChar 150 1 12 4 1 -2 -3 15
-   * @returns {Promise<void>}
-   * @throws {Error} If fatal error occurs in main process
-   */
-  static async main() {
-    const args = process.argv.slice(2);
-    const characterName = args[0] || process.env.control_character || config.character;
 
     // --- Parse options from command line arguments ---
     const options = {};

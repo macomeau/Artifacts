@@ -413,13 +413,10 @@ class CopperMiningLoop extends BaseLoop {
     
     console.log(`Completed mining loop #${loopCount}\n`);
   }
-}
 
   /**
    * Main entry point for the application that handles command line arguments and initiates the mining loop.
    * Parses command line arguments for character name and processing options.
-   * @static
-   * @returns {Promise<void>}
    * @static
    * @async
    * @example

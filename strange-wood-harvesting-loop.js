@@ -373,41 +373,6 @@ class StrangeWoodHarvestingLoop extends BaseLoop {
     }
   }
 }
-    let woodX = 0;
-    let woodY = 0;
-    
-    if (args.length > 1) {
-      // Parse coordinates from second argument
-      const coordMatch = args[1].match(/\(?(-?\d+)\s*,\s*(-?\d+)\)?/);
-      if (coordMatch) {
-        woodX = parseInt(coordMatch[1]);
-        woodY = parseInt(coordMatch[2]);
-      } else {
-        console.error(`Error: Invalid coordinates format "${args[1]}". Must be provided in format "(X,Y)" or "X,Y" as the second argument.`);
-        process.exit(1);
-      }
-    } else {
-        console.error('Error: Coordinates must be provided in format "(X,Y)" or "X,Y" as the second argument.');
-        process.exit(1);
-    }
-    
-    // Create harvesting loop instance with coordinates and character
-    const harvestingLoop = new StrangeWoodHarvestingLoop(characterName, woodX, woodY);
-    
-    try {
-      console.log(`Starting strange wood harvesting automation for character ${characterName}`);
-      console.log('Will perform the following steps in a loop:');
-      console.log(`1. Harvest at (${harvestingLoop.STRANGE_WOOD_COORDS.x},${harvestingLoop.STRANGE_WOOD_COORDS.y}) until ${harvestingLoop.TARGET_WOOD} ${harvestingLoop.WOOD_ITEM_CODE} collected or inventory full`);
-      console.log(`2. Deposit all items at bank (${harvestingLoop.BANK_COORDS.x},${harvestingLoop.BANK_COORDS.y})`);
-      console.log('Press Ctrl+C to stop the script at any time');
-      
-      await harvestingLoop.mainLoop();
-    } catch (error) {
-      console.error('Error in main process:', error.message);
-      process.exit(1); // Exit with error code
-    }
-  }
-}
 
 // Execute the main function if run directly
 if (require.main === module) {
