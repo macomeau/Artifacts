@@ -40,7 +40,9 @@ function prepareConfig() {
       if (scriptArgs.length > 0 && scriptArgs[0].trim() !== '') {
         console.log(`Using character name from command line: ${scriptArgs[0]}`);
         return scriptArgs[0];
-      // Ignore errors when accessing process.argv? Maybe remove this fallback.
+      }
+    } catch (e) {
+      // Ignore errors when accessing process.argv
     }
 
     // If no character name found, return undefined
