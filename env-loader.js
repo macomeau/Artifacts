@@ -62,10 +62,6 @@ function loadEnv() {
       console.log(`[EnvLoader] Final ACCOUNT_NAME: ${process.env.ACCOUNT_NAME}`);
       // Log the correct variable and indicate if it's set
       console.log(`[EnvLoader] Final ARTIFACTS_API_TOKEN is ${process.env.ARTIFACTS_API_TOKEN ? 'set' : 'not set'}`);
-      // Optionally log a few chars of the token for verification (REMOVE AFTER DEBUGGING)
-      // if (process.env.ARTIFACTS_API_TOKEN) {
-      //   console.log(`[EnvLoader DEBUG] Token starts with: ${process.env.ARTIFACTS_API_TOKEN.substring(0, 5)}...`);
-      // }
       console.log(`[EnvLoader] Final DEFAULT_CHARACTER: ${process.env.DEFAULT_CHARACTER}`);
   }
 
