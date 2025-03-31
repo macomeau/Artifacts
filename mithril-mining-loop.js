@@ -170,10 +170,10 @@ class MithrilMiningLoop extends BaseLoop {
     while (!inventoryFull && (this.targetOre === 0 || this.currentOreCount < this.targetOre)) {
       try {
         // Use handleAction from BaseLoop for cooldown management and logging
-        // Use miningAction as the endpoint for mining
+        // Use gatheringAction as the endpoint for mining
         const result = await this.handleAction(
-          () => miningAction(this.characterName), 
-          'Mining Action' // Updated action name for logging clarity
+          () => gatheringAction(this.characterName), 
+          'Mining (Gathering Action)' // Updated action name for logging clarity
         );
 
         // Update state based on the result from handleAction/gatheringAction
