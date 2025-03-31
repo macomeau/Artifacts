@@ -7,6 +7,7 @@
 const db = require('./db');
 const { moveCharacter, getCharacterDetails, makeApiRequest } = require('./api');
 const config = require('./config');
+const { sleep, extractCooldownTime } = require('./utils'); // Import sleep and extractCooldownTime
 
 /**
  * Parse coordinates from string format "(x,y)" to numbers
@@ -103,15 +104,45 @@ async function depositAllItems(characterName) {
         await new Promise(resolve => setTimeout(resolve, 500)); 
 
       } catch (error) {
-        // Error is logged by makeApiRequest. Handle specific deposit errors if needed.
-        if (error.message.includes('404')) {
-          console.error(`[${characterName}] Failed to deposit ${item.code}: Deposit endpoint not found. Please check if the deposit feature is available.`);
-        } else {
-          console.error(`[${characterName}] Failed to deposit ${item.code}:`, error.message);
-        }
+        // Error is logged by makeApiRequest. Handle specific deposit errors.
+        const cooldownSeconds = extractCooldownTime(error);
 
-        // Continue with next item even if one fails
-        continue;
+        if (cooldownSeconds > 0) {
+          console.log(`[${characterName}] Cooldown detected for depositing ${item.code}. Waiting ${cooldownSeconds.toFixed(1)} seconds...`);
+          await sleep(cooldownSeconds * 1000 + 500); // Wait + buffer
+
+          // Retry the deposit for this specific item
+          console.log(`[${characterName}] Retrying deposit for ${item.code}...`);
+          try {
+            const retryResult = await makeApiRequest('action/bank/deposit', 'POST', {
+              code: item.code,
+              quantity: item.quantity || 1,
+              character: characterName
+            }, characterName);
+
+            console.log(`[${characterName}] Successfully deposited ${item.code} on retry.`);
+            // Log successful retry deposit
+            await db.query(
+              `INSERT INTO inventory_snapshots(character, items) VALUES ($1, $2)`,
+              [characterName, JSON.stringify(retryResult.inventory || [])]
+            );
+            await db.query(
+              `INSERT INTO action_logs(character, action_type, result) VALUES ($1, 'bank_deposit_retry', $2)`,
+              [characterName, { item: item.code, quantity: item.quantity || 1 }]
+            );
+            await sleep(500); // Small delay after successful retry
+          } catch (retryError) {
+            console.error(`[${characterName}] Failed to deposit ${item.code} even after retry:`, retryError.message);
+            // Continue to the next item if retry fails
+          }
+        } else if (error.message.includes('404')) {
+          console.error(`[${characterName}] Failed to deposit ${item.code}: Deposit endpoint not found. Please check if the deposit feature is available.`);
+          // Continue with next item
+        } else {
+          // For other non-cooldown errors, log and continue
+          console.error(`[${characterName}] Failed to deposit ${item.code}:`, error.message);
+          // Continue with next item
+        }
       }
     }
 
