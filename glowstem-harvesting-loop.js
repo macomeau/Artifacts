@@ -108,7 +108,8 @@ class GlowstemHarvestingLoop extends BaseLoop {
       }
       
       console.log('Depositing all items to bank...');
-      await depositAllItems();
+      // Pass the character name to depositAllItems
+      await depositAllItems(this.characterName); 
       
       console.log(`Moving back to harvesting location at (${this.harvestCoords.x}, ${this.harvestCoords.y})...`);
       await moveCharacter(this.harvestCoords.x, this.harvestCoords.y, this.characterName);
