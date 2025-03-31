@@ -123,9 +123,6 @@ class MapleHarvestingLoop extends BaseLoop {
           await handleCooldown(this.characterName);
           
           try {
-            // Explicitly check for cooldown before gathering
-            await handleCooldown(this.characterName);
-            
             // Perform gathering action
             await gatheringAction(this.characterName);
             console.log('Harvesting successful');
@@ -133,6 +130,15 @@ class MapleHarvestingLoop extends BaseLoop {
             // Add additional delay to avoid rate limiting (429 errors)
             console.log(`Adding extra delay to avoid rate limiting...`);
             await sleep(3000); // 3 second delay between actions using standardized sleep function
+            
+            // Check inventory after each harvest
+            const currentMaple = await this.getMapleWoodCount();
+            const gatheredMaple = currentMaple - startingMaple;
+            console.log(`Maple wood harvested this session: ${gatheredMaple}`);
+            console.log(`Total maple wood: ${currentMaple}`);
+            
+            // Check if inventory is full
+            await this.checkAndDeposit();
           } catch (error) {
             console.error(`Harvesting failed: ${error.message}`);
             
