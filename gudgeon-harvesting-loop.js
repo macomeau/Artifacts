@@ -145,7 +145,8 @@ class GudgeonHarvestingLoop extends BaseLoop {
         if (details.cooldown && details.cooldown > 0) {
           await sleep(details.cooldown * 1000 + 500);
         }
-        return await depositAllItems();
+        // Pass the character name to depositAllItems
+        return await depositAllItems(this.characterName); 
       });
       
       // Add a small delay before moving back
