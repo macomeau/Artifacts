@@ -376,7 +376,7 @@ async function main() {
 
           // Deposit workflow
           await moveCharacter(4, 1, characterName);
-          await depositAllItems();
+          await depositAllItems(characterName); // Pass characterName here
           await moveCharacter(coords.x, coords.y, characterName);
           return true;
         }
