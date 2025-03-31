@@ -47,6 +47,7 @@ module.exports = {
       'sunflower-harvesting-loop', // Added sunflower harvesting script
       'gudgeon-harvesting-loop', // Added gudgeon harvesting script
       'ash-harvesting-loop', // Added ash harvesting script
+      'bass-harvesting-loop', // Added bass harvesting script
       'go-fight-heal-loop' // Added go-fight-heal-loop script
     ]
   },
