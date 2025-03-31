@@ -57,6 +57,7 @@ module.exports = {
       'fishing-loop', // Generic fishing loop
       'gathering-loop',
       'glowstem-harvesting-loop',
+      'go-deposit-all', // Added deposit script
       'go-fight-heal-loop',
       'go-gather-loop',
       'gold-mining-loop',
