@@ -147,8 +147,9 @@ class AshHarvestingLoop extends BaseLoop {
       }
     }
     
-    // Get starting ash count
+    // Get starting ash count for the correct character
     const startingAsh = await this.getAshWoodCount();
+    console.log(`Using character: ${this.characterName} for harvesting`);
     console.log(`Starting ash harvesting. Current ash wood: ${startingAsh}`);
     
     while (!await this.hasEnoughAshWood()) {
@@ -168,8 +169,8 @@ class AshHarvestingLoop extends BaseLoop {
           }
         }
         
-        // Perform gathering action
-        await gatheringAction();
+        // Perform gathering action with explicit character name
+        await gatheringAction(this.characterName);
         console.log('Harvesting successful');
         
         // Check inventory after each harvest
@@ -498,7 +499,7 @@ class AshHarvestingLoop extends BaseLoop {
             while (!await this.hasEnoughAshWood()) {
               // [Harvesting logic remains the same]
               try {
-                await gatheringAction();
+                await gatheringAction(this.characterName);
                 console.log('Harvesting successful');
                 
                 // Check inventory after each harvest
