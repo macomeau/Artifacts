@@ -166,6 +166,7 @@ class MapleHarvestingLoop extends BaseLoop {
           }
           
           console.log(`Collected target of ${this.targetMapleWood} maple wood`); // Use configured target
+        }
         
         // Step 2: Process maple into planks
         console.log('Checking for cooldown before moving to workshop...');
@@ -267,7 +268,6 @@ class MapleHarvestingLoop extends BaseLoop {
         } catch (depositError) {
           console.error('Deposit after error failed:', depositError.message);
         }
-      }
       }
     }
   }
