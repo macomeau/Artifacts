@@ -36,19 +36,52 @@ module.exports = {
   },
   validation: {
     scripts: [
+      'air-boost-potion-loop',
+      'ash-harvesting-loop',
+      'bass-harvesting-loop',
+      'birch-harvesting-loop',
+      'coal-mining-loop',
+      'combat-loop', // Generic combat loop
+      'cook-bass-loop',
+      'cook-gudgeon-loop',
+      'cook-salmon-loop',
+      'cook-shrimp-loop',
+      'cook-trout-loop',
+      'cook-wolf-meat-loop',
+      'copper-bar-crafting-loop',
       'copper-mining-loop',
+      'copper-ring-crafting-loop',
+      'deadwood-harvesting-loop',
+      'fight-loop',
+      'fight-loop-with-heal',
+      'fishing-loop', // Generic fishing loop
+      'gathering-loop',
+      'glowstem-harvesting-loop',
+      'go-fight-heal-loop',
+      'go-gather-loop',
+      'gold-mining-loop',
+      'gudgeon-harvesting-loop',
+      'hardwood-plank-crafting-loop',
+      'health-potion-loop',
+      'iron-bar-crafting-loop',
+      'iron-dagger-crafting-loop',
       'iron-mining-loop',
-      'woodcutting-loop',
-      'fishing-loop',
-      'combat-loop',
-      'maple-harvesting-loop', // Added maple harvesting script
-      'salmon-harvesting-loop', // Added salmon harvesting script
-      'glowstem-harvesting-loop', // Added glowstem harvesting script
-      'sunflower-harvesting-loop', // Added sunflower harvesting script
-      'gudgeon-harvesting-loop', // Added gudgeon harvesting script
-      'ash-harvesting-loop', // Added ash harvesting script
-      'bass-harvesting-loop', // Added bass harvesting script
-      'go-fight-heal-loop' // Added go-fight-heal-loop script
+      'iron-ring-crafting-loop',
+      'iron-sword-crafting-loop',
+      'leather-boots-crafting-loop',
+      'maple-harvesting-loop',
+      'minor-health-potion-loop',
+      'mithril-mining-loop',
+      'nettle-harvesting-loop',
+      'salmon-harvesting-loop',
+      'shrimp-harvesting-loop',
+      'spruce-harvesting-loop',
+      'steel-bar-crafting-loop',
+      'strange-ore-mining-loop',
+      'strange-wood-harvesting-loop',
+      'sunflower-harvesting-loop',
+      'trout-harvesting-loop',
+      'woodcutting-loop' // Generic woodcutting loop
     ]
   },
   dbPool: {
