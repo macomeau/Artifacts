@@ -180,7 +180,7 @@ class AshHarvestingLoop extends BaseLoop {
         console.log(`Total ash wood: ${currentAsh}`);
         
         // Log only non-empty inventory slots
-        const details = await getCharacterDetails();
+        const details = await getCharacterDetails(this.characterName);
         if (details.inventory) {
           const items = details.inventory
             .filter(item => item && item.code)
