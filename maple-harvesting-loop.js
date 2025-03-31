@@ -95,7 +95,6 @@ class MapleHarvestingLoop extends BaseLoop {
           console.log(`Moving to maple forest at (${this.mapleForestCoords.x}, ${this.mapleForestCoords.y})`);
           try {
             // Explicitly check for cooldown before moving to avoid 499 errors
-            const { handleCooldown } = require('./utils');
             await handleCooldown(this.characterName);
             
             await moveCharacter(this.mapleForestCoords.x, this.mapleForestCoords.y, this.characterName);
@@ -116,16 +115,8 @@ class MapleHarvestingLoop extends BaseLoop {
           // Check for cooldown before gathering
           const freshDetails = await getCharacterDetails(this.characterName);
           
-          if (freshDetails.cooldown && freshDetails.cooldown > 0) {
-            const now = new Date();
-            const expirationDate = new Date(freshDetails.cooldown_expiration);
-            const cooldownSeconds = Math.max(0, (expirationDate - now) / 1000);
-            
-            if (cooldownSeconds > 0) {
-              console.log(`Character is in cooldown. Waiting ${cooldownSeconds.toFixed(1)} seconds...`);
-              await new Promise(resolve => setTimeout(resolve, cooldownSeconds * 1000 + 500));
-            }
-          }
+          // Use the standardized handleCooldown function instead of manual cooldown handling
+          await handleCooldown(this.characterName);
           
           // Perform gathering action
           await gatheringAction(this.characterName);
@@ -133,7 +124,7 @@ class MapleHarvestingLoop extends BaseLoop {
           
           // Add additional delay to avoid rate limiting (429 errors)
           console.log(`Adding extra delay to avoid rate limiting...`);
-          await new Promise(resolve => setTimeout(resolve, 3000)); // 3 second delay between actions
+          await sleep(3000); // 3 second delay between actions using standardized sleep function
           
           // Check inventory after each harvest
           const currentMaple = await this.getMapleWoodCount();
@@ -152,22 +143,13 @@ class MapleHarvestingLoop extends BaseLoop {
         try {
           const freshDetails = await getCharacterDetails(this.characterName);
           
-          if (freshDetails.cooldown && freshDetails.cooldown > 0) {
-            const now = new Date();
-            const expirationDate = new Date(freshDetails.cooldown_expiration);
-            const cooldownSeconds = Math.max(0, (expirationDate - now) / 1000);
-            
-            if (cooldownSeconds > 0) {
-              console.log(`Character is in cooldown. Waiting ${cooldownSeconds.toFixed(1)} seconds...`);
-              await new Promise(resolve => setTimeout(resolve, cooldownSeconds * 1000 + 500));
-            }
-          }
+          // Use the standardized handleCooldown function instead of manual cooldown handling
+          await handleCooldown(this.characterName);
           
           // Move to workshop
           console.log(`Moving to workshop at (${this.workshopCoords.x}, ${this.workshopCoords.y})`);
           
           // Explicitly check for cooldown before moving to avoid 499 errors
-          const { handleCooldown } = require('./utils');
           await handleCooldown(this.characterName);
           
           await moveCharacter(this.workshopCoords.x, this.workshopCoords.y, this.characterName);
@@ -188,22 +170,13 @@ class MapleHarvestingLoop extends BaseLoop {
           console.log('Checking for cooldown before moving to bank...');
           const bankDetails = await getCharacterDetails(this.characterName);
           
-          if (bankDetails.cooldown && bankDetails.cooldown > 0) {
-            const now = new Date();
-            const expirationDate = new Date(bankDetails.cooldown_expiration);
-            const cooldownSeconds = Math.max(0, (expirationDate - now) / 1000);
-            
-            if (cooldownSeconds > 0) {
-              console.log(`Character is in cooldown. Waiting ${cooldownSeconds.toFixed(1)} seconds...`);
-              await new Promise(resolve => setTimeout(resolve, cooldownSeconds * 1000 + 500));
-            }
-          }
+          // Use the standardized handleCooldown function instead of manual cooldown handling
+          await handleCooldown(this.characterName);
           
           // Move to bank
           console.log(`Moving to bank at (${this.bankCoords.x}, ${this.bankCoords.y})`);
           
           // Explicitly check for cooldown before moving to avoid 499 errors
-          const { handleCooldown } = require('./utils');
           await handleCooldown(this.characterName);
           
           await moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName);
