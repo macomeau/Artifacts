@@ -116,11 +116,11 @@ class MapleHarvestingLoop extends BaseLoop {
           console.log(`Already have ${startingMaple} maple wood, which meets target of ${this.targetMapleWood}`);
         } else {
           while (!await this.hasEnoughMapleWood()) {
-          // Check for cooldown before gathering
-          const freshDetails = await getCharacterDetails(this.characterName);
-          
-          // Use the standardized handleCooldown function instead of manual cooldown handling
-          await handleCooldown(this.characterName);
+            // Check for cooldown before gathering
+            const freshDetails = await getCharacterDetails(this.characterName);
+            
+            // Use the standardized handleCooldown function instead of manual cooldown handling
+            await handleCooldown(this.characterName);
           
           try {
             // Perform gathering action
@@ -155,17 +155,17 @@ class MapleHarvestingLoop extends BaseLoop {
             }
           }
           
-          // Check inventory after each harvest
-          const currentMaple = await this.getMapleWoodCount();
-          const gatheredMaple = currentMaple - startingMaple;
-          console.log(`Maple wood harvested this session: ${gatheredMaple}`);
-          console.log(`Total maple wood: ${currentMaple}`);
+            // Check inventory after each harvest
+            const currentMaple = await this.getMapleWoodCount();
+            const gatheredMaple = currentMaple - startingMaple;
+            console.log(`Maple wood harvested this session: ${gatheredMaple}`);
+            console.log(`Total maple wood: ${currentMaple}`);
+            
+            // Check if inventory is full
+            await this.checkAndDeposit();
+          }
           
-          // Check if inventory is full
-          await this.checkAndDeposit();
-        }
-        
-        console.log(`Collected target of ${this.targetMapleWood} maple wood`); // Use configured target
+          console.log(`Collected target of ${this.targetMapleWood} maple wood`); // Use configured target
         
         // Step 2: Process maple into planks
         console.log('Checking for cooldown before moving to workshop...');
@@ -267,6 +267,7 @@ class MapleHarvestingLoop extends BaseLoop {
         } catch (depositError) {
           console.error('Deposit after error failed:', depositError.message);
         }
+      }
       }
     }
   }
