@@ -340,7 +340,33 @@ async function viewProcessOutput(id) {
             
             processScriptName.textContent = scriptBaseName;
             processScriptPath.textContent = process.script;
-            
+
+            // --- Add Copy Button ---
+            const modalHeader = processScriptName.closest('.modal-header'); // Find the header containing the script name
+            if (modalHeader) {
+                // Remove existing button if present (to avoid duplicates on reopen)
+                const existingButton = modalHeader.querySelector('.copy-log-button');
+                if (existingButton) {
+                    existingButton.remove();
+                }
+
+                const copyButton = document.createElement('button');
+                copyButton.textContent = 'Copy Logs';
+                copyButton.className = 'copy-log-button action-button'; // Use existing button style
+                copyButton.style.marginLeft = 'auto'; // Push it towards the right, adjust as needed
+                copyButton.style.marginRight = '10px'; // Space before close button
+                copyButton.onclick = () => copyLogsToClipboard(outputContent, copyButton); // Attach click handler
+                 
+                // Insert the button before the close button within the header
+                const closeButton = modalHeader.querySelector('#close-output-modal');
+                if (closeButton) {
+                   modalHeader.insertBefore(copyButton, closeButton);
+                } else {
+                   modalHeader.appendChild(copyButton); // Fallback append
+                }
+            }
+            // --- End Add Copy Button ---
+             
             // Handle character and args
             if (process.args && process.args.length > 0) {
                 // Special case for scripts that have coordinates as first arg and character as second arg
