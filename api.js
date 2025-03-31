@@ -160,7 +160,8 @@ async function moveCharacter(x, y, characterName) {
   // Sanitize the character name
   const charName = sanitizeCharacterName(characterName || config.character); // Use imported config
   console.log(`Moving character ${charName} to coordinates (${x}, ${y})...`);
-  return makeApiRequest('action/move', 'POST', { x, y, character: charName }, charName);
+  // Use PUT method instead of POST based on 405 error
+  return makeApiRequest('action/move', 'PUT', { x, y, character: charName }, charName);
 }
 
 /**

@@ -35,17 +35,14 @@ function parseCoordinates(coordString) {
  * @throws {Error} If deposit operation fails
  */
 async function depositAllItems(characterName) {
-  // Validate characterName
-  if (!characterName) {
-    // Try to use config.character as fallback
-    if (config.character) {
-      console.log(`No character name provided, using default character: ${config.character}`);
-      characterName = config.character;
-    } else {
-      console.error('DepositAllItems Error: Character name is required.');
-      throw new Error('Character name is required for depositAllItems.');
-    }
+  // Validate characterName - Remove fallback to config.character
+  if (!characterName || typeof characterName !== 'string' || characterName.trim() === '') {
+    const errorMsg = 'DepositAllItems Error: A valid character name must be provided.';
+    console.error(errorMsg);
+    throw new Error(errorMsg);
   }
+
+  console.log(`[${characterName}] Initiating deposit process.`); // Log with the correct name
 
   try {
     // Get character details for the specified character
@@ -73,29 +70,15 @@ async function depositAllItems(characterName) {
       
       try {
         // Make API request to deposit single item for the specified character
-        // Cooldown errors from this call should be handled by makeApiRequest logging or a wrapper function.
-        const result = await makeApiRequest('action/bank/deposit', 'POST', {
+        // Use PUT method instead of POST based on 405 error
+        const result = await makeApiRequest('action/bank/deposit', 'PUT', {
           code: item.code,
           quantity: item.quantity || 1,
           character: characterName // Ensure character is passed in body if API requires it
         }, characterName); // Pass characterName to makeApiRequest
 
-        // Check for new cooldown after deposit
-        freshDetails = await getCharacterDetails(characterName);
-        if (freshDetails.cooldown && freshDetails.cooldown > 0) {
-          const now = new Date();
-          const expirationDate = new Date(freshDetails.cooldown_expiration);
-          const cooldownSeconds = Math.max(0, (expirationDate - now) / 1000);
-          
-          if (cooldownSeconds > 0) {
-            console.log(`Deposit caused cooldown. Waiting ${cooldownSeconds.toFixed(1)} seconds before next deposit...`);
-            await new Promise(resolve => setTimeout(resolve, cooldownSeconds * 1000 + 500)); // Add 500ms buffer
-          }
-        } else {
-          // Add a small delay between deposits even if no cooldown
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
-
+        // Cooldown should be handled by makeApiRequest or a wrapper. Remove manual check here.
+        
         console.log(`[${characterName}] Successfully deposited ${item.code}`);
 
         // Log inventory snapshot for the correct character
