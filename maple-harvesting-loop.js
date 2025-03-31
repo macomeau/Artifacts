@@ -97,7 +97,21 @@ class MapleHarvestingLoop extends BaseLoop {
             // Explicitly check for cooldown before moving to avoid 499 errors
             await handleCooldown(this.characterName);
             
-            await moveCharacter(this.mapleForestCoords.x, this.mapleForestCoords.y, this.characterName);
+            try {
+              await moveCharacter(this.mapleForestCoords.x, this.mapleForestCoords.y, this.characterName);
+              
+              // Add additional delay after movement to avoid rate limiting
+              console.log(`Adding extra delay after movement to avoid rate limiting...`);
+              await sleep(5000); // 5 second delay after movement
+            } catch (error) {
+              if (error.message.includes('Too many requests') || error.message.includes('429')) {
+                console.log('Rate limit hit. Waiting 30 seconds before retrying...');
+                await sleep(30000); // Wait 30 seconds on rate limit
+                await moveCharacter(this.mapleForestCoords.x, this.mapleForestCoords.y, this.characterName);
+              } else if (!error.message.includes('Character already at destination')) {
+                throw error;
+              }
+            }
           } catch (error) {
             if (error.message.includes('Character already at destination')) {
               console.log('Character is already at the maple forest. Continuing with harvesting...');
@@ -182,7 +196,23 @@ class MapleHarvestingLoop extends BaseLoop {
           // Explicitly check for cooldown before moving to avoid 499 errors
           await handleCooldown(this.characterName);
           
-          await moveCharacter(this.workshopCoords.x, this.workshopCoords.y, this.characterName);
+          try {
+            await moveCharacter(this.workshopCoords.x, this.workshopCoords.y, this.characterName);
+            
+            // Add additional delay after movement to avoid rate limiting
+            console.log(`Adding extra delay after movement to avoid rate limiting...`);
+            await sleep(5000); // 5 second delay after movement
+          } catch (error) {
+            if (error.message.includes('Too many requests') || error.message.includes('429')) {
+              console.log('Rate limit hit. Waiting 30 seconds before retrying...');
+              await sleep(30000); // Wait 30 seconds on rate limit
+              await moveCharacter(this.workshopCoords.x, this.workshopCoords.y, this.characterName);
+            } else if (error.message.includes('Character already at destination')) {
+              console.log('Character is already at the workshop. Continuing with processing...');
+            } else {
+              throw error;
+            }
+          }
           
           // Process maple wood into planks
           const currentMaple = await this.getMapleWoodCount();
@@ -195,6 +225,10 @@ class MapleHarvestingLoop extends BaseLoop {
               await handleCooldown(this.characterName);
               await craftingAction('maple_plank', planksToMake, 'maple_wood', this.characterName); // Specify material
               console.log('Processing successful');
+            
+              // Add additional delay after crafting to avoid rate limiting
+              console.log(`Adding extra delay after crafting to avoid rate limiting...`);
+              await sleep(5000); // 5 second delay after crafting
             } catch (error) {
               console.error(`Crafting failed: ${error.message}`);
               
@@ -207,6 +241,10 @@ class MapleHarvestingLoop extends BaseLoop {
                   // Try again after cooldown
                   await craftingAction('maple_plank', planksToMake, 'maple_wood', this.characterName);
                   console.log('Processing successful after cooldown');
+                  
+                  // Add additional delay after crafting to avoid rate limiting
+                  console.log(`Adding extra delay after crafting to avoid rate limiting...`);
+                  await sleep(5000); // 5 second delay after crafting
                 }
               } else {
                 throw error; // Re-throw if it's not a cooldown error
@@ -229,7 +267,23 @@ class MapleHarvestingLoop extends BaseLoop {
           // Explicitly check for cooldown before moving to avoid 499 errors
           await handleCooldown(this.characterName);
           
-          await moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName);
+          try {
+            await moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName);
+            
+            // Add additional delay after movement to avoid rate limiting
+            console.log(`Adding extra delay after movement to avoid rate limiting...`);
+            await sleep(5000); // 5 second delay after movement
+          } catch (error) {
+            if (error.message.includes('Too many requests') || error.message.includes('429')) {
+              console.log('Rate limit hit. Waiting 30 seconds before retrying...');
+              await sleep(30000); // Wait 30 seconds on rate limit
+              await moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName);
+            } else if (error.message.includes('Character already at destination')) {
+              console.log('Character is already at the bank. Continuing with deposit...');
+            } else {
+              throw error;
+            }
+          }
           
           // Deposit items
           console.log('Depositing all items...');
@@ -247,8 +301,28 @@ class MapleHarvestingLoop extends BaseLoop {
             // Explicitly check for cooldown before moving to avoid 499 errors
             await handleCooldown(this.characterName);
             
-            await moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName);
-            await depositAllItems(this.characterName);
+            try {
+              await moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName);
+              
+              // Add additional delay after movement to avoid rate limiting
+              console.log(`Adding extra delay after movement to avoid rate limiting...`);
+              await sleep(5000); // 5 second delay after movement
+              
+              await handleCooldown(this.characterName);
+              await depositAllItems(this.characterName);
+            } catch (error) {
+              if (error.message.includes('Too many requests') || error.message.includes('429')) {
+                console.log('Rate limit hit. Waiting 30 seconds before retrying...');
+                await sleep(30000); // Wait 30 seconds on rate limit
+                await moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName);
+                await depositAllItems(this.characterName);
+              } else if (error.message.includes('Character already at destination')) {
+                console.log('Character is already at the bank. Continuing with deposit...');
+                await depositAllItems(this.characterName);
+              } else {
+                throw error;
+              }
+            }
           } catch (depositError) {
             console.error('Deposit after error failed:', depositError.message);
           }
