@@ -8,7 +8,7 @@
 require('./env-loader'); 
 
 // Now load modules that depend on the loaded environment
-const { getCharacterDetails, miningAction, smeltingAction, moveCharacter } = require('./api');
+const { getCharacterDetails, miningAction, smeltingAction, moveCharacter, gatheringAction } = require('./api');
 const BaseLoop = require('./base-loop');
 const { sleep, handleCooldown, extractCooldownTime } = require('./utils');
 const db = require('./db'); // Assuming db is used for logging as in BaseLoop
@@ -170,10 +170,10 @@ class MithrilMiningLoop extends BaseLoop {
     while (!inventoryFull && (this.targetOre === 0 || this.currentOreCount < this.targetOre)) {
       try {
         // Use handleAction from BaseLoop for cooldown management and logging
-        // Use gatheringAction as the endpoint for mining
+        // Use miningAction as the endpoint for mining
         const result = await this.handleAction(
-          () => gatheringAction(this.characterName), 
-          'Mining (Gathering Action)' // Updated action name for logging clarity
+          () => miningAction(this.characterName), 
+          'Mining Action' // Updated action name for logging clarity
         );
 
         // Update state based on the result from handleAction/gatheringAction
