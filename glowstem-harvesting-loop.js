@@ -123,6 +123,9 @@ class GlowstemHarvestingLoop extends BaseLoop {
         await moveCharacter(this.harvestCoords.x, this.harvestCoords.y, this.characterName);
       } catch (moveError) {
         console.error('Failed to return to harvesting location:', moveError.message);
+        // Add a significant delay if returning fails, especially due to cooldown/rate limit
+        console.log('Waiting 30 seconds before continuing loop after failed return...');
+        await new Promise(resolve => setTimeout(resolve, 30000)); 
       }
     }
   }

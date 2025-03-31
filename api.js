@@ -114,7 +114,14 @@ async function makeApiRequest(endpoint, method, body = null, characterName = nul
   } catch (error) {
     // Log the error for debugging
     console.error('API request failed:', error.message);
-    
+     
+    // --- Rate Limit Handling ---
+    if (error.message.includes('API error (429)')) {
+      console.warn('Rate limit exceeded (429). Waiting 60 seconds before allowing retry...');
+      await sleep(60000 + Math.random() * 1000); // Wait 60s + jitter
+    }
+    // --- End Rate Limit Handling ---
+ 
     // Get current position if possible
     const currentDetails = await getCharacterDetails(charName).catch(() => null);
     
