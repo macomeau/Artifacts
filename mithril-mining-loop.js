@@ -3,9 +3,11 @@
  * @module mithril-mining-loop
  */
 
-// Load environment variables first
-require('./env-loader').loadEnv();
+// Load environment variables first by requiring the loader.
+// The loader modifies process.env directly.
+require('./env-loader'); 
 
+// Now load modules that depend on the loaded environment
 const { getCharacterDetails, miningAction, smeltingAction, moveCharacter } = require('./api');
 const BaseLoop = require('./base-loop');
 const { sleep, handleCooldown, extractCooldownTime } = require('./utils');
@@ -329,7 +331,9 @@ async function main() {
   // Parse command line arguments
   const args = process.argv.slice(2);
   let characterName = args.find(arg => !arg.startsWith('--')); // First non-flag argument
-  characterName = characterName || config.character; // Use default from config if not provided
+  
+  // Use the character name from config as the primary fallback
+  characterName = characterName || config.character; 
 
   const options = {
     refineOre: args.includes('--refine'),
@@ -375,7 +379,8 @@ async function main() {
 
 
   if (!characterName) {
-    console.error('Character name is required! Provide it as the first argument or set control_character in your .env file.');
+    // Updated error message to reflect the correct configuration source
+    console.error('Character name is required! Provide it as the first argument or set DEFAULT_CHARACTER in your .env file.');
     process.exit(1);
   }
 
