@@ -65,45 +65,15 @@ async function depositAllItems(characterName) {
       return;
     }
     
-    // First check if we're in cooldown before starting deposits
-    console.log(`[${characterName}] Checking initial cooldown status...`);
-    try {
-      const freshDetails = await getCharacterDetails(characterName);
-
-      if (freshDetails.cooldown && freshDetails.cooldown > 0) {
-        const now = new Date();
-        const expirationDate = new Date(freshDetails.cooldown_expiration);
-        const cooldownSeconds = Math.max(0, (expirationDate - now) / 1000);
-        
-        if (cooldownSeconds > 0) {
-          console.log(`Character is in cooldown. Waiting ${cooldownSeconds.toFixed(1)} seconds before starting deposits...`);
-          await new Promise(resolve => setTimeout(resolve, cooldownSeconds * 1000 + 500)); // Add 500ms buffer
-        }
-      }
-    } catch (error) {
-      console.error('Failed to check initial cooldown:', error.message);
-    }
-
-    // Deposit items one at a time with cooldown handling
+    // Deposit items one at a time. Cooldowns should be handled by the API call mechanism 
+    // or a higher-level retry/wait handler if this function is wrapped.
+    console.log(`[${characterName}] Starting deposit loop for ${itemsToDeposit.length} item types.`);
     for (const item of itemsToDeposit) {
-      console.log(`Depositing item: ${item.code}`);
+      console.log(`[${characterName}] Attempting to deposit item: ${item.code} x${item.quantity || 1}`);
       
       try {
-        // Check for cooldown before each deposit
-        let freshDetails = await getCharacterDetails(characterName); // Pass characterName
-
-        if (freshDetails.cooldown && freshDetails.cooldown > 0) {
-          const now = new Date();
-          const expirationDate = new Date(freshDetails.cooldown_expiration);
-          const cooldownSeconds = Math.max(0, (expirationDate - now) / 1000);
-
-          if (cooldownSeconds > 0) {
-            console.log(`Character is in cooldown. Waiting ${cooldownSeconds.toFixed(1)} seconds before deposit...`);
-            await new Promise(resolve => setTimeout(resolve, cooldownSeconds * 1000 + 500)); // Add 500ms buffer
-          }
-        }
-
         // Make API request to deposit single item for the specified character
+        // Cooldown errors from this call should be handled by makeApiRequest logging or a wrapper function.
         const result = await makeApiRequest('action/bank/deposit', 'POST', {
           code: item.code,
           quantity: item.quantity || 1,
@@ -132,7 +102,7 @@ async function depositAllItems(characterName) {
         await db.query(
           `INSERT INTO inventory_snapshots(character, items)
            VALUES ($1, $2)`,
-          [characterName, JSON.stringify(result.inventory || [])]
+          [characterName, JSON.stringify(result.inventory || [])] // Use result.inventory from deposit response
         );
 
         // Log deposit to database for the correct character
@@ -144,8 +114,13 @@ async function depositAllItems(characterName) {
             quantity: item.quantity || 1
           }]
         );
+
+        // Add a small mandatory delay between deposit attempts to avoid overwhelming the API,
+        // independent of cooldowns handled by makeApiRequest/wrappers.
+        await new Promise(resolve => setTimeout(resolve, 500)); 
+
       } catch (error) {
-        // Handle specific deposit errors
+        // Error is logged by makeApiRequest. Handle specific deposit errors if needed.
         if (error.message.includes('404')) {
           console.error(`[${characterName}] Failed to deposit ${item.code}: Deposit endpoint not found. Please check if the deposit feature is available.`);
         } else {
@@ -192,60 +167,22 @@ async function main() {
       
       // Check if character is already at the destination
       if (characterDetails.x === targetCoords.x && characterDetails.y === targetCoords.y) {
-        console.log(`Character ${characterName} is already at coordinates (${targetCoords.x}, ${targetCoords.y}).`);
+        console.log(`[${characterName}] Already at bank coordinates (${targetCoords.x}, ${targetCoords.y}).`);
       } else {
-        // Check if character is in cooldown
-        if (characterDetails.cooldown && characterDetails.cooldown > 0) {
-          const now = new Date();
-          const expirationDate = new Date(characterDetails.cooldown_expiration);
-          const cooldownSeconds = Math.max(0, (expirationDate - now) / 1000);
-          
-          if (cooldownSeconds > 0) {
-            console.log(`Character is in cooldown. Waiting ${cooldownSeconds.toFixed(1)} seconds...`);
-            
-            // Wait for the cooldown
-            await new Promise(resolve => setTimeout(resolve, cooldownSeconds * 1000 + 500)); // Add 500ms buffer
-          }
-        }
-        
-        // Check if already at target coordinates
-        const currentDetails = await getCharacterDetails(characterName);
+        // Attempt movement. Cooldowns/retries should be handled within moveCharacter/makeApiRequest or a wrapper.
+        console.log(`[${characterName}] Moving to bank coordinates (${targetCoords.x}, ${targetCoords.y})...`);
         try {
-          if (currentDetails.x === targetCoords.x && currentDetails.y === targetCoords.y) {
-            console.log('Character is already at the destination.');
-          } else {
-            console.log(`Moving character ${characterName} to coordinates (${targetCoords.x}, ${targetCoords.y})...`);
-            try {
-              const moveResult = await moveCharacter(targetCoords.x, targetCoords.y, characterName);
-              console.log('Movement successful');
-            } catch (error) {
-              console.error('Movement failed:', error.message);
-            }
-          }
+          await moveCharacter(targetCoords.x, targetCoords.y, characterName);
+          console.log(`[${characterName}] Movement successful.`);
         } catch (error) {
-          // Handle cooldown errors for movement
-          const cooldownMatch = error.message.match(/Character in cooldown: (\d+\.\d+) seconds left/);
-          if (cooldownMatch) {
-            const cooldownSeconds = parseFloat(cooldownMatch[1]);
-            console.log(`Movement action in cooldown. Waiting ${cooldownSeconds.toFixed(1)} seconds...`);
-            
-            // Wait for the cooldown
-            await new Promise(resolve => setTimeout(resolve, cooldownSeconds * 1000 + 500)); // Add 500ms buffer
-            
-            // Try again after cooldown
-            console.log('Retrying movement after cooldown...');
-            try {
-              const moveResult = await moveCharacter(targetCoords.x, targetCoords.y, characterName);
-              console.log('Movement successful');
-            } catch (retryError) {
-              console.error('Movement failed after retry:', retryError.message);
-              process.exit(1);
-            }
-          } else if (error.message.includes('Character already at destination')) {
-            console.log('Character is already at the destination.');
+           // moveCharacter -> makeApiRequest already logs the error.
+           // Handle specific outcomes if necessary.
+          if (error.message.includes('Character already at destination')) {
+             console.log(`[${characterName}] Already at destination (confirmed by move attempt).`);
           } else {
-            console.error('Movement failed:', error.message);
-            process.exit(1);
+             // If movement fails critically (not just cooldown), log and exit.
+             console.error(`[${characterName}] Movement failed: ${error.message}. Aborting deposit.`);
+             process.exit(1); // Exit if we can't reach the bank
           }
         }
       }
@@ -265,48 +202,17 @@ async function main() {
     }
     
     // Now deposit all items
-    console.log(`Starting deposit of all items for ${characterName}...`);
-    
-    // Check if character is in cooldown before depositing
-    console.log(`Checking for cooldown before depositing for ${characterName}...`);
+    console.log(`[${characterName}] Starting deposit of all items...`);
     try {
-      const freshDetails = await getCharacterDetails(characterName);
-      
-      if (freshDetails.cooldown && freshDetails.cooldown > 0) {
-        const now = new Date();
-        const expirationDate = new Date(freshDetails.cooldown_expiration);
-        const cooldownSeconds = Math.max(0, (expirationDate - now) / 1000);
-        
-        if (cooldownSeconds > 0) {
-          console.log(`Character is in cooldown. Waiting ${cooldownSeconds.toFixed(1)} seconds...`);
-          
-          // Wait for the cooldown
-          await new Promise(resolve => setTimeout(resolve, cooldownSeconds * 1000 + 500)); // Add 500ms buffer
-        }
-      }
-      
-      // Perform deposit with explicit character name
+      // Perform deposit with explicit character name. 
+      // depositAllItems itself no longer handles internal cooldown waits.
       await depositAllItems(characterName);
+      console.log(`[${characterName}] Deposit process completed.`);
     } catch (error) {
-      // Handle cooldown errors for deposit action
-      const cooldownMatch = error.message.match(/Character in cooldown: (\d+\.\d+) seconds left/);
-      if (cooldownMatch) {
-        const cooldownSeconds = parseFloat(cooldownMatch[1]);
-        console.log(`Deposit action in cooldown. Waiting ${cooldownSeconds.toFixed(1)} seconds...`);
-        
-        // Wait for the cooldown
-        await new Promise(resolve => setTimeout(resolve, cooldownSeconds * 1000 + 500)); // Add 500ms buffer
-        
-        // Try again after cooldown
-        console.log('Retrying deposit after cooldown...');
-        try {
-          await depositAllItems(characterName);
-        } catch (retryError) {
-          console.error('Deposit failed after retry:', retryError.message);
-        }
-      } else {
-        console.error('Deposit failed:', error.message);
-      }
+       // Errors during deposit (including cooldowns if not handled by makeApiRequest/wrapper)
+       // are logged within depositAllItems or makeApiRequest.
+       // Log the final failure here.
+       console.error(`[${characterName}] Deposit process failed overall: ${error.message}`);
     }
   } catch (error) {
     console.error('Error:', error.message);
