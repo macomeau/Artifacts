@@ -81,6 +81,16 @@ class SunflowerHarvestingLoop extends BaseLoop {
                  error.message.includes('Resource not found')) {
         console.log('No sunflowers found. Will try again...');
         return null;
+      } else if (error.message.includes('Character in cooldown')) {
+        // Extract cooldown time from error message
+        const cooldownMatch = error.message.match(/Character in cooldown: (\d+\.\d+) seconds left/);
+        if (cooldownMatch) {
+          const cooldownSeconds = parseFloat(cooldownMatch[1]);
+          console.log(`Waiting for cooldown: ${cooldownSeconds.toFixed(1)} seconds...`);
+          await new Promise(resolve => setTimeout(resolve, cooldownSeconds * 1000 + 500));
+          console.log('Cooldown complete, continuing harvesting...');
+          return null;
+        }
       } else {
         console.error('Harvesting failed:', error.message);
         throw error;
@@ -142,28 +152,61 @@ class SunflowerHarvestingLoop extends BaseLoop {
       while (true) {
         await this.startLoop();
         
-        // Check inventory before harvesting
-        const details = await getCharacterDetails(this.characterName);
-        if (await checkInventory(details)) {
-          console.log('Inventory full, depositing items...');
-          await this.depositSunflowers();
-          continue;
+        try {
+          // Check for cooldown before any action
+          const freshDetails = await getCharacterDetails(this.characterName);
+          if (freshDetails.cooldown && freshDetails.cooldown > 0) {
+            const now = new Date();
+            const expirationDate = new Date(freshDetails.cooldown_expiration);
+            const cooldownSeconds = Math.max(0, (expirationDate - now) / 1000);
+            
+            if (cooldownSeconds > 0) {
+              console.log(`Character is in cooldown. Waiting ${cooldownSeconds.toFixed(1)} seconds...`);
+              await new Promise(resolve => setTimeout(resolve, cooldownSeconds * 1000 + 500));
+              console.log('Cooldown complete, continuing...');
+            }
+          }
+          
+          // Check inventory before harvesting
+          const details = await getCharacterDetails(this.characterName);
+          if (await checkInventory(details)) {
+            console.log('Inventory full, depositing items...');
+            await this.depositSunflowers();
+            continue;
+          }
+          
+          // Check if we're at harvesting location, move if needed
+          if (details.x !== this.harvestCoords.x || details.y !== this.harvestCoords.y) {
+            console.log(`Not at harvesting location, moving to (${this.harvestCoords.x}, ${this.harvestCoords.y})...`);
+            await moveCharacter(this.harvestCoords.x, this.harvestCoords.y, this.characterName);
+          }
+          
+          // Harvest sunflowers
+          await this.harvest();
+          
+          // Log progress
+          console.log(`Completed loop #${this.loopCount}. Harvested ${this.resourceCount} sunflowers in total.`);
+          
+          // Add a small delay between loops to avoid API rate limiting
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        } catch (error) {
+          // Handle cooldown errors at the loop level
+          if (error.message.includes('Character in cooldown')) {
+            const cooldownMatch = error.message.match(/Character in cooldown: (\d+\.\d+) seconds left/);
+            if (cooldownMatch) {
+              const cooldownSeconds = parseFloat(cooldownMatch[1]);
+              console.log(`Loop encountered cooldown: ${cooldownSeconds.toFixed(1)} seconds. Waiting...`);
+              await new Promise(resolve => setTimeout(resolve, cooldownSeconds * 1000 + 500));
+              console.log('Cooldown complete, continuing with next loop iteration...');
+              continue;
+            }
+          } else {
+            // For other errors, wait a bit and continue
+            console.error('Error in loop iteration:', error.message);
+            console.log('Waiting 5 seconds before next attempt...');
+            await new Promise(resolve => setTimeout(resolve, 5000));
+          }
         }
-        
-        // Check if we're at harvesting location, move if needed
-        if (details.x !== this.harvestCoords.x || details.y !== this.harvestCoords.y) {
-          console.log(`Not at harvesting location, moving to (${this.harvestCoords.x}, ${this.harvestCoords.y})...`);
-          await moveCharacter(this.harvestCoords.x, this.harvestCoords.y, this.characterName);
-        }
-        
-        // Harvest sunflowers
-        await this.harvest();
-        
-        // Log progress
-        console.log(`Completed loop #${this.loopCount}. Harvested ${this.resourceCount} sunflowers in total.`);
-        
-        // Add a small delay between loops to avoid API rate limiting
-        await new Promise(resolve => setTimeout(resolve, 1000));
       }
     } catch (error) {
       console.error('Fatal error in sunflower harvesting loop:', error.message);
