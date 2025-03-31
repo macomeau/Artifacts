@@ -335,11 +335,12 @@ async function craftingAction(code = 'ITEM', quantity = 1, material, characterNa
   }
 
   const charName = sanitizeCharacterName(characterName || config.character); // Use imported config
+  console.log(`Initiating crafting action for character: ${charName}, Code: ${code}, Qty: ${quantity}`);
   return makeApiRequest('action/crafting', 'POST', {
     code: code,
     quantity: quantity,
     character: charName
-  });
+  }, charName); // Pass charName as the 4th parameter to makeApiRequest
 }
 
 /**
