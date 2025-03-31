@@ -73,11 +73,26 @@ class BaseLoop {
       // We now pass the character name to handleCooldown.
       await handleCooldown(this.characterName); // Pass name instead of cooldown value
 
-      const result = await actionFn();
-      console.log(`${actionName} successful`);
+      let result;
+      try {
+        result = await actionFn();
+        console.log(`${actionName} successful`);
+      } catch (actionError) {
+        // Check if it's a move action and the error is "already at destination"
+        if ((actionName.toLowerCase().includes('move') || actionName.toLowerCase().includes('moving')) && 
+            (actionError.message.includes('Character already at destination') || actionError.message.includes('API error (490)'))) {
+          console.log(`[${this.characterName}] Already at destination for action: ${actionName}.`);
+          // Treat as success, return null or a specific success object if needed
+          return null; 
+        } else {
+          // For any other error, re-throw it to be caught by the outer handler
+          throw actionError;
+        }
+      }
       return result;
     } catch (error) {
-      console.error(`${actionName} failed:`, error.message);
+      // This outer catch handles errors from handleCooldown or re-thrown errors from actionFn
+      console.error(`${actionName} failed overall:`, error.message);
       throw error;
     }
   }
