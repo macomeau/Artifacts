@@ -1,7 +1,7 @@
 const BaseLoop = require('./base-loop');
 const { getCharacterDetails, gatheringAction, craftingAction, moveCharacter } = require('./api');
 const { depositAllItems } = require('./go-deposit-all');
-const { handleCooldown, sleep } = require('./utils');
+const { handleCooldown, sleep, extractCooldownTime } = require('./utils');
 const config = require('./config');
 require('dotenv').config();
 
@@ -111,20 +111,43 @@ class MapleHarvestingLoop extends BaseLoop {
         const startingMaple = await this.getMapleWoodCount();
         console.log(`Starting maple harvesting. Current maple wood: ${startingMaple}`);
         
-        while (!await this.hasEnoughMapleWood()) {
+        // Check if we already have enough maple wood
+        if (startingMaple >= this.targetMapleWood) {
+          console.log(`Already have ${startingMaple} maple wood, which meets target of ${this.targetMapleWood}`);
+        } else {
+          while (!await this.hasEnoughMapleWood()) {
           // Check for cooldown before gathering
           const freshDetails = await getCharacterDetails(this.characterName);
           
           // Use the standardized handleCooldown function instead of manual cooldown handling
           await handleCooldown(this.characterName);
           
-          // Perform gathering action
-          await gatheringAction(this.characterName);
-          console.log('Harvesting successful');
-          
-          // Add additional delay to avoid rate limiting (429 errors)
-          console.log(`Adding extra delay to avoid rate limiting...`);
-          await sleep(3000); // 3 second delay between actions using standardized sleep function
+          try {
+            // Explicitly check for cooldown before gathering
+            await handleCooldown(this.characterName);
+            
+            // Perform gathering action
+            await gatheringAction(this.characterName);
+            console.log('Harvesting successful');
+            
+            // Add additional delay to avoid rate limiting (429 errors)
+            console.log(`Adding extra delay to avoid rate limiting...`);
+            await sleep(3000); // 3 second delay between actions using standardized sleep function
+          } catch (error) {
+            console.error(`Harvesting failed: ${error.message}`);
+            
+            // If it's a cooldown error, handle it
+            if (error.message.includes('Character in cooldown')) {
+              const cooldown = extractCooldownTime(error);
+              if (cooldown > 0) {
+                console.log(`Handling cooldown of ${cooldown}s from harvesting error.`);
+                await handleCooldown(cooldown);
+                continue; // Try again after cooldown
+              }
+            } else {
+              throw error; // Re-throw if it's not a cooldown error
+            }
+          }
           
           // Check inventory after each harvest
           const currentMaple = await this.getMapleWoodCount();
@@ -160,8 +183,28 @@ class MapleHarvestingLoop extends BaseLoop {
 
           if (planksToMake > 0) {
             console.log(`Processing ${planksToMake} maple planks...`);
-            await craftingAction('maple_plank', planksToMake, 'maple_wood', this.characterName); // Specify material
-            console.log('Processing successful');
+            try {
+              // Explicitly check for cooldown before crafting
+              await handleCooldown(this.characterName);
+              await craftingAction('maple_plank', planksToMake, 'maple_wood', this.characterName); // Specify material
+              console.log('Processing successful');
+            } catch (error) {
+              console.error(`Crafting failed: ${error.message}`);
+              
+              // If it's a cooldown error, handle it
+              if (error.message.includes('Character in cooldown')) {
+                const cooldown = extractCooldownTime(error);
+                if (cooldown > 0) {
+                  console.log(`Handling cooldown of ${cooldown}s from crafting error.`);
+                  await handleCooldown(cooldown);
+                  // Try again after cooldown
+                  await craftingAction('maple_plank', planksToMake, 'maple_wood', this.characterName);
+                  console.log('Processing successful after cooldown');
+                }
+              } else {
+                throw error; // Re-throw if it's not a cooldown error
+              }
+            }
           } else {
             console.log('Not enough maple wood to make planks');
           }
@@ -183,6 +226,8 @@ class MapleHarvestingLoop extends BaseLoop {
           
           // Deposit items
           console.log('Depositing all items...');
+          // Check for cooldown before deposit
+          await handleCooldown(this.characterName);
           await depositAllItems(this.characterName);
           console.log('Deposit complete');
           
