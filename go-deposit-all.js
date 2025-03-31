@@ -70,8 +70,8 @@ async function depositAllItems(characterName) {
       
       try {
         // Make API request to deposit single item for the specified character
-        // Use PUT method instead of POST based on 405 error
-        const result = await makeApiRequest('action/bank/deposit', 'PUT', {
+        // Try PATCH method since POST and PUT failed with 405
+        const result = await makeApiRequest('action/bank/deposit', 'PATCH', {
           code: item.code,
           quantity: item.quantity || 1,
           character: characterName // Ensure character is passed in body if API requires it
