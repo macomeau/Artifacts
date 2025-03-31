@@ -689,6 +689,41 @@ app.post('/api/start', validateStartRequest, (req, res) => {
   }
 });
 
+// API endpoint to restart a stopped/failed script
+app.post('/api/restart', async (req, res) => {
+  const { id } = req.body;
+
+  if (!id || !runningProcesses[id]) {
+    return res.status(404).json({ error: 'Process not found or already cleaned up' });
+  }
+
+  const proc = runningProcesses[id];
+
+  // Prevent restarting an already running process
+  if (proc.running) {
+    return res.status(400).json({ error: 'Cannot restart a process that is already running' });
+  }
+
+  // Retrieve original script and args
+  const { script, args } = proc;
+
+  if (!script) {
+    return res.status(500).json({ error: 'Could not retrieve original script name for this process' });
+  }
+
+  console.log(`Attempting to restart process ${id} with script: ${script}`);
+
+  try {
+    // Call the existing startScript function
+    const result = await startScript(script, args || []); // Ensure args is an array
+    console.log(`Restarted process ${id} successfully. New ID: ${result.id}, Task ID: ${result.taskId}`);
+    res.json({ success: true, newProcessId: result.id, taskId: result.taskId });
+  } catch (error) {
+    console.error(`Error restarting script for process ${id}:`, error);
+    res.status(500).json({ error: `Failed to restart script: ${error.message}` });
+  }
+});
+
 // API endpoint to stop a script
 app.post('/api/stop', async (req, res) => {
   const { id } = req.body;

@@ -236,16 +236,23 @@ function updateProcessList(processes) {
         viewBtn.textContent = 'View';
         viewBtn.onclick = () => viewProcessOutput(process.id);
         actionsEl.appendChild(viewBtn);
-        
-        // Add stop button for running processes
+
+        // Add stop button for running processes OR restart for stopped/failed
         if (process.running) {
             const stopBtn = document.createElement('button');
             stopBtn.className = 'action-button stop';
             stopBtn.textContent = 'Stop';
-            stopBtn.onclick = () => stopProcess(process.id);
+            stopBtn.onclick = () => stopProcess(process.id); // Use window.ProcessesModule
             actionsEl.appendChild(stopBtn);
+        } else {
+            // Add restart button for stopped/failed processes
+            const restartBtn = document.createElement('button');
+            restartBtn.className = 'action-button restart'; // Add a CSS class if needed for styling
+            restartBtn.textContent = 'Restart';
+            restartBtn.onclick = () => restartProcess(process.id); // Use window.ProcessesModule
+            actionsEl.appendChild(restartBtn);
         }
-        
+
         card.appendChild(actionsEl);
         
         // Add the card to the container
@@ -501,6 +508,37 @@ function closeOutputModal() {
     }
 }
 
+// Restart a stopped or failed process
+async function restartProcess(id) {
+    try {
+        console.log(`Requesting restart for process ID: ${id}`);
+        const response = await fetch('/api/restart', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ id })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(`API error (${response.status}): ${errorData.error || 'Unknown error'}`);
+        }
+
+        const data = await response.json();
+        if (data.success) {
+            window.CharactersModule.showNotification(`Process restarted successfully (New ID: ${data.newProcessId})`, false);
+            loadProcesses(); // Refresh the list to show the new running process
+        } else {
+            throw new Error(data.error || 'Restart failed');
+        }
+    } catch (error) {
+        console.error('Failed to restart process:', error.message);
+        window.CharactersModule.showNotification(`Failed to restart process: ${error.message}`, true);
+    }
+}
+
+
 // Clear all stopped processes
 async function clearStoppedProcesses() {
     try {
@@ -686,5 +724,6 @@ window.ProcessesModule = {
     loadProcesses: loadProcesses,
     filterProcesses: filterProcesses,
     viewOutput: viewProcessOutput,
-    clearStopped: clearStoppedProcesses
+    clearStopped: clearStoppedProcesses,
+    restartProcess: restartProcess // Add the new function here
 };
