@@ -366,6 +366,32 @@ async function viewProcessOutput(id) {
                 }
             }
             // --- End Add Copy Button ---
+
+            // --- Add Copy Button ---
+            const modalHeader = processScriptName.closest('.modal-header'); // Find the header containing the script name
+            if (modalHeader) {
+                // Remove existing button if present (to avoid duplicates on reopen)
+                const existingButton = modalHeader.querySelector('.copy-log-button');
+                if (existingButton) {
+                    existingButton.remove();
+                }
+
+                const copyButton = document.createElement('button');
+                copyButton.textContent = 'Copy Logs';
+                copyButton.className = 'copy-log-button action-button'; // Use existing button style
+                copyButton.style.marginLeft = 'auto'; // Push it towards the right, adjust as needed
+                copyButton.style.marginRight = '10px'; // Space before close button
+                copyButton.onclick = () => copyLogsToClipboard(outputContent, copyButton); // Attach click handler
+                 
+                // Insert the button before the close button within the header
+                const closeButton = modalHeader.querySelector('#close-output-modal');
+                if (closeButton) {
+                   modalHeader.insertBefore(copyButton, closeButton);
+                } else {
+                   modalHeader.appendChild(copyButton); // Fallback append
+                }
+            }
+            // --- End Add Copy Button ---
              
             // Handle character and args
             if (process.args && process.args.length > 0) {
@@ -531,6 +557,43 @@ async function clearStoppedProcesses() {
         window.CharactersModule.showNotification(`Failed to clear stopped processes: ${error.message}`, true);
     }
 }
+
+/**
+ * Copies the text content of the process output container to the clipboard.
+ * @param {HTMLElement} outputElement - The HTML element containing the log text.
+ * @param {HTMLButtonElement} buttonElement - The button that triggered the copy action.
+ */
+async function copyLogsToClipboard(outputElement, buttonElement) {
+    if (!outputElement || !navigator.clipboard) {
+        console.error('Copy to clipboard is not supported or output element not found.');
+        window.CharactersModule.showNotification('Error: Could not copy logs.', true);
+        return;
+    }
+
+    try {
+        // Get text content, preserving line breaks
+        const logText = Array.from(outputElement.childNodes)
+                           .map(node => node.textContent)
+                           .join('\n');
+
+        await navigator.clipboard.writeText(logText);
+
+        // Provide visual feedback
+        const originalText = buttonElement.textContent;
+        buttonElement.textContent = 'Copied!';
+        buttonElement.disabled = true; // Briefly disable button
+
+        setTimeout(() => {
+            buttonElement.textContent = originalText;
+            buttonElement.disabled = false;
+        }, 1500); // Reset after 1.5 seconds
+
+    } catch (err) {
+        console.error('Failed to copy logs:', err);
+        window.CharactersModule.showNotification('Error: Failed to copy logs to clipboard.', true);
+    }
+}
+
 
 // Initialize the process refresh interval
 function initProcessRefresh() {
