@@ -221,8 +221,32 @@ class AshHarvestingLoop extends BaseLoop {
         }
         
         if (error.message.includes('No resource') || error.message.includes('Resource not found')) {
-          console.log('Stopping: No resources available at this location.');
-          break;
+          console.log('No resources available at this location. Trying to move to a better position...');
+          
+          // Try moving to a slightly different position within the ash forest area
+          try {
+            // Calculate a nearby position with a small offset
+            const offsetX = Math.floor(Math.random() * 3) - 1; // -1, 0, or 1
+            const offsetY = Math.floor(Math.random() * 3) - 1; // -1, 0, or 1
+            
+            const newX = this.ashForestCoords.x + offsetX;
+            const newY = this.ashForestCoords.y + offsetY;
+            
+            console.log(`Moving to nearby position (${newX}, ${newY}) to find resources...`);
+            await moveCharacter(newX, newY, this.characterName);
+            console.log(`Successfully moved to (${newX}, ${newY}). Trying to gather again...`);
+            
+            // Update the ash forest coordinates to this new position if successful
+            this.ashForestCoords = { x: newX, y: newY };
+            
+            // Wait a moment before trying again
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            continue;
+          } catch (moveError) {
+            console.error('Failed to move to a new position:', moveError.message);
+            console.log('Stopping: Unable to find resources in this area.');
+            break;
+          }
         }
         
         // Handle cooldown errors
