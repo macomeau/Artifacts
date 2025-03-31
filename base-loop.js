@@ -67,9 +67,12 @@ class BaseLoop {
    */
   async handleAction(actionFn, actionName) {
     try {
-      const freshDetails = await getCharacterDetails(this.characterName);
-      await handleCooldown(freshDetails.cooldown);
-      
+      // Fetching details here is often redundant. 
+      // handleCooldown (utils.js) or the actionFn itself should manage fetching 
+      // details if necessary based on cooldown state or action requirements.
+      // We now pass the character name to handleCooldown.
+      await handleCooldown(this.characterName); // Pass name instead of cooldown value
+
       const result = await actionFn();
       console.log(`${actionName} successful`);
       return result;

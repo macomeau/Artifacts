@@ -1,4 +1,7 @@
 const db = require('./db');
+// Import getCharacterDetails here to avoid circular dependency issues if api.js also imports utils.js
+// We'll require it inside the function where needed.
+// const { getCharacterDetails } = require('./api'); 
 
 /**
  * Promise-based sleep function
@@ -29,14 +32,55 @@ function parseCoordinates(coordString) {
 }
 
 /**
- * Handle cooldown by waiting the specified time
- * @param {number} cooldownSeconds - Number of seconds to wait
- * @returns {Promise} - Promise that resolves after cooldown
+ * Handle cooldown by checking character details and waiting if necessary
+ * @param {string|number} characterNameOrCooldown - Character name or direct cooldown seconds
+ * @returns {Promise<void>} - Promise that resolves after cooldown
  */
-async function handleCooldown(cooldownSeconds) {
+async function handleCooldown(characterNameOrCooldown) {
+  let cooldownSeconds = 0;
+  let characterName = null;
+
+  if (typeof characterNameOrCooldown === 'number') {
+    cooldownSeconds = characterNameOrCooldown;
+  } else if (typeof characterNameOrCooldown === 'string') {
+    characterName = characterNameOrCooldown;
+    try {
+      // Dynamically require api here to avoid potential circular dependencies at module load time
+      const { getCharacterDetails } = require('./api'); 
+      console.log(`[handleCooldown] Checking details for ${characterName} to determine cooldown...`);
+      const details = await getCharacterDetails(characterName);
+      
+      // Calculate remaining cooldown based on expiration time for accuracy
+      if (details.cooldown_expiration) {
+        const now = new Date();
+        const expirationDate = new Date(details.cooldown_expiration);
+        const remainingMs = expirationDate - now;
+        cooldownSeconds = Math.max(0, remainingMs / 1000);
+      } else {
+        // Fallback to cooldown value if expiration is not present
+        cooldownSeconds = details.cooldown || 0;
+      }
+      
+      if (cooldownSeconds > 0) {
+        console.log(`[handleCooldown] Determined cooldown for ${characterName}: ${cooldownSeconds.toFixed(1)} seconds.`);
+      } else {
+         console.log(`[handleCooldown] No active cooldown found for ${characterName}.`);
+      }
+      
+    } catch (error) {
+      console.error(`[handleCooldown] Failed to get character details for ${characterName}: ${error.message}`);
+      // Proceed without waiting if details fail, the action itself might handle cooldown error
+      return; 
+    }
+  } else {
+     console.warn(`[handleCooldown] Received invalid argument type: ${typeof characterNameOrCooldown}. Skipping cooldown check.`);
+     return; // Don't wait if input is invalid
+  }
+
   if (cooldownSeconds > 0) {
-    console.log(`Waiting ${cooldownSeconds.toFixed(1)} seconds for cooldown...`);
-    await sleep(cooldownSeconds * 1000 + 500); // Add 500ms buffer
+    const waitMs = cooldownSeconds * 1000 + 500; // Add 500ms buffer
+    console.log(`[handleCooldown] Waiting ${cooldownSeconds.toFixed(1)} seconds (actual wait: ${waitMs}ms)...`);
+    await sleep(waitMs);
   }
 }
 

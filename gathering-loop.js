@@ -32,32 +32,11 @@ async function main() {
    * @throws {Error} If gathering fails
    */
   const gatherWithCooldownCheck = async () => {
-    // Check if character is in cooldown before gathering
-    console.log('Checking for cooldown before gathering...');
-    try {
-      // Get fresh character details to check cooldown
-      const freshDetails = await getCharacterDetails();
-      
-      if (freshDetails.cooldown && freshDetails.cooldown > 0) {
-        const now = new Date();
-        const expirationDate = new Date(freshDetails.cooldown_expiration);
-        const cooldownSeconds = Math.max(0, (expirationDate - now) / 1000);
-        
-        if (cooldownSeconds > 0) {
-          console.log(`Character is in cooldown. Waiting ${cooldownSeconds.toFixed(1)} seconds...`);
-          
-          // Wait for the cooldown
-          await new Promise(resolve => setTimeout(resolve, cooldownSeconds * 1000 + 500)); // Add 500ms buffer
-        }
-      }
-    } catch (error) {
-      console.error('Failed to check cooldown with getCharacterDetails:', error.message);
-      // Continue even if we can't check cooldown, the gathering action will handle it
-    }
-    
-    // Start gathering
-    console.log('Starting gathering...');
-    return await gatheringAction();
+    // Cooldown is handled by executeWithCooldown's error handler based on API response,
+    // and potentially by handleCooldown called within executeWithCooldown if needed.
+    console.log('Attempting gathering action...');
+    // Pass the character name explicitly to ensure consistency
+    return await gatheringAction(config.character); 
   };
   
   /**
