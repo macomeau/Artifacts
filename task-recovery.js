@@ -4,13 +4,14 @@
  */
 
 const { spawn } = require('child_process');
+const characterTasks = require('./character-tasks');
 const { 
   getTasksForRecovery, 
   resumeTask, 
   failTask, 
   checkCharacterStatus,
   TASK_STATES 
-} = require('./character-tasks');
+} = characterTasks;
 
 // We'll use the same runningProcesses object from gui.js
 // This needs to be passed in when this module is initialized
@@ -120,7 +121,8 @@ async function recoverTask(task) {
       // Update task state in database
       if (code === 0) {
         console.log(`Marking task ${task.id} as completed`);
-        characterTasks.completeTask(task.id, { exitCode: code })
+        const { completeTask } = require('./character-tasks');
+        completeTask(task.id, { exitCode: code })
           .catch(err => console.error(`Failed to mark task ${task.id} as completed:`, err.message));
       } else {
         console.log(`Marking task ${task.id} as failed (exit code ${code})`);

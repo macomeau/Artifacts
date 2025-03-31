@@ -172,16 +172,27 @@ async function depositAllItems(characterName) {
  */
 async function main() {
   try {
+    // Get character name from command line arguments or config
+    const args = process.argv.slice(2);
+    const characterName = args[0] || process.env.control_character || config.character;
+    
+    if (!characterName) {
+      console.error('Error: No character name provided. Please specify a character name.');
+      console.error('Usage: node go-deposit-all.js [characterName]');
+      process.exit(1);
+    }
+    
+    console.log(`Starting deposit process for character: ${characterName}`);
     const targetCoords = { x: 4, y: 1 };
     
     // Check character's current position and cooldown status
-    console.log('Checking character details before moving...');
+    console.log(`Checking details for character: ${characterName} before moving...`);
     try {
-      const characterDetails = await getCharacterDetails();
+      const characterDetails = await getCharacterDetails(characterName);
       
       // Check if character is already at the destination
       if (characterDetails.x === targetCoords.x && characterDetails.y === targetCoords.y) {
-        console.log(`Character is already at coordinates (${targetCoords.x}, ${targetCoords.y}).`);
+        console.log(`Character ${characterName} is already at coordinates (${targetCoords.x}, ${targetCoords.y}).`);
       } else {
         // Check if character is in cooldown
         if (characterDetails.cooldown && characterDetails.cooldown > 0) {
@@ -198,14 +209,14 @@ async function main() {
         }
         
         // Check if already at target coordinates
-        const currentDetails = await getCharacterDetails();
+        const currentDetails = await getCharacterDetails(characterName);
         try {
           if (currentDetails.x === targetCoords.x && currentDetails.y === targetCoords.y) {
             console.log('Character is already at the destination.');
           } else {
-            console.log(`Moving character ${config.character} to coordinates (${targetCoords.x}, ${targetCoords.y})...`);
+            console.log(`Moving character ${characterName} to coordinates (${targetCoords.x}, ${targetCoords.y})...`);
             try {
-              const moveResult = await moveCharacter(targetCoords.x, targetCoords.y);
+              const moveResult = await moveCharacter(targetCoords.x, targetCoords.y, characterName);
               console.log('Movement successful');
             } catch (error) {
               console.error('Movement failed:', error.message);
@@ -224,7 +235,7 @@ async function main() {
             // Try again after cooldown
             console.log('Retrying movement after cooldown...');
             try {
-              const moveResult = await moveCharacter(targetCoords.x, targetCoords.y);
+              const moveResult = await moveCharacter(targetCoords.x, targetCoords.y, characterName);
               console.log('Movement successful');
             } catch (retryError) {
               console.error('Movement failed after retry:', retryError.message);
@@ -243,9 +254,9 @@ async function main() {
       console.log('Proceeding with movement without character details check...');
       
       // Attempt to move without character details check
-      console.log(`Moving character ${config.character} to coordinates (${targetCoords.x}, ${targetCoords.y})...`);
+      console.log(`Moving character ${characterName} to coordinates (${targetCoords.x}, ${targetCoords.y})...`);
       try {
-        const moveResult = await moveCharacter(targetCoords.x, targetCoords.y);
+        const moveResult = await moveCharacter(targetCoords.x, targetCoords.y, characterName);
         console.log('Movement successful');
       } catch (error) {
         console.error('Movement failed:', error.message);
@@ -254,12 +265,12 @@ async function main() {
     }
     
     // Now deposit all items
-    console.log('Starting deposit of all items...');
+    console.log(`Starting deposit of all items for ${characterName}...`);
     
     // Check if character is in cooldown before depositing
-    console.log('Checking for cooldown before depositing...');
+    console.log(`Checking for cooldown before depositing for ${characterName}...`);
     try {
-      const freshDetails = await getCharacterDetails();
+      const freshDetails = await getCharacterDetails(characterName);
       
       if (freshDetails.cooldown && freshDetails.cooldown > 0) {
         const now = new Date();
@@ -274,8 +285,8 @@ async function main() {
         }
       }
       
-      // Perform deposit
-      await depositAllItems();
+      // Perform deposit with explicit character name
+      await depositAllItems(characterName);
     } catch (error) {
       // Handle cooldown errors for deposit action
       const cooldownMatch = error.message.match(/Character in cooldown: (\d+\.\d+) seconds left/);
@@ -289,7 +300,7 @@ async function main() {
         // Try again after cooldown
         console.log('Retrying deposit after cooldown...');
         try {
-          await depositAllItems();
+          await depositAllItems(characterName);
         } catch (retryError) {
           console.error('Deposit failed after retry:', retryError.message);
         }
