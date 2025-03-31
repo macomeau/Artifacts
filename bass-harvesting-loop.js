@@ -108,7 +108,8 @@ class BassHarvestingLoop extends BaseLoop {
       }
       
       console.log('Depositing all fish to bank...');
-      await depositAllItems();
+      // Pass the character name to the deposit function
+      await depositAllItems(this.characterName); 
       
       console.log(`Moving back to fishing location at (${this.harvestCoords.x}, ${this.harvestCoords.y})...`);
       await moveCharacter(this.harvestCoords.x, this.harvestCoords.y, this.characterName);
