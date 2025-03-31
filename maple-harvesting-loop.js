@@ -1,6 +1,7 @@
 const BaseLoop = require('./base-loop');
 const { getCharacterDetails, gatheringAction, craftingAction, moveCharacter } = require('./api');
 const { depositAllItems } = require('./go-deposit-all');
+const { handleCooldown, sleep } = require('./utils');
 const config = require('./config');
 require('dotenv').config();
 
@@ -93,6 +94,10 @@ class MapleHarvestingLoop extends BaseLoop {
         } else {
           console.log(`Moving to maple forest at (${this.mapleForestCoords.x}, ${this.mapleForestCoords.y})`);
           try {
+            // Explicitly check for cooldown before moving to avoid 499 errors
+            const { handleCooldown } = require('./utils');
+            await handleCooldown(this.characterName);
+            
             await moveCharacter(this.mapleForestCoords.x, this.mapleForestCoords.y, this.characterName);
           } catch (error) {
             if (error.message.includes('Character already at destination')) {
@@ -126,6 +131,10 @@ class MapleHarvestingLoop extends BaseLoop {
           await gatheringAction(this.characterName);
           console.log('Harvesting successful');
           
+          // Add additional delay to avoid rate limiting (429 errors)
+          console.log(`Adding extra delay to avoid rate limiting...`);
+          await new Promise(resolve => setTimeout(resolve, 3000)); // 3 second delay between actions
+          
           // Check inventory after each harvest
           const currentMaple = await this.getMapleWoodCount();
           const gatheredMaple = currentMaple - startingMaple;
@@ -156,6 +165,11 @@ class MapleHarvestingLoop extends BaseLoop {
           
           // Move to workshop
           console.log(`Moving to workshop at (${this.workshopCoords.x}, ${this.workshopCoords.y})`);
+          
+          // Explicitly check for cooldown before moving to avoid 499 errors
+          const { handleCooldown } = require('./utils');
+          await handleCooldown(this.characterName);
+          
           await moveCharacter(this.workshopCoords.x, this.workshopCoords.y, this.characterName);
           
           // Process maple wood into planks
@@ -187,6 +201,11 @@ class MapleHarvestingLoop extends BaseLoop {
           
           // Move to bank
           console.log(`Moving to bank at (${this.bankCoords.x}, ${this.bankCoords.y})`);
+          
+          // Explicitly check for cooldown before moving to avoid 499 errors
+          const { handleCooldown } = require('./utils');
+          await handleCooldown(this.characterName);
+          
           await moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName);
           
           // Deposit items
@@ -199,6 +218,10 @@ class MapleHarvestingLoop extends BaseLoop {
           // Try to deposit items anyway in case of error
           try {
             console.log(`Moving to bank at (${this.bankCoords.x}, ${this.bankCoords.y})`);
+            
+            // Explicitly check for cooldown before moving to avoid 499 errors
+            await handleCooldown(this.characterName);
+            
             await moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName);
             await depositAllItems(this.characterName);
           } catch (depositError) {
@@ -211,6 +234,10 @@ class MapleHarvestingLoop extends BaseLoop {
         // Try to deposit items in case of error
         try {
           console.log(`Moving to bank at (${this.bankCoords.x}, ${this.bankCoords.y})`);
+            
+          // Explicitly check for cooldown before moving to avoid 499 errors
+          await handleCooldown(this.characterName);
+            
           await moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName);
           await depositAllItems(this.characterName);
         } catch (depositError) {

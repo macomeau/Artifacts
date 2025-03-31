@@ -135,16 +135,20 @@ class MithrilMiningLoop extends BaseLoop {
         } else if (error.message.includes('No resource') || error.message.includes('Resource not found')) {
           console.log(`[${this.characterName}] Resource depleted or not found. Waiting 60 seconds before retry...`);
           await sleep(60000);
-        } else {
-          // Handle potential cooldowns from other errors
+        } else if (error.message.includes('Character in cooldown')) {
+          // Extract cooldown time and handle it
           const cooldown = extractCooldownTime(error);
           if (cooldown > 0) {
             console.log(`[${this.characterName}] Handling cooldown of ${cooldown}s from error.`);
             await handleCooldown(cooldown);
           } else {
-            console.log(`[${this.characterName}] Unknown error occurred. Waiting 15 seconds before retry...`);
-            await sleep(15000); // Generic error wait
+            // If we couldn't extract the cooldown time but know it's a cooldown error
+            console.log(`[${this.characterName}] Handling unknown cooldown duration. Waiting 30 seconds...`);
+            await sleep(30000);
           }
+        } else {
+          console.log(`[${this.characterName}] Unknown error occurred. Waiting 15 seconds before retry...`);
+          await sleep(15000); // Generic error wait
         }
       }
     }
@@ -156,6 +160,10 @@ class MithrilMiningLoop extends BaseLoop {
    */
   async mineMithril() {
     console.log(`[${this.characterName}] Ensuring character is at mithril rocks (${this.mineCoords.x}, ${this.mineCoords.y})...`);
+    
+    // Explicitly check for cooldown before moving to avoid 499 errors
+    await handleCooldown(this.characterName);
+    
     await this.handleAction(() => moveCharacter(this.mineCoords.x, this.mineCoords.y, this.characterName), 'Moving');
     console.log(`[${this.characterName}] Arrived at mithril rocks. Starting mining.`);
 
@@ -169,6 +177,9 @@ class MithrilMiningLoop extends BaseLoop {
     // Loop condition: continue if inventory is not full AND (target is 0 OR current count < target)
     while (!inventoryFull && (this.targetOre === 0 || this.currentOreCount < this.targetOre)) {
       try {
+        // Check for cooldown explicitly before action to avoid 499 errors
+        await handleCooldown(this.characterName);
+        
         // Use handleAction from BaseLoop for cooldown management and logging
         // Use gatheringAction as the endpoint for mining
         const result = await this.handleAction(
@@ -201,11 +212,19 @@ class MithrilMiningLoop extends BaseLoop {
         } else if (error.message.includes('No resource') || error.message.includes('Resource not found')) {
            console.log(`[${this.characterName}] Resource depleted. Stopping mining for this cycle.`);
            break; // Exit mining loop for this cycle
+        } else if (error.message.includes('Character in cooldown')) {
+          // Extract cooldown time and handle it
+          const cooldown = extractCooldownTime(error);
+          if (cooldown > 0) {
+            console.log(`[${this.characterName}] Handling cooldown of ${cooldown}s from error.`);
+            await handleCooldown(cooldown);
+            // Continue the loop after handling cooldown
+            continue;
+          }
         }
 
         // If it's a cooldown error, handleAction in BaseLoop should have waited.
         // If it's another error, re-throw to be handled by the main run loop.
-        // We might want more specific handling here later.
         throw error;
       }
     } // End while mining loop
