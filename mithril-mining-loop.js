@@ -112,9 +112,9 @@ class MithrilMiningLoop extends BaseLoop {
           await this.depositItems();
         }
 
-        // Optional: Add a small delay between full cycles
+        // Add a longer delay between full cycles to avoid rate limiting
         console.log(`[${this.characterName}] Cycle complete. Waiting before next cycle...`);
-        await sleep(5000);
+        await sleep(10000); // 10 second delay between cycles
 
       } catch (error) {
         console.error(`[${this.characterName}] Error in main loop #${this.loopCount}:`, error.message);
@@ -175,6 +175,10 @@ class MithrilMiningLoop extends BaseLoop {
           () => gatheringAction(this.characterName), 
           'Mining (Gathering Action)' // Updated action name for logging clarity
         );
+
+        // Add additional delay to avoid rate limiting (429 errors)
+        console.log(`[${this.characterName}] Adding extra delay to avoid rate limiting...`);
+        await sleep(3000); // 3 second delay between actions
 
         // Update state based on the result from handleAction/gatheringAction
         details = result.character || await getCharacterDetails(this.characterName); // Use result if available
