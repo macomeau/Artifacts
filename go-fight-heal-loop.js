@@ -7,6 +7,7 @@
 // Import the API utilities and deposit function
 const { moveCharacter, fightAction, restAction, executeWithCooldown, getCharacterDetails, healCharacter } = require('./api'); // Added healCharacter
 const { depositAllItems } = require('./go-deposit-all');
+const { extractCooldownTime, sleep } = require('./utils'); // Import cooldown and sleep helpers
 const config = require('./config'); // Import the final config object
 const db = require('./db');
 
@@ -374,16 +375,67 @@ async function main() {
             [characterName || config.character, { total_items: totalItems }] // Use config.character directly
           );
 
-          // Deposit workflow
-          await moveCharacter(4, 1, characterName);
-          await depositAllItems(characterName); // Pass characterName here
-          await moveCharacter(coords.x, coords.y, characterName);
-          return true;
+          // --- Deposit workflow with cooldown handling ---
+          const depositOnError = (error, attempts) => {
+            console.error(`Deposit workflow action failed (Attempt ${attempts}): ${error.message}`);
+            // Check if it's a cooldown error specifically
+            const cooldownSeconds = extractCooldownTime(error);
+            if (cooldownSeconds > 0) {
+              console.log(`Cooldown detected during deposit workflow: ${cooldownSeconds.toFixed(1)}s`);
+              return { continueExecution: true, retryDelay: cooldownSeconds * 1000 + 500 }; // Retry after cooldown + buffer
+            }
+            // For other errors, stop the deposit attempt
+            return false; // Stop execution
+          };
+
+          try {
+            // 1. Move to bank
+            console.log(`[Deposit Workflow] Moving to bank (4, 1) for ${characterName}...`);
+            await executeWithCooldown(
+              () => moveCharacter(4, 1, characterName),
+              (result) => console.log('[Deposit Workflow] Arrived at bank.'),
+              depositOnError
+            );
+
+            // 2. Deposit items
+            console.log(`[Deposit Workflow] Depositing items for ${characterName}...`);
+            await executeWithCooldown(
+              () => depositAllItems(characterName),
+              (result) => console.log('[Deposit Workflow] Deposit successful.'),
+              depositOnError
+            );
+
+            // 3. Move back to fight spot
+            console.log(`[Deposit Workflow] Moving back to fight spot (${coords.x}, ${coords.y}) for ${characterName}...`);
+            await executeWithCooldown(
+              () => moveCharacter(coords.x, coords.y, characterName),
+              (result) => console.log('[Deposit Workflow] Returned to fight spot.'),
+              depositOnError
+            );
+
+            console.log('[Deposit Workflow] Completed successfully.');
+            return true; // Indicate deposit happened
+
+          } catch (depositError) {
+            console.error('Deposit workflow failed:', depositError.message);
+            // If any step failed permanently, return false from checkInventory
+            return false;
+          }
+          // --- End Deposit workflow ---
         }
+        // Inventory not full
         return false;
       } catch (error) {
+        // Error during initial getCharacterDetails or inventory check logic
         console.error('Inventory check failed:', error.message);
-        return false;
+        // Check if it was a cooldown error during getCharacterDetails
+        const cooldownSeconds = extractCooldownTime(error);
+        if (cooldownSeconds > 0) {
+            console.log(`Cooldown detected during inventory check details fetch: ${cooldownSeconds.toFixed(1)}s. Waiting...`);
+            await sleep(cooldownSeconds * 1000 + 500); // Use imported sleep
+            // Optionally retry the checkInventory call here, or just let the main loop handle it
+        }
+        return false; // Indicate inventory check failed or wasn't full
       }
     };
 
