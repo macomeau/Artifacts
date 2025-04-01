@@ -66,18 +66,30 @@ class BassHarvestingLoop extends BaseLoop {
         () => gatheringAction(this.characterName),
         'Bass fishing'
       );
-      
-      const afterDetails = await getCharacterDetails(this.characterName);
-      
+
+      // Use character details from the action result if available, otherwise log generic success
+      const characterAfterAction = result?.character || beforeDetails; // Fallback to beforeDetails if result has no character info
+
       if (result && result.resources) {
-        this.resourceCount += result.resources.length;
-        console.log(`Caught ${result.resources.length} bass (total: ${this.resourceCount})`);
+        const caughtAmount = result.resources.length;
+        this.resourceCount += caughtAmount;
+        console.log(`Caught ${caughtAmount} bass (total: ${this.resourceCount})`);
+        await sleep(500 + Math.random() * 500); // Small delay after successful catch (0.5-1s)
+      } else {
+         // Add a small delay even if no resources were caught, but action was successful
+         await sleep(250 + Math.random() * 250); // (0.25-0.5s)
       }
-      
-      console.log(`Fishing successful at coordinates (${afterDetails.x}, ${afterDetails.y})`);
+
+      console.log(`Fishing action completed at coordinates (${characterAfterAction.x}, ${characterAfterAction.y})`);
       return result;
     } catch (error) {
-      if (error.message.includes('inventory is full')) {
+       // Handle 429 Too Many Requests specifically
+      if (error.message.includes('429') || error.message.toLowerCase().includes('too many requests')) {
+        const waitTime = 15000 + Math.random() * 5000; // Wait 15-20 seconds for 429
+        console.warn(`Rate limit hit (429). Waiting ${Math.round(waitTime/1000)}s...`);
+        await sleep(waitTime);
+        return null; // Indicate action didn't complete, loop should retry
+      } else if (error.message.includes('inventory is full')) {
         console.log('Inventory is full. Proceeding to deposit bass...');
         await this.depositFish();
         return null;
@@ -106,13 +118,16 @@ class BassHarvestingLoop extends BaseLoop {
       } else {
         console.log('Already at bank location.');
       }
-      
+      await sleep(1000 + Math.random() * 500); // Wait 1-1.5s after arriving at bank
+
       console.log('Depositing all fish to bank...');
       // Pass the character name to the deposit function
-      await depositAllItems(this.characterName); 
-      
+      await depositAllItems(this.characterName);
+      await sleep(1000 + Math.random() * 500); // Wait 1-1.5s after depositing
+
       console.log(`Moving back to fishing location at (${this.harvestCoords.x}, ${this.harvestCoords.y})...`);
       await moveCharacter(this.harvestCoords.x, this.harvestCoords.y, this.characterName);
+      await sleep(1000 + Math.random() * 500); // Wait 1-1.5s after arriving back
       
       console.log('Ready to continue fishing!');
     } catch (error) {
@@ -157,8 +172,11 @@ class BassHarvestingLoop extends BaseLoop {
         await this.fish();
         
         console.log(`Completed loop #${this.loopCount}. Caught ${this.resourceCount} bass in total.`);
-        
-        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Increased delay between loops
+        const loopDelay = 3000 + Math.random() * 2000; // Wait 3-5 seconds
+        console.log(`Waiting ${Math.round(loopDelay/1000)}s before next loop...`);
+        await sleep(loopDelay); // Use imported sleep
       }
     } catch (error) {
       console.error('Fatal error in bass fishing loop:', error.message);
