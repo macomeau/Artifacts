@@ -192,14 +192,34 @@ function updateProcessList(processes) {
         
         const statusEl = document.createElement('div');
         statusEl.className = 'process-status';
-        statusEl.textContent = process.running ? 'Running' : (process.exitCode === 0 ? 'Completed' : 'Failed');
+        // Display more specific status based on source and state
+        if (process.running) {
+            statusEl.textContent = 'Running';
+        } else if (process.source === 'database') {
+            // Use DB state for more accurate status text for last known tasks
+            statusEl.textContent = process.dbState ? process.dbState.charAt(0).toUpperCase() + process.dbState.slice(1) : 'Stopped';
+        } else {
+            // Fallback for memory processes that are stopped
+            statusEl.textContent = process.exitCode === 0 ? 'Completed' : (typeof process.exitCode === 'number' ? `Failed (${process.exitCode})` : 'Stopped');
+        }
         card.appendChild(statusEl);
-        
-        // Empty div for spacing where the loop count used to be
+
+        // Display loop/activity counts if available
         const spacerEl = document.createElement('div');
         spacerEl.className = 'process-progress';
-        card.appendChild(spacerEl);
-        
+        // Display loop/activity counts if available
+        const progressEl = document.createElement('div');
+        progressEl.className = 'process-progress';
+        // Show loop count primarily, fallback to activity count if loop count is 0
+        const countToShow = process.loopCount > 0 ? process.loopCount : process.activityCount;
+        const countLabel = process.loopCount > 0 ? 'Loop' : 'Activity';
+        if (countToShow > 0) {
+            progressEl.textContent = `${countLabel}: ${countToShow}`;
+        } else {
+             progressEl.textContent = '-'; // Placeholder if no counts
+        }
+        card.appendChild(progressEl);
+
         // Calculate and display process duration
         const durationEl = document.createElement('div');
         durationEl.className = 'process-duration';

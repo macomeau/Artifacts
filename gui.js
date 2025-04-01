@@ -691,35 +691,91 @@ app.post('/api/start', validateStartRequest, (req, res) => {
 
 // API endpoint to restart a stopped/failed script
 app.post('/api/restart', async (req, res) => {
-  const { id } = req.body;
+  const { id } = req.body; // This 'id' is the derived processId string
 
-  if (!id || !runningProcesses[id]) {
-    return res.status(404).json({ error: 'Process not found or already cleaned up' });
+  if (!id) {
+    return res.status(400).json({ error: 'Process ID is required for restart' });
   }
 
-  const proc = runningProcesses[id];
+  let script;
+  let args;
 
-  // Prevent restarting an already running process
-  if (proc.running) {
-    return res.status(400).json({ error: 'Cannot restart a process that is already running' });
+  // Check if the process exists in memory first
+  if (runningProcesses[id]) {
+    const proc = runningProcesses[id];
+
+    // Prevent restarting an already running process from memory
+    if (proc.running) {
+      return res.status(400).json({ error: 'Cannot restart a process that is currently running' });
+    }
+
+    // Retrieve original script and args from memory
+    script = proc.script;
+    args = proc.args;
+
+    if (!script) {
+      return res.status(500).json({ error: 'Could not retrieve original script name for this memory process' });
+    }
+    console.log(`Restarting process found in memory: ${id} with script: ${script}`);
+
+  } else {
+    // Process not in memory, try to parse details from the ID string
+    console.log(`Process ${id} not found in memory. Attempting to parse ID for restart.`);
+    try {
+      // ID format: `${script}_${characterName}_${scriptArgs.join('_')}`
+      // Split carefully, considering args might contain underscores
+      const parts = id.split('_');
+      if (parts.length < 2) { // Need at least script and character
+        throw new Error('Invalid process ID format for parsing');
+      }
+
+      // Assume the first part is the script name (potentially with .js)
+      script = parts[0];
+      // The second part is the character name
+      const characterName = parts[1];
+      // The rest are arguments, joined by underscores
+      const argString = parts.slice(2).join('_');
+
+      // Reconstruct args array - this is imperfect if args originally contained underscores
+      // but is the best we can do from the ID string alone.
+      // A better approach might be to fetch from DB using characterName and script,
+      // but let's stick to parsing the ID for now.
+      args = argString ? argString.split('_') : [];
+
+      // Prepend the character name back to the args list as startScript expects it
+      // (unless it's a coordinate script, but we can't reliably tell that from the ID alone)
+      // Let startScript handle the logic of finding/sanitizing the character name again.
+      // We just need to provide the script and the *original* arguments string parts.
+      args = [characterName, ...args]; // Re-assemble args as best as possible
+
+      console.log(`Parsed from ID - Script: ${script}, Args: ${JSON.stringify(args)}`);
+
+      // Basic validation
+      if (!script || !characterName) {
+          throw new Error('Could not reliably parse script or character name from process ID');
+      }
+
+    } catch (parseError) {
+      console.error(`Error parsing process ID ${id}:`, parseError);
+      // As a fallback, try fetching the latest task for the potential character from DB
+      // This is complex because extracting character name reliably from ID is hard.
+      // For now, return an error if parsing fails.
+      return res.status(404).json({ error: `Process not found in memory and failed to parse ID: ${id}. Cannot determine restart parameters.` });
+    }
   }
 
-  // Retrieve original script and args
-  const { script, args } = proc;
-
-  if (!script) {
-    return res.status(500).json({ error: 'Could not retrieve original script name for this process' });
-  }
-
-  console.log(`Attempting to restart process ${id} with script: ${script}`);
-
+  // Now, attempt to start the script with the determined parameters
   try {
     // Call the existing startScript function
-    const result = await startScript(script, args || []); // Ensure args is an array
-    console.log(`Restarted process ${id} successfully. New ID: ${result.id}, Task ID: ${result.taskId}`);
+    // Add '--no-recycle' to args to prevent potential infinite restart loops if the script fails immediately
+    const restartArgs = [...(args || []), '--no-recycle'];
+    const result = await startScript(script, restartArgs);
+    console.log(`Restarted process (Original ID: ${id}) successfully. New ID: ${result.id}, Task ID: ${result.taskId}`);
+    // Remove the old ID from the manually cleared set if it was there
+    manuallyCleared.delete(id);
     res.json({ success: true, newProcessId: result.id, taskId: result.taskId });
   } catch (error) {
-    console.error(`Error restarting script for process ${id}:`, error);
+    console.error(`Error restarting script (Original ID: ${id}):`, error);
     res.status(500).json({ error: `Failed to restart script: ${error.message}` });
   }
 });
@@ -809,46 +865,126 @@ app.get('/api/output/:id', (req, res) => {
   });
 });
 
-// API endpoint to list all running processes
-app.get('/api/processes', (req, res) => {
-  // Filter out stopped processes that are older than 5 minutes
-  const now = new Date();
-  const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000); // 5 minutes in milliseconds
-  
-  // Auto-clean old stopped processes
-  Object.keys(runningProcesses).forEach(id => {
-    const proc = runningProcesses[id];
-    if (!proc.running && proc.endTime && new Date(proc.endTime) < fiveMinutesAgo) {
-      console.log(`Auto-cleaning old stopped process: ${id}`);
-      delete runningProcesses[id];
-    }
-  });
-  
-  // Only return processes that haven't been manually cleared
-  const processes = Object.keys(runningProcesses)
-    .filter(id => !manuallyCleared.has(id)) // Filter out manually cleared processes
-    .map(id => {
+// API endpoint to list all running processes and last known tasks
+app.get('/api/processes', async (req, res) => {
+  try {
+    // Filter out stopped processes that are older than 5 minutes from memory
+    const now = new Date();
+    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000); // 5 minutes in milliseconds
+
+    // Auto-clean old stopped processes from memory
+    Object.keys(runningProcesses).forEach(id => {
       const proc = runningProcesses[id];
-      return {
-        id,
-        script: proc.script,
-        args: proc.args,
-        running: proc.running,
-        startTime: proc.startTime,
-        endTime: proc.endTime,
-        exitCode: proc.exitCode,
-        itemsGathered: proc.itemsGathered || 0,
-        enemiesDefeated: proc.enemiesDefeated || 0,
-        loopCount: proc.loopCount || 0,
-        activityCount: proc.activityCount || 0
-      };
+      if (!proc.running && proc.endTime && new Date(proc.endTime) < fiveMinutesAgo) {
+        console.log(`Auto-cleaning old stopped process from memory: ${id}`);
+        delete runningProcesses[id];
+        manuallyCleared.add(id); // Ensure it stays cleared if manually cleared before
+      }
     });
-  
-  res.json({ processes });
+
+    // Get current processes from memory (excluding manually cleared)
+    const memoryProcesses = Object.keys(runningProcesses)
+      .filter(id => !manuallyCleared.has(id))
+      .map(id => {
+        const proc = runningProcesses[id];
+        return {
+          id, // This is the derived processId
+          script: proc.script,
+          args: proc.args,
+          running: proc.running,
+          startTime: proc.startTime,
+          endTime: proc.endTime,
+          exitCode: proc.exitCode,
+          // Include progress metrics if available
+          itemsGathered: proc.itemsGathered || 0,
+          enemiesDefeated: proc.enemiesDefeated || 0,
+          loopCount: proc.loopCount || 0,
+          activityCount: proc.activityCount || 0,
+          source: 'memory' // Indicate source
+        };
+      });
+
+    // Get the latest task for EACH character from the database
+    const dbTasksResult = await db.query(`
+      SELECT DISTINCT ON (character) *
+      FROM character_tasks
+      ORDER BY character, last_updated DESC
+    `);
+    const latestDbTasks = dbTasksResult.rows;
+
+    // Create a map of characters currently represented in memoryProcesses
+    const memoryCharacters = new Set(memoryProcesses.map(p => {
+        // Extract character name reliably based on script type
+        if ((p.script.includes('go-fight') || p.script.includes('go-gather') || p.script.includes('fight-loop') || p.script.includes('gathering-loop') || p.script.includes('strange-ore-mining-loop')) && p.args?.length > 1 && /^\s*\(?\s*-?\d+\s*,\s*-?\d+\s*\)?\s*$/.test(p.args[0])) {
+            return p.args[1]; // Second arg is character
+        }
+        return p.args?.[0]; // First arg is character (default)
+    }));
+
+
+    // Filter DB tasks: include only those whose character is NOT in memoryProcesses
+    const dbOnlyTasks = latestDbTasks
+      .filter(task => !memoryCharacters.has(task.character))
+      .map(task => {
+        // Reconstruct the processId for frontend consistency
+        const processId = reconstructProcessId(task.script_name, task.character, task.script_args);
+        // Skip if this ID was manually cleared
+        if (manuallyCleared.has(processId)) {
+            return null; // Filter this out later
+        }
+        return {
+          id: processId, // Use reconstructed processId
+          script: task.script_name,
+          args: task.script_args || [], // Ensure args is an array
+          running: false, // These are never running if they are DB-only
+          startTime: task.start_time,
+          // Use last_updated as endTime for completed/failed tasks from DB
+          endTime: (task.state === characterTasks.TASK_STATES.COMPLETED || task.state === characterTasks.TASK_STATES.FAILED) ? task.last_updated : null,
+          // Map DB state to exitCode concept (0 for completed, 1 for failed/other)
+          exitCode: task.state === characterTasks.TASK_STATES.COMPLETED ? 0 : (task.state === characterTasks.TASK_STATES.FAILED ? 1 : undefined),
+          // Progress metrics are not stored in the DB task record, default to 0
+          itemsGathered: 0,
+          enemiesDefeated: 0,
+          loopCount: 0, // Task DB doesn't store loop count
+          activityCount: 0, // Task DB doesn't store activity count
+          dbState: task.state, // Include the actual DB state
+          source: 'database' // Indicate source
+        };
+      })
+      .filter(task => task !== null); // Remove null entries (manually cleared)
+
+
+    // Combine memory and DB-only tasks
+    const combinedProcesses = [...memoryProcesses, ...dbOnlyTasks];
+
+    res.json({ processes: combinedProcesses });
+
+  } catch (error) {
+    console.error('Error fetching processes:', error.message);
+    res.status(500).json({ error: 'Failed to fetch process list', details: error.message });
+  }
 });
 
 // Store IDs of manually cleared processes to prevent them from reappearing
 const manuallyCleared = new Set();
+
+/**
+ * Reconstructs the process ID string from task details.
+ * Matches the format used as keys in runningProcesses and by the frontend.
+ * @param {string} script - The script name (e.g., 'go-gather-loop.js')
+ * @param {string} characterName - The character name.
+ * @param {Array} args - The script arguments array.
+ * @returns {string} The reconstructed process ID.
+ */
+function reconstructProcessId(script, characterName, args = []) {
+  // Ensure args is an array before joining
+  const safeArgs = Array.isArray(args) ? args : [];
+  // Use the character name derived *during task creation* which should be the first arg in most cases,
+  // or the second arg in coordinate-based scripts. Handle potential missing args gracefully.
+  const charNameToUse = characterName || (safeArgs.length > 0 ? safeArgs[0] : 'unknown'); // Fallback needed
+  return `${script}_${charNameToUse}_${safeArgs.join('_')}`;
+}
+
 
 // API endpoint to clear stopped processes
 app.post('/api/clear-stopped', (req, res) => {

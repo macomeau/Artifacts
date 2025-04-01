@@ -332,15 +332,25 @@ async function cancelTask(taskId) {
  */
 async function cleanupOldTasks(daysToKeep = 7) {
   try {
+    // 1. Find the ID of the most recent task for each character
+    const latestTaskIdsResult = await db.query(`
+      SELECT MAX(id) as latest_id
+      FROM character_tasks
+      GROUP BY character
+    `);
+    const latestTaskIds = latestTaskIdsResult.rows.map(row => row.latest_id);
+
+    // 2. Delete tasks that are old AND not the latest for their character
     const result = await db.query(
       `DELETE FROM character_tasks
-       WHERE state IN ($1, $2)
-       AND last_updated < NOW() - INTERVAL '${daysToKeep} days'
+       WHERE state IN ($1, $2)                                  -- Only completed or failed
+       AND last_updated < NOW() - INTERVAL '${daysToKeep} days' -- Older than retention period
+       AND id != ALL($3::int[])                                 -- Not the latest task for any character
        RETURNING id`,
-      [TASK_STATES.COMPLETED, TASK_STATES.FAILED]
+      [TASK_STATES.COMPLETED, TASK_STATES.FAILED, latestTaskIds]
     );
-    
-    console.log(`Cleaned up ${result.rows.length} old tasks`);
+
+    console.log(`Cleaned up ${result.rows.length} old, non-latest tasks`);
     return result.rows.length;
   } catch (error) {
     console.error('Error cleaning up old tasks:', error.message);
