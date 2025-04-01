@@ -196,20 +196,38 @@ class BassHarvestingLoop extends BaseLoop {
    * @example
    * node bass-harvesting-loop.js [characterName] [harvestX] [harvestY] [bankX] [bankY]
    * node bass-harvesting-loop.js MyChar 6 12 4 1
+   * node bass-harvesting-loop.js MyChar --no-recycle 6 12 4 1
    */
   static async main() {
-    const args = process.argv.slice(2);
-    let characterName = args[0];
+    // Filter out the --no-recycle flag first
+    const noRecycleFlag = '--no-recycle';
+    const originalArgs = process.argv.slice(2);
+    const args = originalArgs.filter(arg => arg !== noRecycleFlag); // Args without the flag
+
+    // Now parse the remaining arguments
+    let characterName = args[0]; // Character name should be the first non-flag argument
 
     // Fallback logic for character name
-    if (!characterName) {
+    if (!characterName || characterName.startsWith('--')) { // Also check if the first arg is another flag
       characterName = process.env.control_character || config.character;
     }
 
-    // --- Parse options from command line arguments ---
+    // --- Parse options from the filtered command line arguments ---
     const options = {};
+    // Coordinates should now be at the correct indices in the filtered 'args' array
     if (args[1] && args[2]) options.harvestCoords = { x: parseInt(args[1], 10), y: parseInt(args[2], 10) };
     if (args[3] && args[4]) options.bankCoords = { x: parseInt(args[3], 10), y: parseInt(args[4], 10) };
+
+    // Validate parsed coordinates to prevent NaN issues
+    if (options.harvestCoords && (isNaN(options.harvestCoords.x) || isNaN(options.harvestCoords.y))) {
+        console.warn(`Invalid harvest coordinates parsed from args: ${args[1]}, ${args[2]}. Using defaults.`);
+        delete options.harvestCoords; // Remove invalid coords to use defaults
+    }
+    if (options.bankCoords && (isNaN(options.bankCoords.x) || isNaN(options.bankCoords.y))) {
+        console.warn(`Invalid bank coordinates parsed from args: ${args[3]}, ${args[4]}. Using defaults.`);
+        delete options.bankCoords; // Remove invalid coords to use defaults
+    }
+
 
     const loop = new BassHarvestingLoop(characterName, options);
 
