@@ -355,10 +355,9 @@ async function startScript(script, args = []) {
       characterName,
       taskType,
       script,
-      scriptArgs,
-      { processId }
+      scriptOnlyArgs, // Store the script-specific args
+      { processId } // Store the derived processId
     );
-    
     taskId = newTask.id;
     console.log(`Created task ${taskId} in database for ${characterName}: ${script}`);
   } catch (error) {
@@ -393,13 +392,15 @@ async function startScript(script, args = []) {
   const childProcess = spawn('node', spawnArgsForNode, { env });
 
   // Store process information
+  // 6. Store Process Information using the correct processId
   runningProcesses[processId] = {
     process: childProcess,
     script,
-    args: scriptArgs,
+    characterName: characterName, // Store determined character name
+    args: scriptOnlyArgs, // Store script-specific args for potential restart
     startTime: new Date(),
     output: [],
-    taskId,
+    taskId, // Store associated task ID
     itemsGathered: 0,
     enemiesDefeated: 0,
     loopCount: 0,
