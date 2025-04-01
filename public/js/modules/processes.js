@@ -501,11 +501,15 @@ async function viewProcessOutput(id) {
             }
             
             // Set up cleanup when modal is closed
-            document.getElementById('close-output-modal').onclick = () => {
-                if (outputRefreshInterval) {
-                    clearInterval(outputRefreshInterval);
+            // Close button functionality
+            document.getElementById('close-output-modal').onclick = closeOutputModal;
+
+            // Add click listener to the modal backdrop to close it
+            outputModal.onclick = (event) => {
+                // Check if the click target is the modal backdrop itself
+                if (event.target === outputModal) {
+                    closeOutputModal();
                 }
-                outputModal.style.display = 'none';
             };
         }
     } catch (error) {
