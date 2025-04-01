@@ -273,31 +273,48 @@ async function startScript(script, args = []) {
   
   // Regular case: first argument might be character name
   if (!skipRegularProcessing) {
-    // Check if we have a characterName in the first argument
-    if (scriptArgs.length > 0) {
+    // Check if we have a characterName in the first argument, ensuring it's not a flag
+    if (scriptArgs.length > 0 && !scriptArgs[0].startsWith('--')) {
       characterName = sanitizeCharacterName(scriptArgs[0]);
+    } else {
+      // First arg is a flag or doesn't exist, so no character name provided via args
+      characterName = null;
     }
-    
-    // If not provided in args, get control character from environment
+
+    // If not determined from args, get control character from environment
     if (!characterName && process.env.control_character) {
       // Sanitize and prepend character name to arguments
       characterName = sanitizeCharacterName(process.env.control_character);
-      scriptArgs = [characterName, ...scriptArgs.slice(scriptArgs[0] ? 1 : 0)]; // Prepend sanitized name
+      // Sanitize and prepend character name to arguments if it wasn't the first arg
+      characterName = sanitizeCharacterName(process.env.control_character);
+      // Only prepend if characterName is valid and wasn't already the (non-flag) first arg
+      if (characterName && characterName !== 'UNKNOWN_CHARACTER' && (scriptArgs.length === 0 || scriptArgs[0].startsWith('--'))) {
+         scriptArgs = [characterName, ...scriptArgs]; // Prepend sanitized name
+      }
     } else if (!characterName) {
-      // Default character name if not provided in args or environment
+      // Still no character name, try the default from config
       characterName = sanitizeCharacterName(guiConfig.defaultCharacter);
       if (!characterName || characterName === 'UNKNOWN_CHARACTER') {
+         // If still no valid character name, throw an error
          throw new Error("Cannot determine character name: Not provided in args, control_character env var not set, and no default character configured.");
       }
-      scriptArgs = [characterName, ...scriptArgs]; // Prepend default name
-      console.log(`Using default character name from config: ${characterName}`);
+      // Only prepend if characterName is valid and wasn't already the (non-flag) first arg
+      if (characterName && characterName !== 'UNKNOWN_CHARACTER' && (scriptArgs.length === 0 || scriptArgs[0].startsWith('--'))) {
+        scriptArgs = [characterName, ...scriptArgs]; // Prepend default name
+        console.log(`Using default character name from config: ${characterName}`);
+      }
     } else {
-      // Character name was provided as first arg, ensure it's sanitized and updated in args
-      scriptArgs[0] = characterName;
+      // Character name was provided as the first (non-flag) arg, ensure it's sanitized and updated in args
+      // This case should already be handled by the initial check, but double-check sanitization
+      if (scriptArgs.length > 0 && !scriptArgs[0].startsWith('--')) {
+          scriptArgs[0] = sanitizeCharacterName(scriptArgs[0]); // Ensure it's sanitized
+          characterName = scriptArgs[0]; // Update characterName variable
+      }
     }
-    
-    // Log if sanitization occurred
-    if (characterName !== (scriptArgs.length > 0 ? scriptArgs[0] : process.env.control_character)) {
+
+    // Log if sanitization occurred (compare sanitized name with original potential first arg or env var)
+    const originalPotentialName = (incomingArgs.length > 0 && !incomingArgs[0].startsWith('--')) ? incomingArgs[0] : process.env.control_character;
+    if (characterName && characterName !== originalPotentialName) {
       console.log(`Character name sanitized to: ${characterName}`);
     }
   }
