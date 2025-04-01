@@ -244,88 +244,51 @@ async function startScript(script, args = []) {
     return sanitized || guiConfig.defaultCharacter || 'UNKNOWN_CHARACTER';
   };
 
-  // Initialize characterName variable that will be used in both cases
+  // --- Refined Argument and Character Name Handling ---
   let characterName = null;
-  // Flag to skip regular case processing if we handled the special case
-  let skipRegularProcessing = false;
+  let scriptOnlyArgs = []; // Arguments specifically for the script, excluding character name if passed first
+  let finalSpawnArgs = [script]; // Arguments for the node spawn command [script, char, ...scriptOnlyArgs, flags]
 
-  // Special case for scripts that work with coordinates like go-fight-heal-loop.js
-  if (script.includes('fight') || script.includes('gather') || script.includes('mining') || script.includes('harvesting')) {
-    // Check if first argument is a coordinate pair
-    if (scriptArgs.length > 0 && isCoordinatePair(scriptArgs[0])) {
-      // First arg is coordinates, do not sanitize it
-      const coordArg = scriptArgs[0];
-      
-      // If there's a second argument, it's the character name
-      if (scriptArgs.length > 1) {
-        characterName = sanitizeCharacterName(scriptArgs[1]);
-      } else {
-        // Use default character from config if control_character env var is not set
-        characterName = sanitizeCharacterName(guiConfig.defaultCharacter);
-        if (!characterName || characterName === 'UNKNOWN_CHARACTER') {
-           throw new Error("Cannot determine character name: Not provided in args, control_character env var not set, and no default character configured.");
-        }
-      }
-      
-      // Build the new arguments array: [coordinates, characterName]
-      scriptArgs = [coordArg, characterName];
-      console.log(`Using coordinates ${coordArg} with character: ${characterName}`);
-      
-      // Skip the regular case processing since we've already set everything up
-      skipRegularProcessing = true;
-    }
-  }
-  
-  // Regular case: first argument might be character name
-  if (!skipRegularProcessing) {
-    // Check if we have a characterName in the first argument, ensuring it's not a flag
-    if (scriptArgs.length > 0 && !scriptArgs[0].startsWith('--')) {
-      characterName = sanitizeCharacterName(scriptArgs[0]);
+  // 1. Determine Character Name and Script-Specific Args
+  const firstArgIsChar = scriptArgs.length > 0 && !scriptArgs[0].startsWith('--') && !isCoordinatePair(scriptArgs[0]);
+  const firstArgIsCoords = scriptArgs.length > 0 && isCoordinatePair(scriptArgs[0]);
+
+  if (firstArgIsChar) {
+    // Character name is the first argument
+    characterName = sanitizeCharacterName(scriptArgs[0]);
+    scriptOnlyArgs = scriptArgs.slice(1); // The rest are script-specific args
+    console.log(`Character name determined from first argument: ${characterName}`);
+  } else if (firstArgIsCoords) {
+    // Coordinate script: first arg is coords, second (optional) is character
+    const coordArg = scriptArgs[0];
+    scriptOnlyArgs = [coordArg]; // Coords are part of script-specific args
+    if (scriptArgs.length > 1) {
+      characterName = sanitizeCharacterName(scriptArgs[1]);
+      scriptOnlyArgs.push(characterName); // Add character to script args if provided *after* coords
+      console.log(`Character name determined from second argument (coord script): ${characterName}`);
     } else {
-      // First arg is a flag or doesn't exist, so no character name provided via args
-      characterName = null;
+      characterName = sanitizeCharacterName(process.env.control_character || guiConfig.defaultCharacter);
+      console.log(`Using default/env character for coord script: ${characterName}`);
     }
-
-    // If not determined from args, get control character from environment
-    if (!characterName && process.env.control_character) {
-      // Sanitize and prepend character name to arguments
-      characterName = sanitizeCharacterName(process.env.control_character);
-      // Sanitize and prepend character name to arguments if it wasn't the first arg
-      characterName = sanitizeCharacterName(process.env.control_character);
-      // Only prepend if characterName is valid and wasn't already the (non-flag) first arg
-      if (characterName && characterName !== 'UNKNOWN_CHARACTER' && (scriptArgs.length === 0 || scriptArgs[0].startsWith('--'))) {
-         scriptArgs = [characterName, ...scriptArgs]; // Prepend sanitized name
-      }
-    } else if (!characterName) {
-      // Still no character name, try the default from config
-      characterName = sanitizeCharacterName(guiConfig.defaultCharacter);
-      if (!characterName || characterName === 'UNKNOWN_CHARACTER') {
-         // If still no valid character name, throw an error
-         throw new Error("Cannot determine character name: Not provided in args, control_character env var not set, and no default character configured.");
-      }
-      // Only prepend if characterName is valid and wasn't already the (non-flag) first arg
-      if (characterName && characterName !== 'UNKNOWN_CHARACTER' && (scriptArgs.length === 0 || scriptArgs[0].startsWith('--'))) {
-        scriptArgs = [characterName, ...scriptArgs]; // Prepend default name
-        console.log(`Using default character name from config: ${characterName}`);
-      }
-    } else {
-      // Character name was provided as the first (non-flag) arg, ensure it's sanitized and updated in args
-      // This case should already be handled by the initial check, but double-check sanitization
-      if (scriptArgs.length > 0 && !scriptArgs[0].startsWith('--')) {
-          scriptArgs[0] = sanitizeCharacterName(scriptArgs[0]); // Ensure it's sanitized
-          characterName = scriptArgs[0]; // Update characterName variable
-      }
-    }
-
-    // Log if sanitization occurred (compare sanitized name with original potential first arg or env var)
-    const originalPotentialName = (incomingArgs.length > 0 && !incomingArgs[0].startsWith('--')) ? incomingArgs[0] : process.env.control_character;
-    if (characterName && characterName !== originalPotentialName) {
-      console.log(`Character name sanitized to: ${characterName}`);
-    }
+  } else {
+    // Character name not in args, use env or default
+    characterName = sanitizeCharacterName(process.env.control_character || guiConfig.defaultCharacter);
+    scriptOnlyArgs = scriptArgs; // All args are script-specific
+    console.log(`Using default/env character: ${characterName}`);
   }
-  
-  // Define task type based on script name
-  let taskType = 'unknown';
+
+  // Final check for a valid character name
+  if (!characterName || characterName === 'UNKNOWN_CHARACTER') {
+    throw new Error("Cannot determine a valid character name.");
+  }
+  console.log(`Final Character Name: ${characterName}, Script-Only Args: ${JSON.stringify(scriptOnlyArgs)}`);
+
+  // 2. Construct Process ID using Character Name and Script-Only Args
+  const processId = `${script}_${characterName}_${scriptOnlyArgs.join('_')}`;
+  console.log(`Constructed Process ID: ${processId}`);
+
+  // 3. Define Task Type
+  let taskType = characterTasks.TASK_TYPES.UNKNOWN; // Use constant
   if (script.includes('mining')) {
     taskType = characterTasks.TASK_TYPES.MINING;
   } else if (script.includes('harvesting') && (script.includes('ash') || script.includes('birch') || script.includes('maple') || script.includes('spruce') || script.includes('deadwood'))) {
@@ -340,13 +303,18 @@ async function startScript(script, args = []) {
     taskType = characterTasks.TASK_TYPES.COMBAT;
   } else if (script.includes('craft')) {
     taskType = characterTasks.TASK_TYPES.CRAFTING;
+    taskType = characterTasks.TASK_TYPES.CRAFTING;
   }
-  
-  // Kill any existing process with the same ID
-  const processId = `${script}_${characterName}_${scriptArgs.join('_')}`;
+
+  // Kill any existing process with the same ID (using the correctly constructed processId)
   if (runningProcesses[processId]) {
     console.log(`Killing existing process: ${processId}`);
-    runningProcesses[processId].process.kill();
+    // Ensure the process object and kill method exist before calling
+    if (runningProcesses[processId].process && typeof runningProcesses[processId].process.kill === 'function') {
+       runningProcesses[processId].process.kill();
+    } else {
+       console.warn(`Process ${processId} found in runningProcesses but lacks a killable process object.`);
+    }
     delete runningProcesses[processId];
   }
   
@@ -398,30 +366,31 @@ async function startScript(script, args = []) {
     // Continue anyway since we can still start the process
   }
   
-  // Prepare the command line arguments for the script
-  let scriptArguments = []; // Arguments intended *for the script itself*
+  // 4. Prepare Arguments for Spawning
+  // Start with the script name itself
+  let spawnArgsForNode = [script];
 
-  // Add the --no-recycle flag if it was present
+  // Add the character name (most scripts expect this first)
+  // Exception: Coordinate scripts might handle it differently internally, but passing it first is usually safe.
+  spawnArgsForNode.push(characterName);
+
+  // Add the script-only arguments
+  spawnArgsForNode.push(...scriptOnlyArgs);
+
+  // Add flags like --no-recycle
   if (!shouldRecycle) {
-    scriptArguments.push(noRecycleFlag);
+    spawnArgsForNode.push(noRecycleFlag);
   }
 
-  // Add the processed script arguments (character name, coords, etc.)
-  scriptArguments.push(...scriptArgs);
-
-  // Add the --env argument if we're using a custom env file
-  // This argument is for our script's env-loader, not for node itself
+  // Add --env flag if needed
   if (customEnvFile) {
-    scriptArguments.push(`--env=${customEnvFile}`);
+    spawnArgsForNode.push(`--env=${customEnvFile}`);
   }
 
-  // The final arguments array for spawn should be: [scriptName, ...scriptArguments]
-  const finalSpawnArgs = [script, ...scriptArguments];
+  console.log(`Spawning node with args: ${spawnArgsForNode.join(' ')}`); // Log final args
 
-  console.log(`Spawning node with args: ${finalSpawnArgs.join(' ')}`); // Log final args
-
-  // Spawn the new process with the script name first, followed by its arguments
-  const childProcess = spawn('node', finalSpawnArgs, { env });
+  // 5. Spawn the Process
+  const childProcess = spawn('node', spawnArgsForNode, { env });
 
   // Store process information
   runningProcesses[processId] = {
@@ -731,17 +700,23 @@ app.post('/api/restart', async (req, res) => {
       return res.status(400).json({ error: 'Cannot restart a process that is currently running' });
     }
 
-    // Retrieve original script and args from memory
+    // Retrieve original script, character, and script-specific args from memory
     script = proc.script;
-    args = proc.args;
+    const character = proc.characterName; // Use stored character name
+    args = proc.args; // Use stored script-specific args
 
-    if (!script) {
-      return res.status(500).json({ error: 'Could not retrieve original script name for this memory process' });
+    if (!script || !character) {
+      return res.status(500).json({ error: 'Could not retrieve original script/character name for this memory process' });
     }
-    console.log(`Restarting process found in memory: ${id} with script: ${script}`);
+    console.log(`Restarting process found in memory: ${id} with script: ${script}, character: ${character}, args: ${JSON.stringify(args)}`);
+
+    // Reconstruct args for startScript: [character, ...scriptOnlyArgs]
+    // Note: startScript will re-sanitize the character name.
+    args = [character, ...(args || [])];
+
 
   } else {
-    // Process not in memory, try to parse details from the ID string
+    // Process not in memory, attempt to parse ID (less reliable)
     console.log(`Process ${id} not found in memory. Attempting to parse ID for restart.`);
     try {
       // ID format: `${script}_${characterName}_${scriptArgs.join('_')}`
@@ -764,13 +739,10 @@ app.post('/api/restart', async (req, res) => {
       // but let's stick to parsing the ID for now.
       args = argString ? argString.split('_') : [];
 
-      // Prepend the character name back to the args list as startScript expects it
-      // (unless it's a coordinate script, but we can't reliably tell that from the ID alone)
-      // Let startScript handle the logic of finding/sanitizing the character name again.
-      // We just need to provide the script and the *original* arguments string parts.
-      args = [characterName, ...args]; // Re-assemble args as best as possible
+      // Re-assemble args for startScript: [characterName, ...parsedArgs]
+      args = [characterName, ...(args || [])];
 
-      console.log(`Parsed from ID - Script: ${script}, Args: ${JSON.stringify(args)}`);
+      console.log(`Parsed from ID - Script: ${script}, Reconstructed Args for startScript: ${JSON.stringify(args)}`);
 
       // Basic validation
       if (!script || !characterName) {
@@ -788,10 +760,10 @@ app.post('/api/restart', async (req, res) => {
 
   // Now, attempt to start the script with the determined parameters
   try {
-    // Call the existing startScript function
-    // Add '--no-recycle' to args to prevent potential infinite restart loops if the script fails immediately
-    const restartArgs = [...(args || []), '--no-recycle'];
-    const result = await startScript(script, restartArgs);
+    // Call the existing startScript function with the reconstructed args
+    // startScript will handle adding --no-recycle internally if needed based on script type,
+    // but adding it here ensures it's present for restarts.
+    const result = await startScript(script, [...(args || []), '--no-recycle']);
     console.log(`Restarted process (Original ID: ${id}) successfully. New ID: ${result.id}, Task ID: ${result.taskId}`);
     // Remove the old ID from the manually cleared set if it was there
     manuallyCleared.delete(id);
@@ -995,15 +967,16 @@ const manuallyCleared = new Set();
  * Matches the format used as keys in runningProcesses and by the frontend.
  * @param {string} script - The script name (e.g., 'go-gather-loop.js')
  * @param {string} characterName - The character name.
- * @param {Array} args - The script arguments array.
+ * @param {string} characterName - The character name associated with the task.
+ * @param {Array} scriptOnlyArgs - The script-specific arguments array (as stored in DB).
  * @returns {string} The reconstructed process ID.
  */
-function reconstructProcessId(script, characterName, args = []) {
+function reconstructProcessId(script, characterName, scriptOnlyArgs = []) {
   // Ensure args is an array before joining
-  const safeArgs = Array.isArray(args) ? args : [];
-  // Use the character name derived *during task creation* which should be the first arg in most cases,
-  // or the second arg in coordinate-based scripts. Handle potential missing args gracefully.
-  const charNameToUse = characterName || (safeArgs.length > 0 ? safeArgs[0] : 'unknown'); // Fallback needed
+  const safeArgs = Array.isArray(scriptOnlyArgs) ? scriptOnlyArgs : [];
+  // Use the character name directly from the task record
+  const charNameToUse = characterName || 'unknown'; // Fallback if characterName is somehow null/undefined
+  // Construct the ID using the script name, character name, and script-specific args
   return `${script}_${charNameToUse}_${safeArgs.join('_')}`;
 }
 
