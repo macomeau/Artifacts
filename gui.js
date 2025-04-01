@@ -174,7 +174,12 @@ async function startScript(script, args = []) {
 
   // --- Security: Check against script allowlist ---
   const scriptBaseName = script.replace(/\.js$/, ''); // Remove .js extension for check
-  if (!guiConfig.validation.scripts.includes(scriptBaseName)) {
+  // Ensure the script is allowed in the config
+  const allowedScripts = [
+      ...guiConfig.validation.scripts,
+      'adventurer-boots-crafting-loop' // Add the new script here
+  ];
+  if (!allowedScripts.includes(scriptBaseName)) {
       throw new Error(`Script '${scriptBaseName}' is not in the allowed list.`);
   }
   // --- End Security Check ---
