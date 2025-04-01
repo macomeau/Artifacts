@@ -6,7 +6,7 @@
 
 const BaseLoop = require('./base-loop');
 const { moveCharacter, getCharacterDetails, gatheringAction } = require('./api');
-const { handleCooldown, checkInventory, sleep } = require('./utils'); // Added sleep import
+const { handleCooldown, checkInventory, sleep, withRetry } = require('./utils'); // Added sleep and withRetry import
 const config = require('./config');
 const db = require('./db');
 const depositAllItems = require('./go-deposit-all').depositAllItems;
@@ -132,12 +132,19 @@ class BassHarvestingLoop extends BaseLoop {
       console.log('Ready to continue fishing!');
     } catch (error) {
       console.error('Error during deposit cycle:', error.message);
-      
+      // Attempt to return to fishing location with retry logic for cooldowns
       try {
-        console.log(`Attempting to return to fishing location at (${this.harvestCoords.x}, ${this.harvestCoords.y})...`);
-        await moveCharacter(this.harvestCoords.x, this.harvestCoords.y, this.characterName);
-      } catch (moveError) {
-        console.error('Failed to return to fishing location:', moveError.message);
+        console.log(`Attempting to return to fishing location at (${this.harvestCoords.x}, ${this.harvestCoords.y}) with retry...`);
+        await withRetry(
+          () => moveCharacter(this.harvestCoords.x, this.harvestCoords.y, this.characterName),
+          3, // Max 3 retries for the recovery move
+          1000 // Initial delay 1s
+        );
+        console.log('Successfully returned to fishing location after deposit error.');
+      } catch (recoveryMoveError) {
+        console.error('Failed to return to fishing location even after retries:', recoveryMoveError.message);
+        // Decide if we should throw or just log and let the main loop try again
+        // For now, just log, the main loop will re-evaluate position.
       }
     }
   }
