@@ -19,8 +19,8 @@
     position: relative;
     background: none;
     border: none;
-    padding: 16px 24px;
-    font-size: 15px;
+    padding: 18px 28px; /* Increased padding */
+    font-size: 17px; /* Increased font size */
     font-weight: 500;
     color: var(--primary-color);
     cursor: pointer;
@@ -52,7 +52,7 @@
 
 .tab-content {
     display: none;
-    padding: 24px;
+    padding: 28px; /* Increased padding */
     animation: fadeIn 0.3s ease;
     box-shadow: 0 2px 8px var(--shadow-color);
     border-radius: 0 0 8px 8px;

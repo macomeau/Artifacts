@@ -11,8 +11,9 @@
 }
 
 .process-filter-container select {
-    padding: 8px 12px;
+    padding: 10px 14px; /* Increased padding */
     border-radius: 4px;
+    font-size: 16px; /* Match base body font size */
     border: 1px solid var(--border-color);
     background-color: var(--card-bg);
     color: var(--text-color);
@@ -20,9 +21,10 @@
 }
 
 .clear-btn {
-    padding: 8px 16px;
+    padding: 10px 18px; /* Increased padding */
     background-color: var(--primary-color);
     color: white;
+    font-weight: 600; /* Bolder text */
     border: none;
     border-radius: 4px;
     cursor: pointer;
@@ -41,7 +43,7 @@
 .process-row {
     display: flex;
     align-items: center;
-    padding: 12px 16px;
+    padding: 14px 18px; /* Increased padding */
     border-radius: 4px;
     background-color: var(--card-bg);
     margin-bottom: 8px;
@@ -77,16 +79,19 @@
 .process-script {
     flex: 2;
     font-weight: 500;
+    font-size: 17px; /* Increased font size */
 }
 
 .process-character {
     flex: 1;
     color: var(--text-muted);
+    font-size: 16px; /* Increased font size */
 }
 
 .process-status {
     flex: 1;
     font-weight: 500;
+    font-size: 16px; /* Increased font size */
 }
 
 .process-row.running .process-status {
@@ -105,7 +110,7 @@
 .process-progress {
     flex: 1;
     color: var(--text-muted);
-    font-size: 0.9em;
+    font-size: 1em; /* Increased font size */
     display: flex;
     align-items: center;
 }
@@ -122,7 +127,7 @@
 .process-duration {
     flex: 1;
     color: var(--text-muted);
-    font-size: 0.9em;
+    font-size: 1em; /* Increased font size */
 }
 
 .process-actions {
@@ -131,11 +136,12 @@
 }
 
 .action-button {
-    padding: 6px 12px;
+    padding: 8px 14px; /* Increased padding */
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 15px; /* Increased font size */
+    font-weight: 600; /* Bolder text */
     transition: all 0.2s ease;
 }
 
@@ -210,13 +216,13 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px;
+    padding: 18px 20px; /* Increased padding */
     background-color: var(--primary-color);
     color: white;
 }
 
 .modal-title {
-    font-size: 18px;
+    font-size: 20px; /* Increased font size */
     font-weight: 500;
 }
 
@@ -231,7 +237,7 @@
 /* Process details section */
 .process-details {
     background-color: rgba(0, 0, 0, 0.05);
-    padding: 12px 16px;
+    padding: 14px 20px; /* Increased padding */
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px 24px;
@@ -251,12 +257,13 @@
 .detail-label {
     font-weight: 600;
     color: var(--text-muted);
-    margin-right: 8px;
-    min-width: 80px;
+    margin-right: 10px; /* Increased margin */
+    min-width: 90px; /* Increased min-width */
+    font-size: 16px; /* Increased font size */
 }
 
 .modal-body {
-    padding: 16px;
+    padding: 20px; /* Increased padding */
     overflow-y: auto;
     flex: 1;
     max-height: calc(80vh - 200px);
@@ -264,9 +271,10 @@
 
 .output-container {
     background-color: rgba(0, 0, 0, 0.05);
-    padding: 12px;
+    padding: 14px; /* Increased padding */
     border-radius: 4px;
     font-family: monospace;
+    font-size: 15px; /* Increased font size */
     white-space: pre-wrap;
     word-break: break-word;
     overflow-x: auto;

@@ -22,16 +22,18 @@
     color: white;
     font-weight: 600;
     text-align: center;
-    padding: 12px;
+    padding: 14px; /* Increased padding */
+    font-size: 17px; /* Increased font size */
     border: 1px solid var(--border-color);
     position: sticky;
     top: 0;
 }
 
 .skills-table td {
-    padding: 10px 12px;
+    padding: 12px 14px; /* Increased padding */
     border: 1px solid var(--border-color);
     text-align: center;
+    font-size: 16px; /* Increased font size */
     font-weight: 500;
     color: var(--text-color);
     vertical-align: middle;
@@ -58,9 +60,10 @@
 /* Skill level cell styling */
 .skill-cell {
     position: relative;
-    width: 60px;
-    height: 40px;
+    width: 70px; /* Increased width */
+    height: 45px; /* Increased height */
     display: flex;
+    font-size: 17px; /* Increased font size */
     align-items: center;
     justify-content: center;
     border-radius: 4px;
@@ -90,12 +93,13 @@
 
 .legend-title {
     font-weight: 600;
-    margin-bottom: 8px;
+    margin-bottom: 10px; /* Increased margin */
+    font-size: 17px; /* Increased font size */
 }
 
 .legend-gradient {
-    height: 20px;
-    width: 300px;
+    height: 24px; /* Increased height */
+    width: 350px; /* Increased width */
     background: linear-gradient(to right, #e57373, #ffb74d, #fff176, #aed581, #4caf50);
     border-radius: 4px;
     margin-bottom: 4px;
@@ -104,11 +108,11 @@
 .legend-labels {
     display: flex;
     justify-content: space-between;
-    width: 300px;
+    width: 350px; /* Increased width */
 }
 
 .legend-labels span {
-    font-size: 12px;
+    font-size: 14px; /* Increased font size */
     color: var(--text-muted);
 }
 
@@ -118,7 +122,7 @@
     align-items: center;
     justify-content: center;
     height: 200px;
-    font-size: 1.2em;
+    font-size: 1.3em; /* Increased font size */
     color: var(--primary-color);
 }
 
@@ -147,8 +151,9 @@
 
 .error-message {
     color: var(--error-color);
-    padding: 15px;
+    padding: 18px; /* Increased padding */
     text-align: center;
+    font-size: 17px; /* Increased font size */
     border: 1px solid var(--error-color);
     border-radius: 4px;
     background-color: var(--error-bg);
