@@ -6,7 +6,7 @@
 
 const BaseLoop = require('./base-loop');
 const { moveCharacter, getCharacterDetails, gatheringAction } = require('./api');
-const { handleCooldown, checkInventory } = require('./utils');
+const { handleCooldown, checkInventory, sleep } = require('./utils'); // Added sleep import
 const config = require('./config');
 const db = require('./db');
 const depositAllItems = require('./go-deposit-all').depositAllItems;
