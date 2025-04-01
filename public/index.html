@@ -712,6 +712,12 @@
                     <h3>Iron Ring</h3>
                     <p>Craft iron rings at the jewelcrafter (1,3)</p>
                 </div>
+                <!-- Add Adventurer Boots Card -->
+                <div class="resource-card" onclick="showAdventurerBootsCraftingForm()">
+                    <div class="resource-icon">🥾</div> <!-- Boot icon -->
+                    <h3>Adventurer Boots</h3>
+                    <p>Craft adventurer boots at the armorsmith (3,1)</p>
+                </div>
             </div>
             
             <!-- Leather Boots Crafting Form -->
@@ -781,6 +787,22 @@
                     </select>
                 </div>
                 <button onclick="startIronRingCrafting()">Start Crafting Iron Rings</button>
+            </div>
+
+            <!-- Adventurer Boots Crafting Form -->
+            <div id="adventurer-boots-crafting-form" class="card" style="display: none;">
+                <h3 class="card-title">Adventurer Boots Crafting</h3>
+                <div class="form-group">
+                    <label for="adventurer-boots-character">Character Name:</label>
+                    <select id="adventurer-boots-character" data-character-dropdown>
+                        <option value="">Select a character</option>
+                    </select>
+                </div>
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="adventurer-boots-no-recycle" name="adventurer-boots-no-recycle">
+                    <label for="adventurer-boots-no-recycle">Do NOT Recycle Boots After Crafting</label>
+                </div>
+                <button onclick="startAdventurerBootsCrafting()">Start Crafting Adventurer Boots</button>
             </div>
         </div>
         

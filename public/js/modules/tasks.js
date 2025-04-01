@@ -6,7 +6,7 @@
 // Show the leather boots crafting form
 function showLeatherBootsCraftingForm() {
     // Use the generic form handling helper
-    const formIds = ['leather-boots-crafting-form', 'iron-sword-crafting-form', 'iron-dagger-crafting-form', 'copper-ring-crafting-form', 'iron-ring-crafting-form'];
+    const formIds = ['leather-boots-crafting-form', 'iron-sword-crafting-form', 'iron-dagger-crafting-form', 'copper-ring-crafting-form', 'iron-ring-crafting-form', 'adventurer-boots-crafting-form']; // Added adventurer boots form
     showForm('leather-boots-crafting-form', formIds, 'leather-boots-character', 'Leather Boots Crafting');
 }
 
@@ -32,7 +32,7 @@ function startLeatherBootsCrafting() {
 // Show the iron sword crafting form
 function showIronSwordCraftingForm() {
     // Use the generic form handling helper
-    const formIds = ['leather-boots-crafting-form', 'iron-sword-crafting-form', 'iron-dagger-crafting-form', 'copper-ring-crafting-form', 'iron-ring-crafting-form'];
+    const formIds = ['leather-boots-crafting-form', 'iron-sword-crafting-form', 'iron-dagger-crafting-form', 'copper-ring-crafting-form', 'iron-ring-crafting-form', 'adventurer-boots-crafting-form']; // Added adventurer boots form
     showForm('iron-sword-crafting-form', formIds, 'iron-sword-character', 'Iron Sword Crafting');
 }
 
@@ -58,7 +58,7 @@ function startIronSwordCrafting() {
 // Show the iron dagger crafting form
 function showIronDaggerCraftingForm() {
     // Use the generic form handling helper
-    const formIds = ['leather-boots-crafting-form', 'iron-sword-crafting-form', 'iron-dagger-crafting-form', 'copper-ring-crafting-form', 'iron-ring-crafting-form'];
+    const formIds = ['leather-boots-crafting-form', 'iron-sword-crafting-form', 'iron-dagger-crafting-form', 'copper-ring-crafting-form', 'iron-ring-crafting-form', 'adventurer-boots-crafting-form']; // Added adventurer boots form
     showForm('iron-dagger-crafting-form', formIds, 'iron-dagger-character', 'Iron Dagger Crafting');
 }
 
@@ -910,7 +910,7 @@ function startIronBarCrafting() {
 // Show the copper ring crafting form
 function showCopperRingCraftingForm() {
     // Use the generic form handling helper
-    const formIds = ['leather-boots-crafting-form', 'iron-sword-crafting-form', 'iron-dagger-crafting-form', 'copper-ring-crafting-form', 'iron-ring-crafting-form'];
+    const formIds = ['leather-boots-crafting-form', 'iron-sword-crafting-form', 'iron-dagger-crafting-form', 'copper-ring-crafting-form', 'iron-ring-crafting-form', 'adventurer-boots-crafting-form']; // Added adventurer boots form
     showForm('copper-ring-crafting-form', formIds, 'copper-ring-character', 'Copper Ring Crafting');
 }
 
@@ -936,7 +936,7 @@ function startCopperRingCrafting() {
 // Show the iron ring crafting form
 function showIronRingCraftingForm() {
     // Use the generic form handling helper
-    const formIds = ['leather-boots-crafting-form', 'iron-sword-crafting-form', 'iron-dagger-crafting-form', 'copper-ring-crafting-form', 'iron-ring-crafting-form'];
+    const formIds = ['leather-boots-crafting-form', 'iron-sword-crafting-form', 'iron-dagger-crafting-form', 'copper-ring-crafting-form', 'iron-ring-crafting-form', 'adventurer-boots-crafting-form']; // Added adventurer boots form
     showForm('iron-ring-crafting-form', formIds, 'iron-ring-character', 'Iron Ring Crafting');
 }
 
@@ -991,6 +991,32 @@ function startMithrilMining() {
             // The script will use its default behavior (mine until inventory full).
             
             return args; // Return the array of extra arguments (potentially empty or just ['--refine'])
+        }
+    );
+}
+
+// Show the adventurer boots crafting form
+function showAdventurerBootsCraftingForm() {
+    // Use the generic form handling helper
+    const formIds = ['leather-boots-crafting-form', 'iron-sword-crafting-form', 'iron-dagger-crafting-form', 'copper-ring-crafting-form', 'iron-ring-crafting-form', 'adventurer-boots-crafting-form']; // Include self
+    showForm('adventurer-boots-crafting-form', formIds, 'adventurer-boots-character', 'Adventurer Boots Crafting');
+}
+
+// Start the adventurer boots crafting process
+function startAdventurerBootsCrafting() {
+    safelyStartScript(
+        'adventurer-boots-crafting-form',
+        'adventurer-boots-character',
+        'adventurer-boots-crafting-loop.js',
+        'adventurer boots crafting',
+        () => {
+            // This function provides the extra arguments based on the checkbox
+            const noRecycleCheckbox = document.getElementById('adventurer-boots-no-recycle');
+            const args = [];
+            if (noRecycleCheckbox && noRecycleCheckbox.checked) {
+                args.push('--no-recycle');
+            }
+            return args; // Return array with flag if checked, empty otherwise
         }
     );
 }
@@ -1075,6 +1101,8 @@ window.showCookSalmonForm = showCookSalmonForm; // Added salmon
 window.startCookSalmon = startCookSalmon; // Added salmon
 window.showMithrilMiningForm = showMithrilMiningForm; // Export new function
 window.startMithrilMining = startMithrilMining; // Export new function
+window.showAdventurerBootsCraftingForm = showAdventurerBootsCraftingForm; // Export new function
+window.startAdventurerBootsCrafting = startAdventurerBootsCrafting; // Export new function
 
 // Export the module
 window.TasksModule = {
@@ -1091,6 +1119,8 @@ window.TasksModule = {
     startCopperRingCrafting: startCopperRingCrafting,
     showIronRingCraftingForm: showIronRingCraftingForm,
     startIronRingCrafting: startIronRingCrafting,
+    showAdventurerBootsCraftingForm: showAdventurerBootsCraftingForm, // Added
+    startAdventurerBootsCrafting: startAdventurerBootsCrafting, // Added
     // Mining
     startMining: startMining,
     showCopperMiningForm: showCopperMiningForm,
