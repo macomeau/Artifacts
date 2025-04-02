@@ -48,6 +48,7 @@ async function initializeTasksTable() {
         last_updated TIMESTAMPTZ DEFAULT NOW(),
         task_data JSONB DEFAULT '{}',
         error_message TEXT,
+        last_logs TEXT, -- Add column for storing last logs on failure
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
       
@@ -126,6 +127,13 @@ async function updateTaskState(taskId, newState, updates = {}) {
     if (updates.errorMessage !== undefined) {
       fields.push(`error_message = $${paramIndex}`);
       values.push(updates.errorMessage);
+      paramIndex++;
+    }
+    
+    // Add last_logs update if provided
+    if (updates.lastLogs !== undefined) {
+      fields.push(`last_logs = $${paramIndex}`);
+      values.push(updates.lastLogs);
       paramIndex++;
     }
     
@@ -283,11 +291,16 @@ async function completeTask(taskId, taskData = {}) {
  * @async
  * @param {number} taskId - ID of the task to fail
  * @param {string} errorMessage - Error message
- * @param {Object} taskData - Final task data
+ * @param {Object} [taskData={}] - Final task data
+ * @param {string} [lastLogs=null] - String containing the last logs from the process
  * @returns {Promise<Object>} Failed task
  */
-async function failTask(taskId, errorMessage, taskData = {}) {
-  return updateTaskState(taskId, TASK_STATES.FAILED, { errorMessage, taskData });
+async function failTask(taskId, errorMessage, taskData = {}, lastLogs = null) {
+  const updates = { errorMessage, taskData };
+  if (lastLogs !== null) {
+    updates.lastLogs = lastLogs;
+  }
+  return updateTaskState(taskId, TASK_STATES.FAILED, updates);
 }
 
 /**

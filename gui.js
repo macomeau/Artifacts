@@ -623,7 +623,17 @@ async function startScript(script, args = []) {
           .catch(err => console.error(`Failed to mark task ${taskId} as completed:`, err.message));
       } else {
         console.log(`Marking task ${taskId} as failed (exit code ${code})`);
-        characterTasks.failTask(taskId, `Process exited with code ${code}`)
+        // Capture last logs on failure
+        let lastLogsString = null;
+        if (runningProcesses[processId] && runningProcesses[processId].output) {
+          const logCountToKeep = 20; // Keep the last 20 log entries
+          const logs = runningProcesses[processId].output
+            .slice(-logCountToKeep)
+            .map(log => `[${new Date(log.time).toISOString()}] [${log.type.toUpperCase()}] ${log.text.trim()}`)
+            .join('\n');
+          lastLogsString = logs;
+        }
+        characterTasks.failTask(taskId, `Process exited with code ${code}`, {}, lastLogsString)
           .catch(err => console.error(`Failed to mark task ${taskId} as failed:`, err.message));
       }
     }

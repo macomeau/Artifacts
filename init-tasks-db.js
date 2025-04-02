@@ -21,6 +21,7 @@ async function initializeTasksTable() {
         last_updated TIMESTAMPTZ DEFAULT NOW(),
         task_data JSONB DEFAULT '{}',
         error_message TEXT,
+        last_logs TEXT, -- Add column for storing last logs on failure
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
       
