@@ -88,34 +88,41 @@ class SalmonHarvestingLoop extends BaseLoop {
   /**
    * Move to bank, deposit all fish and inventory items, and return to fishing location.
    * @returns {Promise<void>}
+   * @throws {Error} If moving or depositing fails.
    */
   async depositFish() {
     try {
       console.log(`Moving to bank at (${this.bankCoords.x}, ${this.bankCoords.y})...`);
-      
+
       const currentDetails = await getCharacterDetails(this.characterName);
       if (currentDetails.x !== this.bankCoords.x || currentDetails.y !== this.bankCoords.y) {
-        await moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName);
+        // Use handleAction for move to manage cooldowns properly
+        await this.handleAction(
+          () => moveCharacter(this.bankCoords.x, this.bankCoords.y, this.characterName),
+          'Move to bank'
+        );
       } else {
         console.log('Already at bank location.');
       }
-      
+
       console.log('Depositing all items (including salmon) to bank...');
+      // depositAllItems should handle its own cooldowns internally
       await depositAllItems(this.characterName); // Pass character name
-      
+
       console.log(`Moving back to fishing location at (${this.harvestCoords.x}, ${this.harvestCoords.y})...`);
-      await moveCharacter(this.harvestCoords.x, this.harvestCoords.y, this.characterName);
-      
-      console.log('Ready to continue fishing!');
+      // Use handleAction for move back
+       await this.handleAction(
+          () => moveCharacter(this.harvestCoords.x, this.harvestCoords.y, this.characterName),
+          'Move to fishing spot'
+        );
+
+      console.log('Deposit cycle finished. Ready to continue fishing!');
     } catch (error) {
       console.error('Error during deposit cycle:', error.message);
-      
-      try {
-        console.log(`Attempting to return to fishing location at (${this.harvestCoords.x}, ${this.harvestCoords.y})...`);
-        await moveCharacter(this.harvestCoords.x, this.harvestCoords.y, this.characterName);
-      } catch (moveError) {
-        console.error('Failed to return to fishing location:', moveError.message);
-      }
+      // Log the error, but re-throw it so the main loop knows something went wrong.
+      // Attempting to move back here might hide the original error source.
+      // The main loop's error handler should decide on recovery or termination.
+      throw error; // Re-throw the error
     }
   }
 
@@ -130,33 +137,52 @@ class SalmonHarvestingLoop extends BaseLoop {
     try {
       console.log(`Initializing salmon fishing loop at (${this.harvestCoords.x}, ${this.harvestCoords.y})...`);
       await this.initialize(this.harvestCoords);
-      
+
       while (true) {
-        await this.startLoop();
-        
+        await this.startLoop(); // Increments loop count, logs start
+
+        // Get details *before* fishing to ensure we are at the right spot
         const details = await getCharacterDetails(this.characterName);
-        if (await checkInventory(details)) {
-          console.log('Inventory full, depositing items...');
-          await this.depositFish();
-          continue;
-        }
-        
+        await handleCooldown(this.characterName); // Handle any existing cooldown before moving/fishing
+
+        // Ensure character is at the fishing location before attempting to fish
         if (details.x !== this.harvestCoords.x || details.y !== this.harvestCoords.y) {
-          console.log(`Not at fishing location, moving to (${this.harvestCoords.x}, ${this.harvestCoords.y})...`);
-          await moveCharacter(this.harvestCoords.x, this.harvestCoords.y, this.characterName);
+          console.log(`Not at fishing location (${details.x}, ${details.y}), moving to (${this.harvestCoords.x}, ${this.harvestCoords.y})...`);
+           await this.handleAction(
+              () => moveCharacter(this.harvestCoords.x, this.harvestCoords.y, this.characterName),
+              'Move to fishing spot'
+            );
+           // Optional: Re-fetch details after moving to confirm position? Could add delay.
+           // const movedDetails = await getCharacterDetails(this.characterName);
+           // if (movedDetails.x !== this.harvestCoords.x || movedDetails.y !== this.harvestCoords.y) {
+           //    throw new Error("Failed to confirm arrival at fishing location after move.");
+           // }
         }
-        
+
+        // Attempt to fish. This method handles 'inventory full' by calling depositFish itself.
+        // If depositFish throws an error, it will be caught by the outer catch block.
         await this.fish();
-        
+
         console.log(`Completed loop #${this.loopCount}. Caught ${this.resourceCount} salmon in total.`);
-        
-        // Add a small delay to prevent tight looping if fishing fails repeatedly
-        await new Promise(resolve => setTimeout(resolve, 1000)); 
+
+        // Add a small delay to prevent tight looping if fishing fails repeatedly (e.g., no resource)
+        await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 500)); // 1-1.5s delay
       }
     } catch (error) {
       console.error('Fatal error in salmon fishing loop:', error.message);
       // Log error to database before throwing
       try {
+        // Try getting current coords for logging, default to target coords if error
+        let currentX = this.harvestCoords.x;
+        let currentY = this.harvestCoords.y;
+        try {
+            const lastKnownDetails = await getCharacterDetails(this.characterName);
+            currentX = lastKnownDetails.x;
+            currentY = lastKnownDetails.y;
+        } catch (detailsError) {
+            console.warn("Could not get character details for error logging coordinates.");
+        }
+
         await db.query(
           `INSERT INTO action_logs(character, action_type, result, coordinates)
            VALUES ($1, $2, $3, point($4,$5))`,
@@ -164,8 +190,8 @@ class SalmonHarvestingLoop extends BaseLoop {
             this.characterName,
             'salmon_fishing_loop_error',
             { error: error.message, stack: error.stack },
-            this.harvestCoords.x,
-            this.harvestCoords.y
+            currentX,
+            currentY
           ]
         );
       } catch (dbError) {
