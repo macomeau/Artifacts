@@ -896,6 +896,7 @@ app.get('/api/processes', async (req, res) => {
           id, // This is the derived processId
           script: proc.script,
           args: proc.args,
+          characterName: proc.characterName, // Add character name here
           running: proc.running,
           startTime: proc.startTime,
           endTime: proc.endTime,
@@ -938,6 +939,7 @@ app.get('/api/processes', async (req, res) => {
         return {
           id: processId, // Use reconstructed processId
           script: task.script_name,
+          characterName: task.character, // Add character name here
           args: task.script_args || [], // Ensure args is an array
           running: false, // These are never running if they are DB-only
           startTime: task.start_time,
