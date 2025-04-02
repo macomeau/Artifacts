@@ -917,17 +917,15 @@ app.get('/api/processes', async (req, res) => {
     `);
     const latestDbTasks = dbTasksResult.rows;
 
-    // Create a map of characters currently represented in memoryProcesses
-    const memoryCharacters = new Set(memoryProcesses.map(p => {
-        // Extract character name reliably based on script type
-        if ((p.script.includes('go-fight') || p.script.includes('go-gather') || p.script.includes('fight-loop') || p.script.includes('gathering-loop') || p.script.includes('strange-ore-mining-loop')) && p.args?.length > 1 && /^\s*\(?\s*-?\d+\s*,\s*-?\d+\s*\)?\s*$/.test(p.args[0])) {
-            return p.args[1]; // Second arg is character
-        }
-        return p.args?.[0]; // First arg is character (default)
-    }));
+    // Create a set of characters currently running in memoryProcesses
+    // Use the characterName stored directly in the process object
+    const memoryCharacters = new Set(
+        Object.values(runningProcesses)
+              .filter(proc => proc.running && !manuallyCleared.has(proc.id)) // Consider only running, non-cleared processes
+              .map(proc => proc.characterName) // Get the stored character name
+    );
 
-
-    // Filter DB tasks: include only those whose character is NOT in memoryProcesses
+    // Filter DB tasks: include only those whose character is NOT currently running in memory
     const dbOnlyTasks = latestDbTasks
       .filter(task => !memoryCharacters.has(task.character))
       .map(task => {
