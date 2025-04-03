@@ -718,6 +718,7 @@ app.post('/api/restart', async (req, res) => {
     args = proc.args; // Use stored script-specific args
 
     if (!script || !character) {
+      console.error(`[ERROR /api/restart] Missing script or character for ID: ${id}. Script: ${script}, Character: ${character}`); // <-- ADD ERROR LOG
       return res.status(500).json({ error: 'Could not retrieve original script/character name for this memory process' });
     }
     console.log(`Restarting process found in memory: ${id} with script: ${script}, character: ${character}, args: ${JSON.stringify(args)}`);
