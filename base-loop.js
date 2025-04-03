@@ -3,7 +3,8 @@
  * @module BaseLoop
  */
 
-const { moveCharacter, getCharacterDetails, gatheringAction, craftingAction, depositAllItems } = require('./api');
+const { moveCharacter, getCharacterDetails, gatheringAction, craftingAction } = require('./api'); // Removed depositAllItems
+const { depositAllItems } = require('./go-deposit-all'); // Added correct import
 const { handleCooldown, checkInventory } = require('./utils');
 const db = require('./db');
 
