@@ -705,6 +705,7 @@ app.post('/api/restart', async (req, res) => {
   // Check if the process exists in memory first
   if (runningProcesses[id]) {
     const proc = runningProcesses[id];
+    console.log(`[DEBUG /api/restart] Found process in memory for ID: ${id}. Contents:`, JSON.stringify(proc, null, 2)); // <-- ADD DEBUG LOG
 
     // Prevent restarting an already running process from memory
     if (proc.running) {
